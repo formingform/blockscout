@@ -11,7 +11,7 @@ defmodule Explorer.Chain.Import do
 
   require Logger
 
-  # Êı¾İµ¼Èë²»Í¬½×¶Î´¦Àí
+  # æ•°æ®å¯¼å…¥ä¸åŒé˜¶æ®µå¤„ç†
   @stages [
     Import.Stage.Addresses,
     Import.Stage.AddressReferencing,
@@ -130,8 +130,8 @@ defmodule Explorer.Chain.Import do
          {:ok, valid_runner_option_pairs} <- validate_runner_options_pairs(runner_options_pairs),
          {:ok, runner_to_changes_list} <- runner_to_changes_list(valid_runner_option_pairs),
          {:ok, data} <- insert_runner_to_changes_list(runner_to_changes_list, options) do
-      Notify.async(data[:transactions]) # ¼àÌıĞèÒª¼à¿ØµÄµØÖ·ÁĞ±í£¬Òì²½·¢ÓÊ¼şÍ¨¹ı
-      Publisher.broadcast(data, Map.get(options, :broadcast, false)) # ·¢²¼ÏûÏ¢
+      Notify.async(data[:transactions]) # ç›‘å¬éœ€è¦ç›‘æ§çš„åœ°å€åˆ—è¡¨ï¼Œå¼‚æ­¥å‘é‚®ä»¶é€šè¿‡
+      Publisher.broadcast(data, Map.get(options, :broadcast, false)) # å‘å¸ƒæ¶ˆæ¯
       {:ok, data}
     end
   end
@@ -139,7 +139,7 @@ defmodule Explorer.Chain.Import do
   defp runner_to_changes_list(runner_options_pairs) when is_list(runner_options_pairs) do
     runner_options_pairs
     |> Stream.map(fn {runner, options} -> runner_changes_list(runner, options) end)
-    |> Enum.reduce({:ok, %{}}, fn  # {:ok, %{}} Îª³õÊ¼Öµ
+    |> Enum.reduce({:ok, %{}}, fn  # {:ok, %{}} ä¸ºåˆå§‹å€¼
       {:ok, {runner, changes_list}}, {:ok, acc_runner_to_changes_list} ->
         {:ok, Map.put(acc_runner_to_changes_list, runner, changes_list)}
 
@@ -155,9 +155,9 @@ defmodule Explorer.Chain.Import do
   end
 
   defp runner_changes_list(runner, %{params: params} = options) do
-    ecto_schema_module = runner.ecto_schema_module() # »ñÈ¡Ä£¿éschema
-    changeset_function_name = Map.get(options, :with, :changeset) #´¦Àí±ä¸ü¼¯µÄº¯ÊıÃû£¬Ä¬ÈÏÊÇchangeset
-    struct = ecto_schema_module.__struct__() # »ñÈ¡½á¹¹Ìå
+    ecto_schema_module = runner.ecto_schema_module() # è·å–æ¨¡å—schema
+    changeset_function_name = Map.get(options, :with, :changeset) #å¤„ç†å˜æ›´é›†çš„å‡½æ•°åï¼Œé»˜è®¤æ˜¯changeset
+    struct = ecto_schema_module.__struct__() # è·å–ç»“æ„ä½“
 
     params
     |> Stream.map(&apply(ecto_schema_module, changeset_function_name, [struct, &1]))
@@ -186,27 +186,27 @@ defmodule Explorer.Chain.Import do
   @global_options ~w(broadcast timeout)a
 
   defp validate_options(options) when is_map(options) do
-    # ³ıÈ¥È«¾ÖÑ¡Ïî broadcast timeout
+    # é™¤å»å…¨å±€é€‰é¡¹ broadcast timeout
     local_options = Map.drop(options, @global_options)
 
-    # ±éÀú@runners  ³õÊ¼ÖµÊÇ{[], local_options}  unknown_options±íÊ¾runnerÖĞ²»ÄÜ´¦ÀíµÄoptions£¬Ä¬ÈÏÊÇ´«ÈëµÄËùÓĞoptions,µ±optionsÔÚrunnersÖĞÄÜÕÒµ½ËµÃ÷¿ÉÒÔÆ¥Åä
+    # éå†@runners  åˆå§‹å€¼æ˜¯{[], local_options}  unknown_optionsè¡¨ç¤ºrunnerä¸­ä¸èƒ½å¤„ç†çš„optionsï¼Œé»˜è®¤æ˜¯ä¼ å…¥çš„æ‰€æœ‰options,å½“optionsåœ¨runnersä¸­èƒ½æ‰¾åˆ°è¯´æ˜å¯ä»¥åŒ¹é…
     #
     {reverse_runner_options_pairs, unknown_options} =
       Enum.reduce(@runners, {[], local_options}, fn runner, {acc_runner_options_pairs, unknown_options} = acc ->
         option_key = runner.option_key()
 
         case local_options do
-          %{^option_key => option_value} ->  # Ä£Ê½Æ¥Åä£¬¿´local_optionsÊÇ·ñÓërunerÖĞµÄoption_keyÆ¥Åä£¬Èç¹ûÆ¥Åä×öÏÂÃæ²Ù×÷
-            {[{runner, option_value} | acc_runner_options_pairs], Map.delete(unknown_options, option_key)} # °Ñrunner¼°¶ÔÓ¦´¦ÀíÖµoption_value×é³ÉÒ»¸öÔª×éÌí¼Óµ½acc_runner_options_pairsÍ·²¿,²¢´ÓÎ´ÖªµÄunknown_optionsÖĞÉ¾³ı
+          %{^option_key => option_value} ->  # æ¨¡å¼åŒ¹é…ï¼Œçœ‹local_optionsæ˜¯å¦ä¸runerä¸­çš„option_keyåŒ¹é…ï¼Œå¦‚æœåŒ¹é…åšä¸‹é¢æ“ä½œ
+            {[{runner, option_value} | acc_runner_options_pairs], Map.delete(unknown_options, option_key)} # æŠŠrunneråŠå¯¹åº”å¤„ç†å€¼option_valueç»„æˆä¸€ä¸ªå…ƒç»„æ·»åŠ åˆ°acc_runner_options_pairså¤´éƒ¨,å¹¶ä»æœªçŸ¥çš„unknown_optionsä¸­åˆ é™¤
 
           _ ->
-            acc  #×îÖÕ·µ»ØÖµ ÀïÃæ°üº¬{acc_runner_options_pairs, unknown_options}
+            acc  #æœ€ç»ˆè¿”å›å€¼ é‡Œé¢åŒ…å«{acc_runner_options_pairs, unknown_options}
         end
       end)
 
-    # ÅĞ¶Ïunknown_options ÊÇ·ñÎª¿Õ£¨Îª¿ÕËµÃ÷ËùÓĞµÄoptionsÓĞ¶ÔÓ¦µÄrunner´¦Àí£¬Ğ£ÑéÍ¨¹ı£©£¬ true Óëfalse·Ö±ğ·µ»Ø¶ÔÓ¦µÄÖµ
+    # åˆ¤æ–­unknown_options æ˜¯å¦ä¸ºç©ºï¼ˆä¸ºç©ºè¯´æ˜æ‰€æœ‰çš„optionsæœ‰å¯¹åº”çš„runnerå¤„ç†ï¼Œæ ¡éªŒé€šè¿‡ï¼‰ï¼Œ true ä¸falseåˆ†åˆ«è¿”å›å¯¹åº”çš„å€¼
     case Enum.empty?(unknown_options) do
-      true -> {:ok, Enum.reverse(reverse_runner_options_pairs)} #Ö®Ç°Ìí¼Óµ½Í·²¿£¬ÏÖÔÚ½øĞĞ·´×ª
+      true -> {:ok, Enum.reverse(reverse_runner_options_pairs)} #ä¹‹å‰æ·»åŠ åˆ°å¤´éƒ¨ï¼Œç°åœ¨è¿›è¡Œåè½¬
       false -> {:error, {:unknown_options, unknown_options}}
     end
   end
@@ -215,23 +215,23 @@ defmodule Explorer.Chain.Import do
     {status, reversed} =
       runner_options_pairs
       |> Stream.map(fn {runner, options} -> validate_runner_options(runner, options) end)
-      |> Enum.reduce({:ok, []}, fn  #³õÊ¼ÖµÊÇ{:ok, []}
-        # ±íÊ¾²»½øĞĞĞ£Ñé
+      |> Enum.reduce({:ok, []}, fn  #åˆå§‹å€¼æ˜¯{:ok, []}
+        # è¡¨ç¤ºä¸è¿›è¡Œæ ¡éªŒ
         :ignore, acc ->
           acc
 
-        {:ok, valid_runner_option_pair}, {:ok, valid_runner_options_pairs} -> #µ±Ç°µÄvalid_runner_option_pairÍ¨¹ı£¬ÇÒvalid_runner_options_pairsÖ®Ç°µÄÒ²ÊÇÍ¨¹ı
-          {:ok, [valid_runner_option_pair | valid_runner_options_pairs]} # valid_runner_option_pair Ìí¼Óµ½valid_runner_options_pairsÍ·²¿
+        {:ok, valid_runner_option_pair}, {:ok, valid_runner_options_pairs} -> #å½“å‰çš„valid_runner_option_pairé€šè¿‡ï¼Œä¸”valid_runner_options_pairsä¹‹å‰çš„ä¹Ÿæ˜¯é€šè¿‡
+          {:ok, [valid_runner_option_pair | valid_runner_options_pairs]} # valid_runner_option_pair æ·»åŠ åˆ°valid_runner_options_pairså¤´éƒ¨
 
-        # µ±Ç°³É¹¦£¬Ö®Ç°µÄÊ§°ÜÒ²·µ»ØÊ§°Ü
+        # å½“å‰æˆåŠŸï¼Œä¹‹å‰çš„å¤±è´¥ä¹Ÿè¿”å›å¤±è´¥
         {:ok, _}, {:error, _} = error ->
           error
 
-        # µ±Ç°Ê§°Ü£¬ÀúÊ·³É¹¦£¬Ò²·µ»ØÊ§°Ü
+        # å½“å‰å¤±è´¥ï¼Œå†å²æˆåŠŸï¼Œä¹Ÿè¿”å›å¤±è´¥
         {:error, reason}, {:ok, _} ->
           {:error, [reason]}
 
-        # µ±Ç°ÀúÊ·¶¼Ê§°Ü£¬·µ»ØËùÓĞ´íÎó
+        # å½“å‰å†å²éƒ½å¤±è´¥ï¼Œè¿”å›æ‰€æœ‰é”™è¯¯
         {:error, reason}, {:error, reasons} ->
           {:error, [reason | reasons]}
       end)
@@ -242,7 +242,7 @@ defmodule Explorer.Chain.Import do
   defp validate_runner_options(runner, options) when is_map(options) do
     option_key = runner.option_key()
 
-    # È¡runnerÖĞËùÓĞº¯Êı×é³Émap£¬¿´mapÊÇ·ñÓĞ:runner_specific_options ¶ÔÓ¦Öµ£¿
+    # å–runnerä¸­æ‰€æœ‰å‡½æ•°ç»„æˆmapï¼Œçœ‹mapæ˜¯å¦æœ‰:runner_specific_options å¯¹åº”å€¼ï¼Ÿ
     runner_specific_options =
       if Map.has_key?(Enum.into(runner.__info__(:functions), %{}), :runner_specific_options) do
         runner.runner_specific_options()
@@ -250,7 +250,7 @@ defmodule Explorer.Chain.Import do
         []
       end
 
-    # Í¨¹ıschemaÖĞĞ£Ñé±ØĞë²ÎÊı£¿
+    # é€šè¿‡schemaä¸­æ ¡éªŒå¿…é¡»å‚æ•°ï¼Ÿ
     case {validate_runner_option_params_required(option_key, options),
           validate_runner_options_known(option_key, options, runner_specific_options)} do
       {:ignore, :ok} -> :ignore
@@ -290,16 +290,16 @@ defmodule Explorer.Chain.Import do
   defp runner_to_changes_list_to_multis(runner_to_changes_list, options)
        when is_map(runner_to_changes_list) and is_map(options) do
     timestamps = timestamps()
-    full_options = Map.put(options, :timestamps, timestamps) #»ñÈ¡Ê±¼ä´ÁÌí¼Óµ½optionsÖĞ
+    full_options = Map.put(options, :timestamps, timestamps) #è·å–æ—¶é—´æˆ³æ·»åŠ åˆ°optionsä¸­
 
-    # ËùÓĞ½×¶ÎÉú³ÉµÄ¶à¸öÊÂÎñ£¨multis£©ÒÔ¼°×îÖÕµÄÔËĞĞÆ÷ºÍ¸ü¸ÄÁĞ±íÓ³Éä
+    # æ‰€æœ‰é˜¶æ®µç”Ÿæˆçš„å¤šä¸ªäº‹åŠ¡ï¼ˆmultisï¼‰ä»¥åŠæœ€ç»ˆçš„è¿è¡Œå™¨å’Œæ›´æ”¹åˆ—è¡¨æ˜ å°„
     {multis, final_runner_to_changes_list} =
-      # ¶Ô@stages ½øĞĞµü´ú
+      # å¯¹@stages è¿›è¡Œè¿­ä»£
       Enum.flat_map_reduce(@stages, runner_to_changes_list, fn stage, remaining_runner_to_changes_list ->
         stage.multis(remaining_runner_to_changes_list, full_options)
       end)
 
-    # final_runner_to_changes_list ²»Îª¿Õ£¬Å×³öÒì³£
+    # final_runner_to_changes_list ä¸ä¸ºç©ºï¼ŒæŠ›å‡ºå¼‚å¸¸
     unless Enum.empty?(final_runner_to_changes_list) do
       raise ArgumentError,
             "No stages consumed the following runners: #{final_runner_to_changes_list |> Map.keys() |> inspect()}"
@@ -334,7 +334,7 @@ defmodule Explorer.Chain.Import do
   defp insert_runner_to_changes_list(runner_to_changes_list, options) when is_map(runner_to_changes_list) do
     runner_to_changes_list
     |> runner_to_changes_list_to_multis(options)
-    |> logged_import(options) # ÊÂ¼şµ¼Èë
+    |> logged_import(options) # äº‹ä»¶å¯¼å…¥
     |> case do
       {:ok, result} ->
         {:ok, result}
@@ -343,17 +343,17 @@ defmodule Explorer.Chain.Import do
         remove_consensus_from_partially_imported_blocks(options)
         error
     end
-  rescue # µ¼Èë´¦Àí
+  rescue # å¯¼å…¥å¤„ç†
     exception ->
       remove_consensus_from_partially_imported_blocks(options)
       reraise exception, __STACKTRACE__
   end
 
-  # multis°üº¬¶à¸öÊÂÎñµÄÁĞ±í  options°üº¬µ¼Èë²Ù×÷µÄÑ¡Ïî
+  # multisåŒ…å«å¤šä¸ªäº‹åŠ¡çš„åˆ—è¡¨  optionsåŒ…å«å¯¼å…¥æ“ä½œçš„é€‰é¡¹
   defp logged_import(multis, options) when is_list(multis) and is_map(options) do
-    import_id = :erlang.unique_integer([:positive]) # Éú³ÉÎ¨Ò»ÕıÕûÊı£¬µ¼Èë²Ù×÷±êÊ¶
+    import_id = :erlang.unique_integer([:positive]) # ç”Ÿæˆå”¯ä¸€æ­£æ•´æ•°ï¼Œå¯¼å…¥æ“ä½œæ ‡è¯†
 
-    # ÈÕÖ¾ÖĞÌí¼ÓÔªÊı¾İ£¬µ¼ÈëÊÂÎñÇ°¼ÇÂ¼µ¼Èë²Ù×÷µÄÔªÊı¾İ
+    # æ—¥å¿—ä¸­æ·»åŠ å…ƒæ•°æ®ï¼Œå¯¼å…¥äº‹åŠ¡å‰è®°å½•å¯¼å…¥æ“ä½œçš„å…ƒæ•°æ®
     Explorer.Logger.metadata(fn -> import_transactions(multis, options) end, import_id: import_id)
   end
 
@@ -372,7 +372,7 @@ defmodule Explorer.Chain.Import do
       end
   end
 
-  #Ö´ĞĞ´øÓĞÈÕÖ¾¼ÇÂ¼µÄÊÂÎñ
+  #æ‰§è¡Œå¸¦æœ‰æ—¥å¿—è®°å½•çš„äº‹åŠ¡
   defp import_transaction(multi, options) when is_map(options) do
     Repo.logged_transaction(multi, timeout: Map.get(options, :timeout, @transaction_timeout))
   end
