@@ -1,4 +1,4 @@
-defmodule Explorer.Repo.Migrations.CreateL2ValidatorHistorys do
+defmodule Explorer.Repo.Appchain.Migrations.CreateL2ValidatorHistorys do
   use Ecto.Migration
 
   def change do

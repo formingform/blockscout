@@ -1,4 +1,4 @@
-defmodule Explorer.Repo.Migrations.CreateL1Txs do
+defmodule Explorer.Repo.Appchain.Migrations.CreateL1Txs do
   use Ecto.Migration
 
   def change do

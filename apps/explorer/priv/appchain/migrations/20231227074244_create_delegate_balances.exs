@@ -1,4 +1,4 @@
-defmodule Explorer.Repo.Migrations.CreateDelegateBalances do
+defmodule Explorer.Repo.Appchain.Migrations.CreateDelegateBalances do
   use Ecto.Migration
 
   def change do

@@ -21,6 +21,9 @@ config :explorer, Explorer.Repo.RSK, timeout: :timer.seconds(80)
 
 config :explorer, Explorer.Repo.Suave, timeout: :timer.seconds(80)
 
+# Configure Appchain database
+config :explorer, Explorer.Repo.Appchain, timeout: :timer.seconds(80)
+
 config :explorer, Explorer.Tracer, env: "dev", disabled?: true
 
 config :logger, :explorer,

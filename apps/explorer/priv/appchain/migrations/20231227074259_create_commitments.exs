@@ -1,4 +1,4 @@
-defmodule Explorer.Repo.Migrations.CreateCommitments do
+defmodule Explorer.Repo.Appchain.Migrations.CreateCommitments do
   use Ecto.Migration
 
   def change do
