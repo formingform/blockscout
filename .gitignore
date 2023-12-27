@@ -54,6 +54,10 @@ dump.rdb
 /docker-compose/services/logs
 /docker-compose/tmp
 
+
+# 忽略本地测试文件
+/apps/explorer/config/runtime/dev.exs
+
 .idea/
 *.iml
 

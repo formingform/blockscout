@@ -22,6 +22,7 @@ To get BlockScout up and running locally:
 * Create and migrate your database with `$ mix ecto.create && mix ecto.migrate`
 * Run IEx (Interactive Elixir) to access the index and explore: `$ iex -S mix`
 
+
 ### Testing
 
 * Format the Elixir code: `$ mix format`
@@ -36,3 +37,7 @@ To get BlockScout up and running locally:
 * Reset the test database: `MIX_ENV=test mix do ecto.drop, ecto.create, ecto.migrate`
 * Change `tag` in `benchmarks/explorer/chain/recent_collated_transactions.exs` to a new value, so that it will compare against the old values saved in `benchmarks/explorer/chain/recent_collated_transactions.benchee`
 * Run the benchmark: `MIX_ENV=test mix run benchmarks/explorer/chain/recent_collated_transactions.exs`
+
+### create migration
+* `cd .\apps\explorer\`  and `run mix ecto.gen.migration create_l2_validators`
+  
