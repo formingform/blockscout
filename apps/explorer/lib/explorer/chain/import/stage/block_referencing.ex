@@ -16,12 +16,14 @@ defmodule Explorer.Chain.Import.Stage.BlockReferencing do
     Runner.TokenTransfers,
     Runner.Address.TokenBalances,
     Runner.TransactionActions,
-    Runner.Withdrawals,
-    Runner.L2Validators
+    Runner.Withdrawals
   ]
 
   @impl Stage
   def runners do
+    IO.puts("========================================")
+    IO.puts(System.get_env("CHAIN_TYPE"))
+    IO.puts("========================================")
     case System.get_env("CHAIN_TYPE") do
       "polygon_edge" ->
         @default_runners ++
@@ -39,6 +41,12 @@ defmodule Explorer.Chain.Import.Stage.BlockReferencing do
             Runner.Zkevm.TransactionBatches,
             Runner.Zkevm.BatchTransactions
           ]
+
+      "platon_appchain" ->
+        @default_runners ++
+        [
+          Runner.PlatonAppchain.L2Validators
+        ]
 
       _ ->
         @default_runners

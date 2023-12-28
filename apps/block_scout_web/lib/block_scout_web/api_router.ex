@@ -255,7 +255,12 @@ defmodule BlockScoutWeb.ApiRouter do
     end
 
     scope "/validators" do
-      get("/", V2.L2ValidatorController, :validators)
+      get("/", V2.L2ValidatorController, :validators) # 分页获取验证人列表
+      get("/", V2.L2ValidatorController, :validator_detail) # 获取验证人详情
+      get("/", V2.L2ValidatorController, :staking_events) # Staking Events
+      get("/", V2.L2ValidatorController, :blocks_produced)
+      get("/", V2.L2ValidatorController, :validator_action)
+      get("/", V2.L2ValidatorController, :delegator)
     end
 
     scope "/main-page" do

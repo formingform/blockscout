@@ -34,11 +34,11 @@ defmodule Indexer.Supervisor do
     TokenUpdater,
     TransactionAction,
     UncleBlock,
-    Withdrawal,
-    L2Validator
+    Withdrawal
   }
 
   alias Indexer.Fetcher.Zkevm.TransactionBatch
+  alias Indexer.Fetcher.PlatonAppchain.L2Validator
 
   alias Indexer.Temporary.{
     BlocksTransactionsMismatch,

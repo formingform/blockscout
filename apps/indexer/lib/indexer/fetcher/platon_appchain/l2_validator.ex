@@ -1,19 +1,15 @@
-defmodule Indexer.Fetcher.L2Validator do
+defmodule Indexer.Fetcher.PlatonAppchain.L2Validator do
   @moduledoc """
-  Periodically updates tokens total_supply
+  Get new validator.
   """
 
   use GenServer
 
   require Logger
 
-  alias Explorer.{Chain, Repo}
-  alias Explorer.Chain.Token
-  alias Explorer.Counters.AverageBlockTime
-  alias Explorer.Token.MetadataRetriever
-  alias Timex.Duration
+  alias Explorer.Chain
 
-  @default_update_interval :timer.seconds(10)
+  @default_update_interval :timer.seconds(3)
 
   def start_link(_) do
     GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
@@ -34,8 +30,8 @@ defmodule Indexer.Fetcher.L2Validator do
 
   def handle_info(:update, contract_address_hashes) do
 
-    size = [1, 2]
-    li = prepare_datas(size)
+    param = [{3,"0x2905F311530Bf3A11aF0BeFc386E88e381d600c0"},{5,"0x0A023C9DaAd2250fFeb1CB33349627Bd017Df1D8"}]
+    li = prepare_datas(param)
     {import_data, event_name} =  {%{l2_validators: %{params: li}, timeout: :infinity}, "StateSynced"}
 
     case Chain.import(import_data) do
@@ -44,12 +40,12 @@ defmodule Indexer.Fetcher.L2Validator do
       {:error, reason} ->
         IO.puts("fail==========================")
         IO.puts("fail begin==========================")
-#        Logger.error(
-#          fn ->
-#            ["failed to fetch internal transactions for blocks: ", Exception.format(:error, reason)]
-#          end,
-#          error_count: 1
-#        )
+        #        Logger.error(
+        #          fn ->
+        #            ["failed to fetch internal transactions for blocks: ", Exception.format(:error, reason)]
+        #          end,
+        #          error_count: 1
+        #        )
         IO.inspect("error message #{inspect reason}")
         IO.puts("fail end==========================")
         IO.puts("fail==========================")
@@ -63,7 +59,7 @@ defmodule Indexer.Fetcher.L2Validator do
   defp schedule_next_update do
     IO.puts("==============validator====================")
     # 每3秒执行一次
-    update_interval = 8000
+    update_interval = 3000
     Process.send_after(self(), :update, update_interval)
   end
 
@@ -85,14 +81,31 @@ defmodule Indexer.Fetcher.L2Validator do
     :ok
   end
 
-
   @spec prepare_datas(any()) :: list()
-  def prepare_datas(size) do
-    Enum.map(size, fn s ->
+  def prepare_datas(param) do
+    Enum.map(param, fn {index,hash_str} ->
+      {:ok, address_hash} = Chain.string_to_address_hash(hash_str)
       %{
-        rank: 1,
+        rank: index,
         name: "王小二",
-        logo: "to"
+        detail: "我是王小",
+        logo: "logo",
+        website: "website",
+        validator_hash: address_hash,
+        owner_hash: address_hash,
+        commission: 1,
+        self_bonded: 2,
+        unbondeding: 3,
+        pending_withdrawal_bonded: 4,
+        total_delegation: 5,
+        validator_reward: 6,
+        delegator_reward: 7,
+        expect_apr: 8,
+        block_rate: 9,
+        auth_status: 10,
+        status: 11,
+        stake_epoch: 12,
+        epoch: 13
       }
     end)
   end

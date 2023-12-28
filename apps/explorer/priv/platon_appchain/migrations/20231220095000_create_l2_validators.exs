@@ -40,9 +40,9 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2Validators do
       # 0-Active 1- Verifying 2-candidate
       add(:status, :integer, null: false)
       # 质押成为验证人的epoch
-      add(:stake_epoch, :bigint, null: false)
+      add(:stake_epoch, :numeric, precision: 100, null: false)
       # 当前结算周期(根据这个周期去查询合约)
-      add(:epoch, :bigint, null: false)
+      add(:epoch, :numeric, precision: 100, null: false)
 
       timestamps(null: false, type: :utc_datetime_usec)
     end
