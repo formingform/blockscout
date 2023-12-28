@@ -1,4 +1,4 @@
-defmodule Explorer.Repo.Appchain.Migrations.CreateL2ValidatorEvents do
+defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2ValidatorEvents do
   use Ecto.Migration
 
   def change do

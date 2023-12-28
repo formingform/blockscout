@@ -1,8 +1,8 @@
-defmodule Explorer.Repo.Appchain.Migrations.CreateL2ValidatorHistorys do
+defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2Validators do
   use Ecto.Migration
 
   def change do
-    create table(:l2_validator_historys, primary_key: false) do
+    create table(:l2_validators, primary_key: false) do
       # 排名
       add(:rank, :integer, null: false)
       # 验证人名称
@@ -37,16 +37,12 @@ defmodule Explorer.Repo.Appchain.Migrations.CreateL2ValidatorHistorys do
       add(:block_rate, :numeric, precision: 100, null: true)
       # 是否验证 0-未验证，1-已验证
       add(:auth_status, :integer, null: false)
-      # 0-exiting 1-exited（目前只有1）
+      # 0-Active 1- Verifying 2-candidate
       add(:status, :integer, null: false)
       # 质押成为验证人的epoch
       add(:stake_epoch, :bigint, null: false)
       # 当前结算周期(根据这个周期去查询合约)
       add(:epoch, :bigint, null: false)
-      # 退出区块
-      add(:exit_number, :bigint, null: false)
-      # 退出内容
-      add(:event, :string, null: true)
 
       timestamps(null: false, type: :utc_datetime_usec)
     end

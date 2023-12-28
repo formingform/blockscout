@@ -40,5 +40,5 @@ To get BlockScout up and running locally:
 
 ### create migration
 * `cd .\apps\explorer\`  and `run mix ecto.gen.migration create_l2_validators`
-* 执行指定目录的migration `mix ecto.migrate --migrations-path priv/appchain/migrations`
+* 执行指定目录的migration `mix ecto.migrate --migrations-path priv/platon_appchain/migrations`
   

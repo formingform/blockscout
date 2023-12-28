@@ -1,4 +1,4 @@
-defmodule Explorer.Repo.Appchain.Migrations.CreateCheckPoints do
+defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateCheckPoints do
   use Ecto.Migration
 
   def change do

@@ -1,4 +1,4 @@
-defmodule Explorer.Repo.Appchain.Migrations.CreateRewardPoolStatistics do
+defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateRewardPoolStatistics do
   use Ecto.Migration
 
   def change do
