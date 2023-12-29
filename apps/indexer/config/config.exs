@@ -25,3 +25,8 @@ config :logger, :indexer,
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
+
+# config.
+
+# If using Ethereumex, you can specify a default JSON-RPC server url here for all requests.
+config :ethereumex, url: "http://192.168.9.82:8801"
