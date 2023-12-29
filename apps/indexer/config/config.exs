@@ -2,6 +2,11 @@
 # and its dependencies with the aid of the Config module.
 import Config
 
+config :ethereumex,
+       http_options: [pool_timeout: 5000, receive_timeout: 15_000],
+       http_pool_options: %{},
+       http_headers: []
+
 config :indexer,
   ecto_repos: [Explorer.Repo]
 

@@ -586,6 +586,17 @@ config :indexer, Indexer.Fetcher.Withdrawal.Supervisor,
 
 config :indexer, Indexer.Fetcher.Withdrawal, first_block: System.get_env("WITHDRAWALS_FIRST_BLOCK")
 
+L2_STATE_SENDER_CONTRACT
+
+config :indexer, Indexer.Fetcher.PlatonAppchain.Supervisor, disabled?: !(chain_type == "platon_appchain")
+
+config :indexer, Indexer.Fetcher.PlatonAppchain,
+  platon_appchain_l1_rpc: System.get_env("INDEXER_PLATON_APPCHAIN_L1_RPC")
+
+config :indexer, Indexer.Fetcher.PlatonAppchain.Contracts,
+  l1_stake_manager: System.get_env("INDEXED_PLATON_APPCHAIN_L1_STAKE_MANAGER_CONTRACT"),
+  l2_stake_handler: System.get_env("INDEXED_PLATON_APPCHAIN_L2_STAKE_HANDLER_CONTRACT")
+
 config :indexer, Indexer.Fetcher.PolygonEdge.Supervisor, disabled?: !(chain_type == "polygon_edge")
 
 config :indexer, Indexer.Fetcher.PolygonEdge.Deposit.Supervisor, disabled?: !(chain_type == "polygon_edge")
