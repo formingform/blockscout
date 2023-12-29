@@ -1,8 +1,7 @@
-defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2Validators do
+defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2HistoricalValidators do
   use Ecto.Migration
-
   def change do
-    create table(:l2_validators, primary_key: false) do
+    create table(:l2_historical_validators, primary_key: false) do
       # 验证人地址
       add(:validator_hash, :bytea, null: false, primary_key: true)
       # 质押成为验证人的epoch
@@ -49,6 +48,10 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2Validators do
       add(:round, :bigint, null: false)
       # 出块总数
       add(:blocks, :bigint, null: false)
+      # 退出区块
+      add(:quit_block_number, :bigint, null: false)
+      # 退出内容
+      add(:quit_event, :string, null: true)
 
       timestamps(null: false, type: :utc_datetime_usec)
     end

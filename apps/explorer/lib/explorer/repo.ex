@@ -203,6 +203,30 @@ defmodule Explorer.Repo do
     end
   end
 
+  defmodule PlatonAppchain do
+    use Ecto.Repo,
+        otp_app: :explorer,
+        adapter: Ecto.Adapters.Postgres
+
+    def init(_, opts) do
+      db_url = Application.get_env(:explorer, Explorer.Repo.PlatonAppchain)[:url]
+      repo_conf = Application.get_env(:explorer, Explorer.Repo.PlatonAppchain)
+
+      merged =
+        %{url: db_url}
+        |> ConfigHelper.get_db_config()
+        |> Keyword.merge(repo_conf, fn
+          _key, v1, nil -> v1
+          _key, nil, v2 -> v2
+          _, _, v2 -> v2
+        end)
+
+      Application.put_env(:explorer, Explorer.Repo.PlatonAppchain, merged)
+
+      {:ok, Keyword.put(opts, :url, db_url)}
+    end
+  end
+
   defmodule PolygonZkevm do
     use Ecto.Repo,
       otp_app: :explorer,

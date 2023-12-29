@@ -14,6 +14,9 @@ config :explorer, Explorer.Repo.Account, timeout: :timer.seconds(80)
 # Configure Polygon Edge database
 config :explorer, Explorer.Repo.PolygonEdge, timeout: :timer.seconds(80)
 
+# Configure Polygon Edge database
+config :explorer, Explorer.Repo.PlatonAppchain, timeout: :timer.seconds(80)
+
 # Configure Polygon zkEVM database
 config :explorer, Explorer.Repo.PolygonZkevm, timeout: :timer.seconds(80)
 
