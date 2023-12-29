@@ -30,7 +30,12 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Validator do
 
   def handle_info(:update, contract_address_hashes) do
 
-    param = [{3,"0x2905F311530Bf3A11aF0BeFc386E88e381d600c0"},{5,"0x0A023C9DaAd2250fFeb1CB33349627Bd017Df1D8"}]
+    param = [{31,"0xa904bD454A2cc9bC4BE98f1A045bED80A1961DbD"},{52,"0x7921067C779562d46634C124aF0F6AD19E5895C6"},
+      {13,"0x4ea29e80381542E1c9Ce63a7CC2C45B2FECc30E8"},{15,"0xC9Fa2a6EdDf33520E8d02002df120a1C9c9318F3"},
+      {23,"0xDB0eCbE91f2739a10DAd39e5b53b3174C6C0Eeb2"},{35,"0xa9f7f793A8A5485E1fc50E266fB0bc65C12Db8ee"},
+      {33,"0x13943B955A42f55c0576c08a14734641249a943F"},{45,"0x5e2284d43588744EB7e58092F4CC7F86a7B7DCdc"},
+      {53,"0x63Eaf0e0780295d180f7e08a3ecA80C9201C098D"},{56,"0xBc0455fa1d36694701a17fc094c0CBA074893Aa0"},
+      {73,"0x9f289ea5612Af9fB69D1816ba20a2d72A1153668"},{65,"0x19CeE362fd3566C720ebC1b2B1B4E64C9231Ed2A"}]
     li = prepare_datas(param)
     {import_data, event_name} =  {%{l2_validators: %{params: li}, timeout: :infinity}, "StateSynced"}
 

@@ -69,6 +69,7 @@ defmodule Explorer.Chain do
   }
 
   alias Explorer.Chain.Block.{EmissionReward, Reward}
+  alias Explorer.Chain.PlatonAppchain.L2Validator
 
   alias Explorer.Chain.Cache.{
     Accounts,
@@ -6435,15 +6436,32 @@ defmodule Explorer.Chain do
   @doc """
   简单获取验证人,返回值需要指定（待处理）
   """
-  @spec list_l2Validators([paging_options | necessity_by_association_option | api?]) :: []
+  @spec list_l2Validators([paging_options | necessity_by_association_option | api?]) :: [L2Validator.t()]
   def list_l2Validators(options \\ [])  do
-    fetch_L2Validators(options)
+    necessity_by_association = Keyword.get(options, :necessity_by_association, %{})
+    paging_options = Keyword.get(options, :paging_options) || @default_paging_options
+    validator_type = Keyword.get(options, :validator_type, "All")
+
+    fetch_L2Validators(validator_type, paging_options, necessity_by_association, options)
+
+#    fetch_L2Validators(options)
   end
 
 
-  defp fetch_L2Validators(options) do
+  defp fetch_L2Validators(validator_type, paging_options, necessity_by_association, options) do
     L2Validator
+#    |> page_validators(paging_options)
+    |> limit(^paging_options.page_size)
+    |> order_by(desc: :rank)
+#    |> join_associations(necessity_by_association)
     |> select_repo(options).all()
+  end
+
+
+  defp page_validators(query, %PagingOptions{key: nil}), do: query
+
+  defp page_validators(query, %PagingOptions{key: {rank}}) do
+    where(query, [validator], validator.rank < ^rank)
   end
 
 
