@@ -3,7 +3,9 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.StakeHandler do
   Stake handler contract interface encapsulation
   """
   alias Ethers
-  use Ethers.Contract, abi_file: "config/abi/StakeHandler.json", default_address: Application.get_env(:indexer, Contracts)[:l2_stake_handler]
+  use Ethers.Contract, abi_file: "config/abi/L2_StakeHandler.json", default_address: Application.get_env(:indexer, Contracts)[:l2_stake_handler]
+
+  @rpc_opts [url: System.get_env("ETHEREUM_JSONRPC_HTTP_URL"), http_headers: [{"Content-Type", "application/json"}]]
 
   defp convertValidatorToJSON(validator) do
     data = %{
@@ -73,7 +75,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.StakeHandler do
   ]}
   """
   def getValidators(start, size) do
-    result = get_validators(start, size) |> Ethers.call()
+    result = get_validators(start, size) |> Ethers.call(rpc_opts: @rpc_opts)
     {:ok, data} = result
     [nextStart | validators] = data
     validatorsJson = List.first(validators) |> Enum.map(fn validator -> convertValidatorToJSON(validator) end)
@@ -110,7 +112,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.StakeHandler do
   ]
   """
   def getValidatorsWithAddr(validators) do
-    result = get_validators_with_addr(validators) |> Ethers.call()
+    result = get_validators_with_addr(validators) |> Ethers.call(rpc_opts: @rpc_opts)
     {:ok, validators} = result
     validatorsJson = validators |> Enum.map(fn validator -> convertValidatorToJSON(validator) end)
     validatorsJson
@@ -130,7 +132,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.StakeHandler do
     ["0x1dd26dfb60b996fd5d5152af723949971d9119ee","0x70d207c1322ccb9069d3790d6768866dabff1035","0x343972bf63d1062761aaaa891d2750f03cb4b2f7"]
   """
   def getValidatorAddrs(periodType, period) do
-    result = get_validator_addrs(periodType, period) |> Ethers.call()
+    result = get_validator_addrs(periodType, period) |> Ethers.call(rpc_opts: @rpc_opts)
     {:ok, addrs} = result
     addrs
   end
@@ -155,7 +157,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.StakeHandler do
     }]
   """
   def getDelegationsWithValidator(validators, delegator) do
-    result =  get_delegations_with_validator(validators, delegator) |> Ethers.call()
+    result =  get_delegations_with_validator(validators, delegator) |> Ethers.call(rpc_opts: @rpc_opts)
     {:ok, delegations} = result
     delegationJson = delegations |> Enum.map(fn delegation -> convertDelegationToJSON(delegation) end)
     delegationJson
@@ -173,7 +175,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.StakeHandler do
 
   """
   def pendingWithdrawalsOfDelegate(validator, delegator) do
-    result = pending_withdrawals_of_delegate(validator, delegator) |> Ethers.call()
+    result = pending_withdrawals_of_delegate(validator, delegator) |> Ethers.call(rpc_opts: @rpc_opts)
     {:ok, pendingWithdrawals} = result
     pendingWithdrawals
   end
@@ -188,7 +190,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.StakeHandler do
     * Amount not yet withdrawable
   """
   def pendingWithdrawalsOfStake(validator) do
-    result = pending_withdrawals_of_stake(validator) |> Ethers.call()
+    result = pending_withdrawals_of_stake(validator) |> Ethers.call(rpc_opts: @rpc_opts)
     {:ok, pendingWithdrawals} = result
     pendingWithdrawals
   end
@@ -204,7 +206,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.StakeHandler do
     * Amount withdrawable
   """
   def withdrawableOfDelegate(validator, delegator) do
-    result = withdrawable_of_delegate(validator) |> Ethers.call()
+    result = withdrawable_of_delegate(validator) |> Ethers.call(rpc_opts: @rpc_opts)
     {:ok, withdrawable} = result
     withdrawable
   end
@@ -219,7 +221,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.StakeHandler do
     * Amount withdrawable
   """
   def withdrawableOfStake(validator) do
-    result = withdrawable_of_stake(validator) |> Ethers.call()
+    result = withdrawable_of_stake(validator) |> Ethers.call(rpc_opts: @rpc_opts)
     {:ok, withdrawable} = result
     withdrawable
   end
