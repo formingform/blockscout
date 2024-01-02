@@ -74,12 +74,38 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler do
    }
   ]}
   """
-  def getValidators(start, size) do
-    result = get_validators(start, size) |> Ethers.call(rpc_opts: @rpc_opts)
+#  def getValidators(start, size) do
+#    result = get_validators(start, size) |> Ethers.call(rpc_opts: @rpc_opts)
+#    {:ok, data} = result
+#    [nextStart | validators] = data
+#    validatorsJson = List.first(validators) |> Enum.map(fn validator -> convertValidatorToJSON(validator) end)
+#    {Base.encode16(nextStart), validatorsJson}
+#  end
+
+  @default_start  <<>>
+  @default_page_size 10
+
+  defp getValidators(start, size) do
+    result = L2StakeHandler.get_validators(start, size) |> Ethers.call(rpc_opts: @rpc_opts)
     {:ok, data} = result
     [nextStart | validators] = data
-    validatorsJson = List.first(validators) |> Enum.map(fn validator -> convertValidatorToJSON(validator) end)
-    {Base.encode16(nextStart), validatorsJson}
+    {Base.encode16(nextStart), validators}
+  end
+
+  defp getValidators(validators, start, size) when size <= @default_page_size do
+    validators
+  end
+
+  defp getValidators(validators, start, size) do
+    {nextStart, cur_validators} = getValidators(start, @default_page_size) |> Ethers.call(rpc_opts: @rpc_opts)
+    all_validators = validators ++ cur_validators
+    nextSize = length(cur_validators)
+    getValidators(all_validators, nextStart, nextSize)
+  end
+
+  def getAllStakers() do
+    all_stakers = getValidators([], @default_start, @default_page_size)
+    Enum.map(all_stakers, fn(validator) -> convertValidatorToJSON(validator) end)
   end
 
   @doc """
