@@ -6,6 +6,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler do
   use Ethers.Contract, abi_file: "config/abi/L2_StakeHandler.json", default_address: Application.get_env(:indexer, Contracts)[:l2_stake_handler]
 
   @rpc_opts [url: System.get_env("ETHEREUM_JSONRPC_HTTP_URL"), http_headers: [{"Content-Type", "application/json"}]]
+  @default_size 10
 
   defp convertValidatorToJSON(validator) do
     data = %{
@@ -74,12 +75,32 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler do
    }
   ]}
   """
-  def getValidators(start, size) do
+  def getValidators(start \\ <<>>, size \\ @default_size) do
     result = get_validators(start, size) |> Ethers.call(rpc_opts: @rpc_opts)
     {:ok, data} = result
     [nextStart | validators] = data
     validatorsJson = List.first(validators) |> Enum.map(fn validator -> convertValidatorToJSON(validator) end)
     {Base.encode16(nextStart), validatorsJson}
+  end
+
+  @doc """
+  Query the list of all validators, Support pagination to query the list of all validators
+
+  ## Parameters
+    * `start`(bytes) - represents the starting query ID. When passing empty bytes, it defaults to starting from the first Id
+    * `size`(integer) - page size
+
+  ## Returns
+    * All Validator Info array for query
+  """
+  def getAllValidators(all \\ [], start \\ <<>>, size \\ @default_size) do
+    if size == 0 do
+      all
+    else
+      {nextStart, validators} = getValidators(start, size)
+      all = all ++ validators
+      getAllValidators(all, Base.decode16!(nextStart), length(validators))
+    end
   end
 
   @doc """

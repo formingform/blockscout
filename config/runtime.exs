@@ -595,7 +595,8 @@ config :indexer, Indexer.Fetcher.PlatonAppchain,
 
 config :indexer, Indexer.Fetcher.PlatonAppchain.Contracts,
   l1_stake_manager: System.get_env("INDEXED_PLATON_APPCHAIN_L1_STAKE_MANAGER_CONTRACT"),
-  l2_stake_handler: System.get_env("INDEXED_PLATON_APPCHAIN_L2_STAKE_HANDLER_CONTRACT")
+  l2_stake_handler: System.get_env("INDEXED_PLATON_APPCHAIN_L2_STAKE_HANDLER_CONTRACT"),
+  l2_reward_manager: System.get_env("INDEXED_PLATON_APPCHAIN_L2_REWARD_MANAGER_CONTRACT")
 
 config :indexer, Indexer.Fetcher.PolygonEdge.Supervisor, disabled?: !(chain_type == "polygon_edge")
 
