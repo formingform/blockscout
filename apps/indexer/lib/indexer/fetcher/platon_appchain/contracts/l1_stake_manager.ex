@@ -1,4 +1,4 @@
-defmodule Indexer.Fetcher.PlatonAppchain.Contracts.StakeManager do
+defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L1StakeManager do
   alias Ethers
   use Ethers.Contract, abi_file: "config/abi/L1_StakeManager.json", default_address: Application.get_env(:indexer, Contracts)[:l1_stake_manager]
 

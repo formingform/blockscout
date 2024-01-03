@@ -1,4 +1,4 @@
-defmodule Indexer.Fetcher.PlatonAppchain.Contracts.StakeHandler do
+defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler do
   @moduledoc """
   Stake handler contract interface encapsulation
   """
@@ -83,10 +83,6 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.StakeHandler do
   end
 
   @doc """
-  /// @notice Query the list of validators by addrs
-    /// @dev Support to query the list of validators by addr of validators
-    /// @param validators addr of validators
-    /// @return ValidatorInfo array for query
   Query the list of validators by addrs。Support to query the list of validators by addr of validators
 
   ## Parameters
