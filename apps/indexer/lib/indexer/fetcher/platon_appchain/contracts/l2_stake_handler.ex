@@ -6,6 +6,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler do
   use Ethers.Contract, abi_file: "config/abi/L2_StakeHandler.json", default_address: Application.get_env(:indexer, Contracts)[:l2_stake_handler]
 
   @rpc_opts [url: System.get_env("ETHEREUM_JSONRPC_HTTP_URL"), http_headers: [{"Content-Type", "application/json"}]]
+  @default_size 10
 
   defp convertValidatorToJSON(validator) do
     data = %{
@@ -74,38 +75,33 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler do
    }
   ]}
   """
-#  def getValidators(start, size) do
-#    result = get_validators(start, size) |> Ethers.call(rpc_opts: @rpc_opts)
-#    {:ok, data} = result
-#    [nextStart | validators] = data
-#    validatorsJson = List.first(validators) |> Enum.map(fn validator -> convertValidatorToJSON(validator) end)
-#    {Base.encode16(nextStart), validatorsJson}
-#  end
-
-  @default_start  <<>>
-  @default_page_size 10
-
-  defp getValidators(start, size) do
-    result = L2StakeHandler.get_validators(start, size) |> Ethers.call(rpc_opts: @rpc_opts)
+  def getValidators(start \\ <<>>, size \\ @default_size) do
+    result = get_validators(start, size) |> Ethers.call(rpc_opts: @rpc_opts)
     {:ok, data} = result
     [nextStart | validators] = data
-    {Base.encode16(nextStart), validators}
+    validatorsJson = List.first(validators) |> Enum.map(fn validator -> convertValidatorToJSON(validator) end)
+    {Base.encode16(nextStart), validatorsJson}
   end
 
-  defp getValidators(validators, start, size) when size <= @default_page_size do
-    validators
-  end
+  @doc """
+  Query the list of all validators, Support pagination to query the list of all validators
 
-  defp getValidators(validators, start, size) do
-    {nextStart, cur_validators} = getValidators(start, @default_page_size) |> Ethers.call(rpc_opts: @rpc_opts)
-    all_validators = validators ++ cur_validators
-    nextSize = length(cur_validators)
-    getValidators(all_validators, nextStart, nextSize)
-  end
+  ## Parameters
+    * `all`(array of validator info) - Array to save all validator info
+    * `start`(bytes) - Represents the starting query ID. When passing empty bytes, it defaults to starting from the first Id, default is <<>>
+    * `size`(integer) - Use this paging value to continuously obtain the loop calling interface until all data is obtained. default is 10
 
-  def getAllStakers() do
-    all_stakers = getValidators([], @default_start, @default_page_size)
-    Enum.map(all_stakers, fn(validator) -> convertValidatorToJSON(validator) end)
+  ## Returns
+    * All Validator Info array for query
+  """
+  def getAllValidators(all \\ [], start \\ <<>>, size \\ @default_size) do
+    if size == 0 do
+      all
+    else
+      {nextStart, validators} = getValidators(start, size)
+      all = all ++ validators
+      getAllValidators(all, Base.decode16!(nextStart), length(validators))
+    end
   end
 
   @doc """
