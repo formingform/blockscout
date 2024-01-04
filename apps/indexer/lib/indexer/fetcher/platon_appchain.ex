@@ -39,7 +39,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   end
 
   def l2_rpc_url() do
-    json_rpc_named_arguments(PlatonAppchain.json_rpc_named_arguments(l2_rpc))
+     Application.get_all_env(:indexer)[Indexer.Fetcher.PlatonAppchain][:l2_rpc_url]
   end
 
   def l2_validator_contract_address() do
@@ -132,39 +132,6 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     end
   end
 
-
-  @spec prepare_events(list(), list()) :: list()
-  def convert_validator_info(json_validators) do
-    Enum.map(json_validators, fn json_validator ->
-      [data_bytes] = decode_data(event["data"], [:bytes])
-
-      sig = binary_part(data_bytes, 0, 32)
-
-      l1_block_number = quantity_to_integer(event["blockNumber"])
-
-      {from, to, l1_timestamp} =
-        if Base.encode16(sig, case: :lower) == @deposit_signature do
-          timestamps = get_timestamps_by_events(events, json_rpc_named_arguments)
-
-          [_sig, _root_token, sender, receiver, _amount] =
-            TypeDecoder.decode_raw(data_bytes, [{:bytes, 32}, :address, :address, :address, {:uint, 256}])
-
-          {sender, receiver, Map.get(timestamps, l1_block_number)}
-        else
-          {nil, nil, nil}
-        end
-
-      %{
-        msg_id: quantity_to_integer(Enum.at(event["topics"], 1)),
-        from: from,
-        to: to,
-        l1_transaction_hash: event["transactionHash"],
-        l1_timestamp: l1_timestamp,
-        l1_block_number: l1_block_number
-      }
-    end)
-  end
-
   @spec import_validators(list()) :: list()
   def import_validators(validators) do
     import_data = %{l2_validators: %{params: validators}, timeout: :infinity}
@@ -172,7 +139,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     validators
   end
 
-  @spec log_validators(list(), binary(), integer(), integer(), integer(), binary())
+  @spec log_validators(list(), binary(), integer(), integer(), integer(), binary()) :: any()
   def log_validators(validators, validatorType, periodType, period, block, layer) do
     periodName =
       if period_type()[:round] == periodType do

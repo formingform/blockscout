@@ -1,4 +1,4 @@
-defmodule Indexer.Fetcher.PlatonAppchain.RoundL2Validator do
+defmodule Indexer.Fetcher.PlatonAppchain.L2RoundValidator do
   @moduledoc """
   Get new round validator.
   """
@@ -29,13 +29,12 @@ defmodule Indexer.Fetcher.PlatonAppchain.RoundL2Validator do
           next_round_block: 0
         }}
     else
-      Logger.error("L2 validator contract address: #{contract_name} is invalid or not defined. PlatonAppchain is not started.")
+      Logger.error("L2 validator contract address: #{l2_validator_contract_address} is invalid or not defined. PlatonAppchain is not started.")
       :ignore
     end
-
   end
 
-  @spec handle_continue(map(), RoundL2Validator, atom()) :: {:noreply, map()}
+  @spec handle_continue(map(), L2RoundValidator, atom()) :: {:noreply, map()}
   def handle_continue(
         %{
           l2_validator_contract_address: l2_validator_contract_address,
@@ -46,7 +45,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.RoundL2Validator do
         calling_module,
         fetcher_name
       )
-      when calling_module in [RoundL2Validator] do
+      when calling_module in [L2RoundValidator] do
 
     {:ok, latest_block} = PlatonAppchain.get_latest_block_number(l2_rpc_arguments)
     round = PlatonAppchain.calculateL2Round(latest_block, l2_round_size)
@@ -57,8 +56,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.RoundL2Validator do
       round_validator_addresses = L2StakeHandler.getValidatorAddrs(PlatonAppchain.period_type()[:round], round)
       round_validators = L2StakeHandler.getValidatorsWithAddr(round_validator_addresses)
       # 设置验证人类型
-      round_validators = Enum.map(round_validators, fn(validator) ->  Map.put(map, :status, PlatonAppchain.validator_status()[:Verifying]) end)
-      PlatonAppchain.log_validators(round_validators, "Verifying", "round", round, last_block, "L2")
+      round_validators = Enum.map(round_validators, fn(validator) ->  Map.put(validator, :status, PlatonAppchain.validator_status()[:Verifying]) end)
+      PlatonAppchain.log_validators(round_validators, "Verifying", "round", round, latest_block, "L2")
 
 
     end
