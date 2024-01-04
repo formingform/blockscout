@@ -641,5 +641,6 @@ config :indexer, Indexer.Fetcher.Zkevm.TransactionBatch.Supervisor,
 Code.require_file("#{config_env()}.exs", "config/runtime")
 
 for config <- "../apps/*/config/runtime/#{config_env()}.exs" |> Path.expand(__DIR__) |> Path.wildcard() do
+  IO.puts("config_env:::#{config_env()}")
   Code.require_file("#{config_env()}.exs", Path.dirname(config))
 end
