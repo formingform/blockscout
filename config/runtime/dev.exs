@@ -35,7 +35,7 @@ config :block_scout_web, BlockScoutWeb.Endpoint,
 ################
 
 database = if System.get_env("DATABASE_URL"), do: nil, else: "explorer_dev"
-hostname = if System.get_env("DATABASE_URL"), do: nil, else: "192.168.16.189"
+hostname = if System.get_env("DATABASE_URL"), do: nil, else: "localhost"
 
 pool_size =
   if System.get_env("DATABASE_READ_ONLY_API_URL"),
