@@ -17,9 +17,12 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   alias Explorer.{Chain, Repo}
   alias Indexer.{BoundQueue, Helper}
 
-  # @default_update_interval :timer.seconds(3)
+  # 周期类型：roung: 共识周期; epoch：结算周期
   @period_type [round: 1, epoch: 2]
-  @default_block_interval 1000 # 1 second
+
+  # 缺省的出块间隔时间，毫秒
+  @default_block_interval 1000
+
   # 0：201候选验证人；1：43 出块验证人； 2：备选验证人（质押人）
   @validator_status %{Active: 0, Verifying: 1, Candidate: 2}
 
