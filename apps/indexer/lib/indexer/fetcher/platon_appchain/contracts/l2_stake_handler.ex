@@ -94,7 +94,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler do
   ## Returns
     * All Validator Info array for query
   """
-  def getAllValidators(all \\ [], start \\ <<>>, size \\ @default_size) do
+  defp getAllValidators(all \\ [], start \\ <<>>, size \\ @default_size) do
     if size == 0 do
       all
     else
@@ -129,8 +129,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler do
   }
   ]
   """
-  def getValidatorsWithAddr(validators) do
-    result = get_validators_with_addr(validators) |> Ethers.call(rpc_opts: @rpc_opts)
+  def getValidatorsWithAddr(validator_addresses) do
+    result = get_validators_with_addr(validator_addresses) |> Ethers.call(rpc_opts: @rpc_opts)
     {:ok, validators} = result
     validatorsJson = validators |> Enum.map(fn validator -> convertValidatorToJSON(validator) end)
     validatorsJson
