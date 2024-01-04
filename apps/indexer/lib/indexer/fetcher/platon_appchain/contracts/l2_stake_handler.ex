@@ -224,7 +224,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler do
     * Amount withdrawable
   """
   def withdrawableOfDelegate(validator, delegator) do
-    result = withdrawable_of_delegate(validator) |> Ethers.call(rpc_opts: @rpc_opts)
+    result = withdrawable_of_delegate(validator, delegator) |> Ethers.call(rpc_opts: @rpc_opts)
     {:ok, withdrawable} = result
     withdrawable
   end
