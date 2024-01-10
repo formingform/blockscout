@@ -19,6 +19,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
 
   # 周期类型：roung: 共识周期; epoch：结算周期
   @period_type [round: 1, epoch: 2]
+  @l1_events_tx_type [deposit: 1, stake: 2, addStake: 3, delegate: 4]
 
   # 缺省的出块间隔时间，毫秒
   @default_block_interval 1000
@@ -43,11 +44,11 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   end
 
   def l2_rpc_url() do
-     Application.get_all_env(:indexer)[Indexer.Fetcher.PlatonAppchain][:l2_rpc_url]
+    System.get_env("ETHEREUM_JSONRPC_HTTP_URL")
   end
 
   def l1_rpc_url() do
-    Application.get_all_env(:indexer)[Indexer.Fetcher.PlatonAppchain][:l1_rpc_url]
+    Application.get_all_env(:indexer)[Indexer.Fetcher.PlatonAppchain][:platon_appchain_l1_rpc]
   end
 
   def l2_validator_contract_address() do
@@ -64,6 +65,10 @@ defmodule Indexer.Fetcher.PlatonAppchain do
 
   def period_type() do
     @period_type
+  end
+
+  def l1_events_tx_type() do
+    @l1_events_tx_type
   end
 
   def validator_status() do
@@ -113,11 +118,111 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     ]
   end
 
+  def get_logs(from_block, to_block, address, topic0, json_rpc_named_arguments, retries) do
+    processed_from_block = if is_integer(from_block), do: integer_to_quantity(from_block), else: from_block
+    processed_to_block = if is_integer(to_block), do: integer_to_quantity(to_block), else: to_block
+
+    req =
+      request(%{
+        id: 0,
+        method: "eth_getLogs",
+        params: [
+          %{
+            :fromBlock => processed_from_block,
+            :toBlock => processed_to_block,
+            :address => address,
+            :topics => [topic0]
+          }
+        ]
+      })
+
+    error_message = &"Cannot fetch logs for the block range #{from_block}..#{to_block}. Error: #{inspect(&1)}"
+
+    repeated_call(&json_rpc/2, [req, json_rpc_named_arguments], error_message, retries)
+  end
+
+  defp get_transaction_by_hash(hash, _json_rpc_named_arguments, _retries_left) when is_nil(hash), do: {:ok, nil}
+
+  defp get_transaction_by_hash(hash, json_rpc_named_arguments, retries) do
+    req =
+      request(%{
+        id: 0,
+        method: "eth_getTransactionByHash",
+        params: [hash]
+      })
+
+    error_message = &"eth_getTransactionByHash failed. Error: #{inspect(&1)}"
+
+    repeated_call(&json_rpc/2, [req, json_rpc_named_arguments], error_message, retries)
+  end
+
+  defp get_last_l1_item(table) do
+    query =
+      from(item in table,
+        select: {item.block_number, item.hash},
+        order_by: [desc: item.event_Id],
+        limit: 1
+      )
+
+    query
+    |> Repo.one()
+    |> Kernel.||({0, nil})
+  end
+
+  @spec get_last_l2_item(module()) :: {non_neg_integer(), binary() | nil}
+  def get_last_l2_item(table) do
+    query =
+      from(item in table,
+        select: {item.block_number, item.hash},
+        order_by: [desc: item.event_Id],
+        limit: 1
+      )
+
+    query
+    |> Repo.one()
+    |> Kernel.||({0, nil})
+  end
+
+  defp get_block_check_interval(json_rpc_named_arguments) do
+    {last_safe_block, _} = get_safe_block(json_rpc_named_arguments)
+
+    first_block = max(last_safe_block - @block_check_interval_range_size, 1)
+
+    with {:ok, first_block_timestamp} <-
+           get_block_timestamp_by_number(first_block, json_rpc_named_arguments, 100_000_000),
+         {:ok, last_safe_block_timestamp} <-
+           get_block_timestamp_by_number(last_safe_block, json_rpc_named_arguments, 100_000_000) do
+      block_check_interval =
+        ceil((last_safe_block_timestamp - first_block_timestamp) / (last_safe_block - first_block) * 1000 / 2)
+
+      Logger.info("Block check interval is calculated as #{block_check_interval} ms.")
+      {:ok, block_check_interval, last_safe_block}
+    else
+      {:error, error} ->
+        {:error, "Failed to calculate block check interval due to #{inspect(error)}"}
+    end
+  end
+
+  defp get_safe_block(json_rpc_named_arguments) do
+    case get_block_number_by_tag("safe", json_rpc_named_arguments) do
+      {:ok, safe_block} ->
+        {safe_block, false}
+
+      {:error, :not_found} ->
+        {:ok, latest_block} = get_block_number_by_tag("latest", json_rpc_named_arguments, 100_000_000)
+        {latest_block, true}
+    end
+  end
+
+  @spec repeated_request(list(), any(), list(), non_neg_integer()) :: {:ok, any()} | {:error, atom()}
+  def repeated_request(req, error_message, json_rpc_named_arguments, retries) do
+    repeated_call(&json_rpc/2, [req, json_rpc_named_arguments], error_message, retries)
+  end
+
   @spec get_block_number_by_tag(list()) :: {:ok, non_neg_integer()} | {:error, atom()}
   def get_latest_block_number(json_rpc_named_arguments) do
     get_block_number_by_tag("latest", json_rpc_named_arguments, 100_000_000)
   end
-
 
   @spec get_block_number_by_tag(binary(), list(), integer()) :: {:ok, non_neg_integer()} | {:error, atom()}
   def get_block_number_by_tag(tag, json_rpc_named_arguments, retries \\ 3) do
@@ -169,7 +274,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     |> get_blocks_by_events(json_rpc_named_arguments, 100_000_000)
     |> Enum.reduce(%{}, fn block, acc ->
       block_number = quantity_to_integer(Map.get(block, "number"))
-      {:ok, timestamp} = DateTime.from_unix(quantity_to_integer(Map.get(block, "timestamp")))
+      {:ok, timestamp} = quantity_to_integer(Map.get(block, "timestamp"))
       Map.put(acc, block_number, timestamp)
     end)
   end
@@ -194,7 +299,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   end
 
   @spec init_l1(
-          Explorer.Chain.PlatonAppchain.L1Event | Explorer.Chain.PlatonAppchain.L2Event,
+          Explorer.Chain.PlatonAppchain.L1Events | Explorer.Chain.PlatonAppchain.L2Events,
           list(),
           pid(),
           binary(),
@@ -203,10 +308,10 @@ defmodule Indexer.Fetcher.PlatonAppchain do
           binary()
         ) :: {:ok, map()} | :ignore
   def init_l1(table, env, pid, contract_address, contract_name, table_name, entity_name)
-      when table in [Explorer.Chain.PlatonAppchain.L1Event, Explorer.Chain.PlatonAppchain.L2Event] do
+      when table in [Explorer.Chain.PlatonAppchain.L1Events, Explorer.Chain.PlatonAppchain.L2Executes] do
     with {:start_block_l1_undefined, false} <- {:start_block_l1_undefined, is_nil(env[:start_block_l1])},
-         l1_rpc = Application.get_all_env(:indexer)[Indexer.Fetcher.PolygonEdge][:polygon_edge_l1_rpc],
-         {:rpc_l1_undefined, false} <- {:rpc_l1_undefined, is_nil(polygon_edge_l1_rpc)},
+         platon_appchain_l1_rpc = l1_rpc_url(),
+         {:rpc_l1_undefined, false} <- {:rpc_l1_undefined, is_nil(platon_appchain_l1_rpc)},
          {:contract_is_valid, true} <- {:contract_is_valid, Helper.is_address_correct?(contract_address)},
          start_block_l1 = parse_integer(env[:start_block_l1]),
          false <- is_nil(start_block_l1),
@@ -214,7 +319,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
          {last_l1_block_number, last_l1_transaction_hash} <- get_last_l1_item(table),
          {:start_block_l1_valid, true} <-
            {:start_block_l1_valid, start_block_l1 <= last_l1_block_number || last_l1_block_number == 0},
-         json_rpc_named_arguments = json_rpc_named_arguments(polygon_edge_l1_rpc),
+         json_rpc_named_arguments = json_rpc_named_arguments(platon_appchain_l1_rpc),
          {:ok, last_l1_tx} <-
            get_transaction_by_hash(last_l1_transaction_hash, json_rpc_named_arguments, 100_000_000),
          {:l1_tx_not_found, false} <- {:l1_tx_not_found, !is_nil(last_l1_transaction_hash) && is_nil(last_l1_tx)},
@@ -271,7 +376,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   end
 
   @spec init_l2(
-          Explorer.Chain.PolygonEdge.DepositExecute | Explorer.Chain.PolygonEdge.Withdrawal,
+          Explorer.Chain.PlatonAppchain.L2Events | Explorer.Chain.PlatonAppchain.L1Executes,
           list(),
           pid(),
           binary(),
@@ -281,7 +386,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
           list()
         ) :: {:ok, map()} | :ignore
   def init_l2(table, env, pid, contract_address, contract_name, table_name, entity_name, json_rpc_named_arguments)
-      when table in [Explorer.Chain.PolygonEdge.DepositExecute, Explorer.Chain.PolygonEdge.Withdrawal] do
+      when table in [Explorer.Chain.PlatonAppchain.L2Events, Explorer.Chain.PlatonAppchain.L1Executes] do
     with {:start_block_l2_undefined, false} <- {:start_block_l2_undefined, is_nil(env[:start_block_l2])},
          {:contract_address_valid, true} <- {:contract_address_valid, Helper.is_address_correct?(contract_address)},
          start_block_l2 = parse_integer(env[:start_block_l2]),
@@ -337,7 +442,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     end
   end
 
-  @spec handle_continue(map(), binary(), Deposit | WithdrawalExit, atom()) :: {:noreply, map()}
+  @spec handle_continue(map(), binary(), L1Events, atom()) :: {:noreply, map()}
   def handle_continue(
         %{
           contract_address: contract_address,
@@ -350,11 +455,11 @@ defmodule Indexer.Fetcher.PlatonAppchain do
         calling_module,
         fetcher_name
       )
-      when calling_module in [Deposit, WithdrawalExit] do
+      when calling_module in [L1Events] do
     time_before = Timex.now()
 
     eth_get_logs_range_size =
-      Application.get_all_env(:indexer)[Indexer.Fetcher.PolygonEdge][:polygon_edge_eth_get_logs_range_size]
+      Application.get_all_env(:indexer)[Indexer.Fetcher.PlatonAppchain][:platon_appchain_eth_get_logs_range_size]
 
     chunks_number = ceil((end_block - start_block + 1) / eth_get_logs_range_size)
     chunk_range = Range.new(0, max(chunks_number - 1, 0), 1)
@@ -453,10 +558,10 @@ defmodule Indexer.Fetcher.PlatonAppchain do
 
   defp import_events(events, calling_module) do
     {import_data, event_name} =
-      if calling_module == Deposit do
-        {%{polygon_edge_deposits: %{params: events}, timeout: :infinity}, "StateSynced"}
-      else
-        {%{polygon_edge_withdrawal_exits: %{params: events}, timeout: :infinity}, "ExitProcessed"}
+      if calling_module == L1Events do
+        {%{l1_events: %{params: events}, timeout: :infinity}, "StateSynced"}
+#      else
+#        {%{l2_executes: %{params: events}, timeout: :infinity}, "ExitProcessed"}
       end
 
     {:ok, _} = Chain.import(import_data)

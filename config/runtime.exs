@@ -591,12 +591,18 @@ L2_STATE_SENDER_CONTRACT
 config :indexer, Indexer.Fetcher.PlatonAppchain.Supervisor, disabled?: !(chain_type == "platon_appchain")
 
 config :indexer, Indexer.Fetcher.PlatonAppchain,
-  platon_appchain_l1_rpc: System.get_env("INDEXER_PLATON_APPCHAIN_L1_RPC")
+  platon_appchain_l1_rpc: System.get_env("INDEXER_PLATON_APPCHAIN_L1_RPC"),
+  platon_appchain_eth_get_logs_range_size:
+    ConfigHelper.parse_integer_env_var("INDEXER_PLATON_APPCHAIN_ETH_GET_LOGS_RANGE_SIZE", 1000)
 
 config :indexer, Indexer.Fetcher.PlatonAppchain.Contracts,
   l1_stake_manager: System.get_env("INDEXED_PLATON_APPCHAIN_L1_STAKE_MANAGER_CONTRACT"),
   l2_stake_handler: System.get_env("INDEXED_PLATON_APPCHAIN_L2_STAKE_HANDLER_CONTRACT"),
   l2_reward_manager: System.get_env("INDEXED_PLATON_APPCHAIN_L2_REWARD_MANAGER_CONTRACT")
+
+config :indexer, Indexer.Fetcher.PlatonAppchain.L1Events,
+  start_block_l1: System.get_env("INDEXER_PLATON_APPCHAIN_L1_START_BLOCK"),
+  state_sender: System.get_env("INDEXER_PLATON_APPCHAIN_L1_STATE_SENDER_CONTRACT")
 
 config :indexer, Indexer.Fetcher.PolygonEdge.Supervisor, disabled?: !(chain_type == "polygon_edge")
 
