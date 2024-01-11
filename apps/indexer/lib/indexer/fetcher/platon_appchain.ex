@@ -21,6 +21,8 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   @period_type [round: 1, epoch: 2]
   @l1_events_tx_type [deposit: 1, stake: 2, addStake: 3, delegate: 4]
 
+  @l2_events_tx_type [withdraw: 1, stakeWithdraw: 2, degationWithdraw: 3]
+
   # 缺省的出块间隔时间，毫秒
   @default_block_interval 1000
 
@@ -69,6 +71,10 @@ defmodule Indexer.Fetcher.PlatonAppchain do
 
   def l1_events_tx_type() do
     @l1_events_tx_type
+  end
+
+  def l2_events_tx_type() do
+    @l2_events_tx_type
   end
 
   def validator_status() do
@@ -276,6 +282,8 @@ defmodule Indexer.Fetcher.PlatonAppchain do
       block_number = quantity_to_integer(Map.get(block, "number"))
       {:ok, timestamp} = quantity_to_integer(Map.get(block, "timestamp"))
       Map.put(acc, block_number, timestamp)
+      miner = Map.get(block, "miner")
+      Map.put(acc, "#{block_number}_miner", miner)
     end)
   end
 
