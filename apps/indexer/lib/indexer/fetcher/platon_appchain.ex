@@ -124,6 +124,14 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     ]
   end
 
+  @spec get_logs(
+          non_neg_integer() | binary(),
+          non_neg_integer() | binary(),
+          binary(),
+          binary(),
+          list(),
+          non_neg_integer()
+        ) :: {:ok, list()} | {:error, term()}
   def get_logs(from_block, to_block, address, topic0, json_rpc_named_arguments, retries) do
     processed_from_block = if is_integer(from_block), do: integer_to_quantity(from_block), else: from_block
     processed_to_block = if is_integer(to_block), do: integer_to_quantity(to_block), else: to_block
@@ -384,7 +392,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   end
 
   @spec init_l2(
-          Explorer.Chain.PlatonAppchain.L2Events | Explorer.Chain.PlatonAppchain.L1Executes,
+          Explorer.Chain.PlatonAppchain.L2Event | Explorer.Chain.PlatonAppchain.L2Execute,
           list(),
           pid(),
           binary(),
@@ -394,7 +402,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
           list()
         ) :: {:ok, map()} | :ignore
   def init_l2(table, env, pid, contract_address, contract_name, table_name, entity_name, json_rpc_named_arguments)
-      when table in [Explorer.Chain.PlatonAppchain.L2Events, Explorer.Chain.PlatonAppchain.L1Executes] do
+      when table in [Explorer.Chain.PlatonAppchain.L2Event, Explorer.Chain.PlatonAppchain.L2Execute] do
     with {:start_block_l2_undefined, false} <- {:start_block_l2_undefined, is_nil(env[:start_block_l2])},
          {:contract_address_valid, true} <- {:contract_address_valid, Helper.is_address_correct?(contract_address)},
          start_block_l2 = parse_integer(env[:start_block_l2]),
@@ -575,5 +583,98 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     {:ok, _} = Chain.import(import_data)
 
     {events, event_name}
+  end
+
+  @spec fill_block_range(integer(), integer(), {module(), module()}, binary(), list()) :: integer()
+  def fill_block_range(start_block, end_block, {module, table}, contract_address, json_rpc_named_arguments) do
+    fill_block_range(start_block, end_block, module, contract_address, json_rpc_named_arguments, true)
+
+    fill_msg_id_gaps(
+      start_block,
+      table,
+      module,
+      contract_address,
+      json_rpc_named_arguments,
+      false
+    )
+
+    {last_l2_block_number, _} = get_last_l2_item(table)
+
+    fill_block_range(
+      max(start_block, last_l2_block_number),
+      end_block,
+      module,
+      contract_address,
+      json_rpc_named_arguments,
+      false
+    )
+  end
+
+  @spec fill_msg_id_gaps(integer(), module(), module(), binary(), list(), boolean()) :: no_return()
+  def fill_msg_id_gaps(
+        start_block_l2,
+        table,
+        calling_module,
+        contract_address,
+        json_rpc_named_arguments,
+        scan_db \\ true
+      ) do
+    id_min = Repo.aggregate(table, :min, :msg_id)
+    id_max = Repo.aggregate(table, :max, :msg_id)
+
+    with true <- !is_nil(id_min) and !is_nil(id_max),
+         starts = msg_id_gap_starts(id_max, table),
+         ends = msg_id_gap_ends(id_min, table),
+         min_block_l2 = l2_block_number_by_msg_id(id_min, table),
+         {new_starts, new_ends} =
+           if(start_block_l2 < min_block_l2,
+             do: {[start_block_l2 | starts], [min_block_l2 | ends]},
+             else: {starts, ends}
+           ),
+         true <- Enum.count(new_starts) == Enum.count(new_ends) do
+      ranges = Enum.zip(new_starts, new_ends)
+
+      invalid_range_exists = Enum.any?(ranges, fn {l2_block_start, l2_block_end} -> l2_block_start > l2_block_end end)
+
+      ranges_final =
+        with {:ranges_are_invalid, true} <- {:ranges_are_invalid, invalid_range_exists},
+             {max_block_l2, _} = get_last_l2_item(table),
+             {:start_block_l2_is_min, true} <- {:start_block_l2_is_min, start_block_l2 <= max_block_l2} do
+          [{start_block_l2, max_block_l2}]
+        else
+          {:ranges_are_invalid, false} -> ranges
+          {:start_block_l2_is_min, false} -> []
+        end
+
+      ranges_final
+      |> Enum.each(fn {l2_block_start, l2_block_end} ->
+        count =
+          fill_block_range(
+            l2_block_start,
+            l2_block_end,
+            calling_module,
+            contract_address,
+            json_rpc_named_arguments,
+            scan_db
+          )
+
+        if count > 0 do
+          log_fill_msg_id_gaps(scan_db, l2_block_start, l2_block_end, table, count)
+        end
+      end)
+
+      if scan_db do
+        fill_msg_id_gaps(start_block_l2, table, calling_module, contract_address, json_rpc_named_arguments, false)
+      end
+    end
+  end
+
+  defp log_fill_msg_id_gaps(scan_db, l2_block_start, l2_block_end, table, count) do
+    find_place = if scan_db, do: "in DB", else: "through RPC"
+    table_name = table.__schema__(:source)
+
+    Logger.info(
+      "Filled gaps between L2 blocks #{l2_block_start} and #{l2_block_end}. #{count} event(s) were found #{find_place} and written to #{table_name} table."
+    )
   end
 end
