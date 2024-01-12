@@ -5,10 +5,10 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateCheckPoints do
     create table(:checkpoints, primary_key: false) do
       # l2上的epoch，一个epoch结束块高生成一个checkpoint
       add(:epoch, :bigint, null: false, primary_key: true)
-      # checkpoint收集事件的l2上截至块高（epoch结束的前3个块高）
-      add(:block_number, :bigint, null: false)
       # checkpoint收集的事件的L2开始块高（epoch开始的前3个块高）
       add(:start_block_number, :bigint, null: false)
+      # checkpoint收集事件的l2上截至块高（epoch结束的前3个块高）
+      add(:end_block_number, :bigint, null: false)
       # event_root
       add(:event_root, :bytea, null: false)
       # checkpoint总包含的事件数（另起线程统计l2_events中数据）
