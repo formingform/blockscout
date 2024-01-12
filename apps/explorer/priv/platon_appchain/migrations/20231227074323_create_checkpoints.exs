@@ -11,8 +11,8 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateCheckPoints do
       add(:end_block_number, :bigint, null: false)
       # event_root
       add(:event_root, :bytea, null: false)
-      # checkpoint总包含的事件数（另起线程统计l2_events中数据）
-      add(:event_counts, :integer, null: false)
+      # checkpoint中包含的事件数（另起线程统计l2_events中数据，缺省就是null, 如果是null表示还没有统计。)
+      add(:event_counts, :integer, null: true)
       # 交易所在L1区块
       add(:l1_block_number, :bigint, null: false)
       # checkpoint 批次在L1上的hash
