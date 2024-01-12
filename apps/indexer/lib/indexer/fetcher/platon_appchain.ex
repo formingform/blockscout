@@ -656,7 +656,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   def fill_block_range(start_block, end_block, {module, table}, contract_address, json_rpc_named_arguments) do
     fill_block_range(start_block, end_block, module, contract_address, json_rpc_named_arguments, true)
 
-    fill_msg_id_gaps(
+    fill_event_id_gaps(
       start_block,
       table,
       module,
@@ -677,8 +677,8 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     )
   end
 
-  @spec fill_msg_id_gaps(integer(), module(), module(), binary(), list(), boolean()) :: no_return()
-  def fill_msg_id_gaps(
+  @spec fill_event_id_gaps(integer(), module(), module(), binary(), list(), boolean()) :: no_return()
+  def fill_event_id_gaps(
         start_block_l2,
         table,
         calling_module,
@@ -686,13 +686,13 @@ defmodule Indexer.Fetcher.PlatonAppchain do
         json_rpc_named_arguments,
         scan_db \\ true
       ) do
-    id_min = Repo.aggregate(table, :min, :msg_id)
-    id_max = Repo.aggregate(table, :max, :msg_id)
+    id_min = Repo.aggregate(table, :min, :event_id)
+    id_max = Repo.aggregate(table, :max, :event_id)
 
     with true <- !is_nil(id_min) and !is_nil(id_max),
-         starts = msg_id_gap_starts(id_max, table),
-         ends = msg_id_gap_ends(id_min, table),
-         min_block_l2 = l2_block_number_by_msg_id(id_min, table),
+         starts = event_id_gap_starts(id_max, table),
+         ends = event_id_gap_ends(id_min, table),
+         min_block_l2 = l2_block_number_by_event_id(id_min, table),
          {new_starts, new_ends} =
            if(start_block_l2 < min_block_l2,
              do: {[start_block_l2 | starts], [min_block_l2 | ends]},
@@ -726,17 +726,17 @@ defmodule Indexer.Fetcher.PlatonAppchain do
           )
 
         if count > 0 do
-          log_fill_msg_id_gaps(scan_db, l2_block_start, l2_block_end, table, count)
+          log_fill_event_id_gaps(scan_db, l2_block_start, l2_block_end, table, count)
         end
       end)
 
       if scan_db do
-        fill_msg_id_gaps(start_block_l2, table, calling_module, contract_address, json_rpc_named_arguments, false)
+        fill_event_id_gaps(start_block_l2, table, calling_module, contract_address, json_rpc_named_arguments, false)
       end
     end
   end
 
-  defp log_fill_msg_id_gaps(scan_db, l2_block_start, l2_block_end, table, count) do
+  defp log_fill_event_id_gaps(scan_db, l2_block_start, l2_block_end, table, count) do
     find_place = if scan_db, do: "in DB", else: "through RPC"
     table_name = table.__schema__(:source)
 
