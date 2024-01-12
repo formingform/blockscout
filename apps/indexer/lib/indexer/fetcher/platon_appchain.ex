@@ -585,6 +585,73 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     {events, event_name}
   end
 
+
+  @spec fill_block_range(integer(), integer(), L2Execute | L2Event, binary(), list(), boolean()) :: integer()
+  def fill_block_range(
+        l2_block_start,
+        l2_block_end,
+        calling_module,
+        contract_address,
+        json_rpc_named_arguments,
+        scan_db
+      )
+      when calling_module in [
+    L2Execute,
+    L2Event
+  ] do
+    eth_get_logs_range_size =
+      Application.get_all_env(:indexer)[Indexer.Fetcher.PlatonAppchain][:platon_appchain_eth_get_logs_range_size]
+
+    chunks_number =
+      if scan_db do
+        1
+      else
+        ceil((l2_block_end - l2_block_start + 1) / eth_get_logs_range_size)
+      end
+
+    chunk_range = Range.new(0, max(chunks_number - 1, 0), 1)
+
+    Enum.reduce(chunk_range, 0, fn current_chunk, count_acc ->
+      chunk_start = l2_block_start + eth_get_logs_range_size * current_chunk
+
+      chunk_end =
+        if scan_db do
+          l2_block_end
+        else
+          min(chunk_start + eth_get_logs_range_size - 1, l2_block_end)
+        end
+
+      log_blocks_chunk_handling(chunk_start, chunk_end, l2_block_start, l2_block_end, nil, "L2")
+
+      count =
+        calling_module.find_and_save_entities(
+          scan_db,
+          contract_address,
+          chunk_start,
+          chunk_end,
+          json_rpc_named_arguments
+        )
+
+      event_name =
+        if calling_module == Indexer.Fetcher.PlatonAppchain.L2Execute do
+          "StateSyncResult"
+        else
+          "L2StateSynced"
+        end
+
+      log_blocks_chunk_handling(
+        chunk_start,
+        chunk_end,
+        l2_block_start,
+        l2_block_end,
+        "#{count} #{event_name} event(s)",
+        "L2"
+      )
+
+      count_acc + count
+    end)
+  end
+
   @spec fill_block_range(integer(), integer(), {module(), module()}, binary(), list()) :: integer()
   def fill_block_range(start_block, end_block, {module, table}, contract_address, json_rpc_named_arguments) do
     fill_block_range(start_block, end_block, module, contract_address, json_rpc_named_arguments, true)
