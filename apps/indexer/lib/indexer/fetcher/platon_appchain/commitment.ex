@@ -21,8 +21,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
   @fetcher_name :platon_appchain_Commitment
 
   # 32-byte signature of the event NewCommitment(uint256 indexed startId, uint256 indexed endId, bytes32 root)
-  # todo 修改NewCommitment签名哈希
-  @new_commitment_event "0x31c652130602f3ce96ceaf8a4c2b8b49f049166c6fcf2eb31943a75ec7c936ae"
+  @new_commitment_event "0x11efd893530b26afc66d488ff54cb15df117cb6e0e4a08c6dcb166d766c3bf3b"
 
   # 32-byte representation of deposit signature, keccak256("NewCommitment")
   @new_commitment_signature "a22e3e55b690d7d609fdd9acbb8a48098de7fa7874cf95d975b1264b0c24d161"
