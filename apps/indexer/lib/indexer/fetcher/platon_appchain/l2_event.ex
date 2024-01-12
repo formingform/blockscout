@@ -55,7 +55,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
       L2Event,
       env,
       self(),
-      env[:state_sender],
+      env[:l2_state_sender],
       "L2StateSender",
       "l2_events",
       "L2Events",
@@ -100,7 +100,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
     PlatonAppchain.fill_block_range(
       start_block,
       safe_block,
-      {__MODULE__, Withdrawal},
+      {__MODULE__, L2Event},
       contract_address,
       json_rpc_named_arguments
     )
@@ -112,7 +112,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
       PlatonAppchain.fill_block_range(
         safe_block + 1,
         latest_block,
-        {__MODULE__, Withdrawal},
+        {__MODULE__, L2Event},
         contract_address,
         json_rpc_named_arguments
       )
@@ -180,7 +180,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
   @spec find_and_save_entities(boolean(), binary(), non_neg_integer(), non_neg_integer(), list()) :: non_neg_integer()
   def find_and_save_entities(
         scan_db,
-        state_sender,
+        l2_state_sender, #发出L2StateSynced事件的合约地址
         block_start,
         block_end,
         json_rpc_named_arguments
@@ -191,7 +191,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
           from(log in Log,
             select: {log.second_topic, log.data, log.transaction_hash, log.block_number},
             where:
-              log.first_topic == @l2_state_synced_event and log.address_hash == ^state_sender and
+              log.first_topic == @l2_state_synced_event and log.address_hash == ^l2_state_sender and
               log.block_number >= ^block_start and log.block_number <= ^block_end
           )
 
@@ -205,7 +205,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
           PlatonAppchain.get_logs(
             block_start,
             block_end,
-            state_sender,
+            l2_state_sender,
             @l2_state_synced_event,
             json_rpc_named_arguments,
             100_000_000
@@ -213,12 +213,12 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
 
         Enum.map(result, fn event ->
           event_to_l2_event(
-            Enum.at(event["topics"], 1),
+            Enum.at(event["topics"], 1), #topics[0]是合约方法签名，[1]是第一个带indexed的合约参数，这里是event_id
             event["data"],
             event["transactionHash"],
             event["blockNumber"]
           )
-        end)
+        end
       end
 
     {:ok, _} =
