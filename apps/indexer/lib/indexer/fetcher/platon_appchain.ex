@@ -238,6 +238,62 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     get_block_number_by_tag("latest", json_rpc_named_arguments, 100_000_000)
   end
 
+  defp get_block_timestamp_by_number_inner(number, json_rpc_named_arguments) do
+    result =
+      %{id: 0, number: number}
+      |> ByNumber.request(false)
+      |> json_rpc(json_rpc_named_arguments)
+
+    with {:ok, block} <- result,
+         false <- is_nil(block),
+         timestamp <- Map.get(block, "timestamp"),
+         false <- is_nil(timestamp) do
+      {:ok, quantity_to_integer(timestamp)}
+    else
+      {:error, message} ->
+        {:error, message}
+
+      true ->
+        {:error, "RPC returned nil."}
+    end
+  end
+
+  defp get_block_miner_by_number_inner(number, json_rpc_named_arguments) do
+    result =
+      %{id: 0, number: number}
+      |> ByNumber.request(false)
+      |> json_rpc(json_rpc_named_arguments)
+
+    with {:ok, block} <- result,
+         false <- is_nil(block),
+         miner <- Map.get(block, "miner"),
+         false <- is_nil(miner),
+         timestamp <- Map.get(block, "timestamp"),
+         false <- is_nil(timestamp) do
+      {:ok, miner, quantity_to_integer(timestamp)}
+    else
+      {:error, message} ->
+        {:error, message}
+
+      true ->
+        {:error, "RPC returned nil."}
+    end
+  end
+
+  def get_block_timestamp_by_number(number, json_rpc_named_arguments, retries) do
+    func = &get_block_timestamp_by_number_inner/2
+    args = [number, json_rpc_named_arguments]
+    error_message = &"Cannot fetch block ##{number} or its timestamp. Error: #{inspect(&1)}"
+    repeated_call(func, args, error_message, retries)
+  end
+
+  def get_block_miner_by_number(number, json_rpc_named_arguments, retries) do
+    func = &get_block_miner_by_number_inner/2
+    args = [number, json_rpc_named_arguments]
+    error_message = &"Cannot fetch block ##{number} or its miner. Error: #{inspect(&1)}"
+    repeated_call(func, args, error_message, retries)
+  end
+
   @spec get_block_number_by_tag(binary(), list(), integer()) :: {:ok, non_neg_integer()} | {:error, atom()}
   def get_block_number_by_tag(tag, json_rpc_named_arguments, retries \\ 3) do
     error_message = &"Cannot fetch #{tag} block number. Error: #{inspect(&1)}"

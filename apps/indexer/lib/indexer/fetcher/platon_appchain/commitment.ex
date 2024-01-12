@@ -1,6 +1,6 @@
-defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
+defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
   @moduledoc """
-  Fills L2_executes DB table.
+  Fills Commitment DB table.
   """
 
   use GenServer
@@ -15,13 +15,16 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
 
   alias Explorer.{Chain, Repo}
   alias Explorer.Chain.Log
-  alias Explorer.Chain.PlatonAppchain.L2Execute
+  alias Explorer.Chain.PlatonAppchain.Commitment
   alias Indexer.Fetcher.PlatonAppchain
 
-  @fetcher_name :platon_appchain_l2_execute
+  @fetcher_name :platon_appchain_Commitment
 
-  # 32-byte signature of the event StateSyncResult(uint256 indexed counter, bool indexed status, bytes message)
-  @state_sync_result_event "0x31c652130602f3ce96ceaf8a4c2b8b49f049166c6fcf2eb31943a75ec7c936ae"
+  # 32-byte signature of the event NewCommitment(uint256 indexed startId, uint256 indexed endId, bytes32 root)
+  @new_commitment_event "0x31c652130602f3ce96ceaf8a4c2b8b49f049166c6fcf2eb31943a75ec7c936ae"
+
+  # 32-byte representation of deposit signature, keccak256("NewCommitment")
+  @new_commitment_signature ""
 
   def child_spec(start_link_arguments) do
     spec = %{
@@ -46,13 +49,13 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
     env = Application.get_all_env(:indexer)[__MODULE__]
 
     PlatonAppchain.init_l2(
-      L2Execute,
+      Commitment,
       env,
       self(),
       env[:state_receiver],
       "StateReceiver",
-      "l2_executes",
-      "L2 Executes",
+      "commitments",
+      "Commitment",
       json_rpc_named_arguments
     )
   end
@@ -66,13 +69,15 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
           json_rpc_named_arguments: json_rpc_named_arguments
         } = state
       ) do
-    PlatonAppchain.fill_event_id_gaps(
-      start_block_l2,
-      L2Execute,
-      __MODULE__,
-      contract_address,
-      json_rpc_named_arguments
-    )
+
+    # todo 这里需要实现类似fill_event_id_gaps的函数
+#    PlatonAppchain.fill_event_id_gaps(
+#      start_block_l2,
+#      Commitment,
+#      __MODULE__,
+#      contract_address,
+#      json_rpc_named_arguments
+#    )
 
     Process.send(self(), :find_new_events, [])
     {:noreply, state}
@@ -94,7 +99,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
     fill_block_range(
       start_block,
       safe_block,
-      {__MODULE__, L2Execute},
+      {__MODULE__, Commitment},
       contract_address,
       json_rpc_named_arguments
     )
@@ -106,7 +111,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
       fill_block_range(
         safe_block + 1,
         latest_block,
-        {__MODULE__, L2Execute},
+        {__MODULE__, Commitment},
         contract_address,
         json_rpc_named_arguments
       )
@@ -123,16 +128,37 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
 
   @spec remove(non_neg_integer()) :: no_return()
   def remove(starting_block) do
-    Repo.delete_all(from(de in L2Execute, where: de.block_number >= ^starting_block))
+    Repo.delete_all(from(de in Commitment, where: de.block_number >= ^starting_block))
   end
 
-  @spec event_to_l2_execute(binary(), binary(), binary(), binary()) :: map()
-  def event_to_l2_execute(second_topic, third_topic, l2_transaction_hash, l2_block_number) do
+  @spec event_to_commitment(map(), binary(), binary()) :: map()
+  def event_to_commitment(data, l2_transaction_hash, l2_block_number) do
+    [data_bytes] = decode_data(data, [:bytes])
+
+    sig = binary_part(data_bytes, 0, 32)
+
+    {start_id, end_id, state_root, miner, l2_timestamp} =
+      if Base.encode16(sig, case: :lower) === @new_commitment_signature do
+        {:ok, miner, timestamps} = PlatonAppchain.get_block_miner_by_number(l2_block_number, json_rpc_named_arguments)
+        [_sig, start_id, end_id, state_root] =
+          TypeDecoder.decode_raw(data_bytes, [{:bytes, 32}, {:uint, 256}, {:uint, 256}, {:bytes, 32}])
+
+        {start_id, end_id, state_root, miner, timestamps}
+      else
+        {nil, nil, nil, nil, nil}
+      end
+
     %{
-      event_Id: quantity_to_integer(second_topic),
-      hash: l2_transaction_hash,
-      block_number: quantity_to_integer(l2_block_number),
-      status: quantity_to_integer(third_topic) != 0
+      start_end_Id: Integer.to_string(start_id) + "-" + Integer.to_string(end_id),
+      state_batch_hash: event["transactionHash"],
+      state_root: state_root,
+      start_id: start_id,
+      end_id: end_id,
+      tx_number: start_id - end_id + 1,
+      from: miner,
+      to: event["address"],
+      block_timestamp: l2_timestamp,
+      block_number: l2_block_number,
     }
   end
 
@@ -148,16 +174,16 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
       if scan_db do
         query =
           from(log in Log,
-            select: {log.second_topic, log.third_topic, log.transaction_hash, log.block_number},
+            select: {log.data, log.transaction_hash, log.block_number},
             where:
-              log.first_topic == @state_sync_result_event and log.address_hash == ^state_receiver and
+              log.first_topic == @new_commitment_event and log.address_hash == ^state_receiver and
               log.block_number >= ^block_start and log.block_number <= ^block_end
           )
 
         query
         |> Repo.all(timeout: :infinity)
-        |> Enum.map(fn {second_topic, third_topic, l2_transaction_hash, l2_block_number} ->
-          event_to_l2_execute(second_topic, third_topic, l2_transaction_hash, l2_block_number)
+        |> Enum.map(fn {data, l2_transaction_hash, l2_block_number} ->
+          event_to_commitment(data, l2_transaction_hash, l2_block_number)
         end)
       else
         {:ok, result} =
@@ -165,15 +191,14 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
             block_start,
             block_end,
             state_receiver,
-            @state_sync_result_event,
+            @new_commitment_event,
             json_rpc_named_arguments,
             100_000_000
           )
 
         Enum.map(result, fn event ->
-          event_to_l2_execute(
-            Enum.at(event["topics"], 1),
-            Enum.at(event["topics"], 2),
+          event_to_commitment(
+            event["data"],
             event["transactionHash"],
             event["blockNumber"]
           )
@@ -182,15 +207,15 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
 
     {:ok, _} =
       Chain.import(%{
-        l2_executes: %{params: executes},
+        commitments: %{params: executes},
         timeout: :infinity
       })
 
     Enum.count(executes)
   end
 
-  @spec state_sync_result_event_signature() :: binary()
-  def state_sync_result_event_signature do
-    @state_sync_result_event
+  @spec new_commitment_event_signature() :: binary()
+  def new_commitment_event_signature do
+    @new_commitment_event
   end
 end
