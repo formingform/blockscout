@@ -72,7 +72,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
           json_rpc_named_arguments: json_rpc_named_arguments
         } = state
       ) do
-    PlatonAppchain.fill_msg_id_gaps(
+    PlatonAppchain.fill_event_id_gaps(
       start_block_l2,
       L2Event,
       __MODULE__,
