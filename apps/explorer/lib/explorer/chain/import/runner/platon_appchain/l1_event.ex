@@ -1,11 +1,11 @@
-defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L1Events do
+defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L1Event do
 
   require Ecto.Query
 
   alias Ecto.{Changeset, Multi, Repo}
-  alias Explorer.Chain.{Import, L1Events}
+  alias Explorer.Chain.{Import, L1Event}
   alias Explorer.Prometheus.Instrumenter
-  alias Explorer.Chain.PlatonAppchain.L1Events
+  alias Explorer.Chain.PlatonAppchain.L1Event
 
   import Ecto.Query, only: [from: 2]
 
@@ -14,10 +14,10 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L1Events do
   # milliseconds
   @timeout 60_000
 
-  @type imported :: [L1Events.t()]
+  @type imported :: [L1Event.t()]
 
 
-  def ecto_schema_module, do: L1Events
+  def ecto_schema_module, do: L1Event
 
   def option_key, do: :l1_events
 
@@ -55,7 +55,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L1Events do
   def timeout, do: @timeout
 
   @spec insert(Repo.t(), [map()], %{required(:timeout) => timeout(), required(:timestamps) => Import.timestamps()}) ::
-          {:ok, [L1Events.t()]}
+          {:ok, [L1Event.t()]}
           | {:error, [Changeset.t()]}
   def insert(repo, changes_list, %{timeout: timeout, timestamps: timestamps} = options) when is_list(changes_list) do
     on_conflict = Map.get_lazy(options, :on_conflict, &default_on_conflict/0)
@@ -68,7 +68,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L1Events do
       ordered_changes_list,
       conflict_target: :hash,
       on_conflict: on_conflict,
-      for: L1Events,
+      for: L1Event,
       returning: true,
       timeout: timeout,
       timestamps: timestamps
@@ -78,7 +78,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L1Events do
 
   defp default_on_conflict do
     from(
-      l in L1Events,
+      l in L1Event,
       update: [
         set: [
           # Don't update `event_Id` as it is a primary key and used for the conflict target

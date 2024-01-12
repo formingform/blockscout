@@ -128,6 +128,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
 
   @spec event_to_l2_execute(binary(), binary(), binary(), binary()) :: map()
   def event_to_l2_execute(second_topic, third_topic, l2_transaction_hash, l2_block_number) do
+    # todo 关联commitment表获取state_batch_hash值
     %{
       event_Id: quantity_to_integer(second_topic),
       hash: l2_transaction_hash,

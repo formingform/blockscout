@@ -1,4 +1,4 @@
-defmodule Explorer.Chain.PlatonAppchain.L1Events do
+defmodule Explorer.Chain.PlatonAppchain.L1Event do
   use Explorer.Schema
 
   # alias Ecto.Changeset

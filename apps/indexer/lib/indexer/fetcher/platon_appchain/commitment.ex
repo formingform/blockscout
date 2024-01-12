@@ -21,10 +21,11 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
   @fetcher_name :platon_appchain_Commitment
 
   # 32-byte signature of the event NewCommitment(uint256 indexed startId, uint256 indexed endId, bytes32 root)
+  # todo 修改NewCommitment签名哈希
   @new_commitment_event "0x31c652130602f3ce96ceaf8a4c2b8b49f049166c6fcf2eb31943a75ec7c936ae"
 
   # 32-byte representation of deposit signature, keccak256("NewCommitment")
-  @new_commitment_signature ""
+  @new_commitment_signature "a22e3e55b690d7d609fdd9acbb8a48098de7fa7874cf95d975b1264b0c24d161"
 
   def child_spec(start_link_arguments) do
     spec = %{
@@ -55,7 +56,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
       env[:state_receiver],
       "StateReceiver",
       "commitments",
-      "Commitment",
+      "Commitments",
       json_rpc_named_arguments
     )
   end
@@ -170,7 +171,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
         block_end,
         json_rpc_named_arguments
       ) do
-    executes =
+    commitments =
       if scan_db do
         query =
           from(log in Log,
@@ -207,11 +208,11 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
 
     {:ok, _} =
       Chain.import(%{
-        commitments: %{params: executes},
+        commitments: %{params: commitments},
         timeout: :infinity
       })
 
-    Enum.count(executes)
+    Enum.count(commitments)
   end
 
   @spec new_commitment_event_signature() :: binary()

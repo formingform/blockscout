@@ -1,4 +1,4 @@
-defmodule Indexer.Fetcher.PlatonAppchain.L1Events do
+defmodule Indexer.Fetcher.PlatonAppchain.L1Event do
   @moduledoc """
   Fills platon appchain l1_events DB table.
   """
@@ -15,20 +15,19 @@ defmodule Indexer.Fetcher.PlatonAppchain.L1Events do
   alias EthereumJSONRPC.Block.ByNumber
   alias EthereumJSONRPC.Blocks
   alias Explorer.Chain.Events.Subscriber
-  alias Explorer.Chain.PlatonAppchain.L1Events
+  alias Explorer.Chain.PlatonAppchain.L1Event
   alias Indexer.Fetcher.PlatonAppchain
 
-  @fetcher_name :platon_appchain_l1_events
+  @fetcher_name :platon_appchain_l1_event
 
   # 32-byte signature of the event StateSynced(uint256 indexed id, address indexed sender, address indexed receiver, bytes data)
   @state_synced_event "0xd1d7f6609674cc5871fdb4b0bcd4f0a214118411de9e38983866514f22659165"
 
   # 32-byte representation of deposit signature, keccak256("DEPOSIT")
   @deposit_signature "87a7811f4bfedea3d341ad165680ae306b01aaeacc205d227629cf157dd9f821"
-  @stake_signature "0x1bcc0f4c3fad314e585165815f94ecca9b96690a26d6417d7876448a9a867a69"
-  @add_stake_signature "0x7f629647b0cf8231fa5380e25f7c9bf0685fecbdc41360b93da5b447cef9ee73"
-#  @slash_signature "0x117f1d6f44fd34ccb7a58f1261fa59e5c4bf68e2712d65f246a8805167a93344"
-  @delegate_signature "0xc7ddcf4441a1bb01353b38db832023115117943d28ad05b882de4ad99e94b8fc"
+  @stake_signature "1bcc0f4c3fad314e585165815f94ecca9b96690a26d6417d7876448a9a867a69"
+  @add_stake_signature "7f629647b0cf8231fa5380e25f7c9bf0685fecbdc41360b93da5b447cef9ee73"
+  @delegate_signature "c7ddcf4441a1bb01353b38db832023115117943d28ad05b882de4ad99e94b8fc"
 
   def child_spec(start_link_arguments) do
     spec = %{
@@ -54,13 +53,13 @@ defmodule Indexer.Fetcher.PlatonAppchain.L1Events do
     Subscriber.to(:polygon_edge_reorg_block, :realtime)
 
     PlatonAppchain.init_l1(
-      L1Events,
+      L1Event,
       env,
       self(),
       env[:state_sender],
       "State Sender",
       "l1_events",
-      "L1Events"
+      "L1 Events"
     )
   end
 
