@@ -18,7 +18,7 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateCheckPoints do
       # checkpoint 批次在L1上的hash
       add(:l1_transaction_hash, :bytea, null: false)
       # checkpoint交易所在L1交易时间
-      add(:block_timestamp, :utc_datetime_usec, null: false)
+      add(:l1_block_timestamp, :utc_datetime_usec, null: false)
 
       #record timestamp
       timestamps(null: false, type: :utc_datetime_usec)
