@@ -55,21 +55,37 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2EpochValidator do
     # 通过call不同合约的方法，获取validator的各种信息
     if next_epoch_block == 0 || latest_block >= next_epoch_block do
       #应用启动后第一次执行
-      # 更新出块验证人候选人列表(201)
-      epoch_validator_addresses = L2StakeHandler.getValidatorAddrs(@period_type[:epoch], epoch)
-
-      epoch_validators = L2StakeHandler.getValidatorsWithAddr(epoch_validator_addresses)
-      # 设置验证人类型
-      epoch_validators = Enum.map(epoch_validators, fn(validator) ->  Map.put(validator, :status, PlatonAppchain.validator_status()[:Active]) end)
-
-      PlatonAppchain.log_validators(epoch_validators, "Active", "epoch", epoch, latest_block, "L2")
 
       # 更新所有质押人
       all_candidates = L2StakeHandler.getAllValidators()
       # 设置验证人类型
-      all_candidates = Enum.map(all_candidates, fn(candidate) ->  Map.put(candidate, :stats, PlatonAppchain.validator_status()[:Candidate]) end)
-
+      all_candidates = Enum.map(all_candidates, fn(candidate) ->  Map.put(candidate, :status, PlatonAppchain.validator_status()[:Candidate]) end)
       PlatonAppchain.log_validators(all_candidates, "Candidate", "epoch", epoch, latest_block, "L2")
+
+      # 更新出块验证人候选人列表(201)
+      epoch_validator_addresses = L2StakeHandler.getValidatorAddrs(@period_type[:epoch], epoch)
+      PlatonAppchain.log_validators(epoch_validator_addresses, "Active", "epoch", epoch, latest_block, "L2")
+
+      # epoch_validators = L2StakeHandler.getValidatorsWithAddr(epoch_validator_addresses)
+      # 设置验证人类型
+      # epoch_validators = Enum.map(epoch_validators, fn(validator) ->  Map.put(validator, :status, PlatonAppchain.validator_status()[:Active]) end)
+
+      # 合并两个列表。
+      Enum.map(all_candidates, fn(candidate) ->
+        if Enum.member?(epoch_validator_addresses, candidate[:validatorAddr]) do
+          Map.put(candidate, :status, PlatonAppchain.validator_status()[:Active])
+        else candidate
+        end
+      end)
+      # todo:
+      # 1. 需要修改相应changeset, 配置on_conflict
+      # 2. 这里直接import, 是属于另外的事务了吗？如果是，有什么影响吗？
+     {:ok, _} =
+        Chain.import(%{
+          l2_validators: %{params: all_candidates},
+          timeout: :infinity
+        })
+
     end
 
     # 计算下次获取round出块验证人的块高，并算出大概需要delay多久

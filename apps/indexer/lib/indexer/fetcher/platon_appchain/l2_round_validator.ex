@@ -60,6 +60,29 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2RoundValidator do
       PlatonAppchain.log_validators(round_validators, "Verifying", "round", round, latest_block, "L2")
 
 
+#      {:ok, _} = Repo.insert(
+#        l2_validators, # L2Validators.upsert, #todo: 定义changeset
+#        # on_conflict: [inc: [balance: attrs.balance]],
+#        # on_conflict: [set: [name: name, logo: logo]],
+#        on_conflict: :replace_all,
+#        conflict_target: :validator_hash,
+#        returning: true
+#      )
+      # todo:
+      # 1. 需要修改相应changeset, 配置on_conflict
+      # 2. 这里直接import, 是属于另外的事务了吗？如果是，有什么影响吗？
+      {:ok, _} =
+        Chain.import(%{
+          l2_validators: %{params: round_validators},
+          timeout: :infinity
+        })
+
+      #      case Chain.import(%{l2_round_validators: %{params: round_validators}, timeout: :infinity}) do
+      #        {:ok, _} ->
+      #          Logger.debug(fn -> "success to fetch l2_round_validators" end)
+      #        {:error, reason} ->
+      #          Logger.debug(fn -> "failed to fetch l2_round_validators: #{inspect reason}" end)
+      end
     end
 
     # 计算下次获取round出块验证人的块高，并算出大概需要delay多久

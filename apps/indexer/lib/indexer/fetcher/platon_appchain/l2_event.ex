@@ -218,20 +218,20 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
             event["transactionHash"],
             event["blockNumber"]
           )
-        end
+        end)
       end
 
     {:ok, _} =
       Chain.import(%{
-        platon_appchain_l2_events: %{params: l2_events},
+        l2_events: %{params: l2_events},
         timeout: :infinity
       })
 
-    Enum.count(withdrawals)
+    # Enum.count(withdrawals)
   end
 
-  @spec l2_state_synced_event_signature() :: binary()
-  def l2_state_synced_event_signature do
-    @l2_state_synced_event
-  end
+#  @spec l2_state_synced_event_signature() :: binary()
+#  def l2_state_synced_event_signature do
+#    @l2_state_synced_event
+#  end
 end

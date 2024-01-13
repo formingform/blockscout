@@ -16,6 +16,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Checkpoint do
   alias Explorer.Chain.PlatonAppchain.Checkpoint
   alias Indexer.Fetcher.PlatonAppchain
 
+
   @fetcher_name :platon_appchain_checkpoint
 
   # 32-byte signature of the event CheckpointSubmitted(uint64 indexed epoch, uint64 indexed blockNumber, bytes32 eventRoot)
@@ -80,11 +81,25 @@ defmodule Indexer.Fetcher.PlatonAppchain.Checkpoint do
         start_block_number: start_block_number,
         end_block_number: end_block_number,
         event_root: event["data"],
-        event_count: 0,
+        # event_counts: nil,
         l1_block_number: quantity_to_integer(event["blockNumber"]),
         l1_transaction_hash: quantity_to_integer(event["transactionHash"]),
         l1_block_timestamp: Map.get(timestamps, l1_block_number)
       }
     end)
+  end
+
+  def task_for_event_counts(start_block_number, end_block_number) do
+    query =
+      from(l2_events in L2Event,
+        select: fragment("count(*)")),
+        where:
+          l2_events.block_number >= ^start_block_number and l2_events.block_number <= ^end_block_number
+      )
+    event_count = query
+      |> Repo.one(timeout: :infinity)
+
+
+
   end
 end

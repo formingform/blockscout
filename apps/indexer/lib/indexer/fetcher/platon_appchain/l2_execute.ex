@@ -1,6 +1,7 @@
 defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
   @moduledoc """
   Fills L2_executes DB table.
+    //todo: 还要把L2上执行的交易，加入到L2_validator_events表中
   """
 
   use GenServer

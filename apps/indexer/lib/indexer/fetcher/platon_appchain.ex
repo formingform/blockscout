@@ -23,6 +23,8 @@ defmodule Indexer.Fetcher.PlatonAppchain do
 
   @l2_events_tx_type [withdraw: 1, stakeWithdraw: 2, degationWithdraw: 3]
 
+  @l2_validator_event_action_type [ValidatorRegistered: 1, StakeAdded: 2, DegationAdded: 3, UnStaked: 4, UnDelegated: 5, Slashed: 6]
+
   # 缺省的出块间隔时间，毫秒
   @default_block_interval 1000
 
@@ -77,6 +79,11 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     @l2_events_tx_type
   end
 
+  def l2_validator_event_action_type() do
+    @l2_validator_event_action_type
+  end
+
+
   def validator_status() do
     @validator_status
   end
@@ -128,11 +135,11 @@ defmodule Indexer.Fetcher.PlatonAppchain do
           non_neg_integer() | binary(),
           non_neg_integer() | binary(),
           binary(),
-          binary(),
+          list(),
           list(),
           non_neg_integer()
         ) :: {:ok, list()} | {:error, term()}
-  def get_logs(from_block, to_block, address, topic0, json_rpc_named_arguments, retries) do
+  def get_logs_by_topics(from_block, to_block, address, topics, json_rpc_named_arguments, retries) do
     processed_from_block = if is_integer(from_block), do: integer_to_quantity(from_block), else: from_block
     processed_to_block = if is_integer(to_block), do: integer_to_quantity(to_block), else: to_block
 
@@ -145,7 +152,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
             :fromBlock => processed_from_block,
             :toBlock => processed_to_block,
             :address => address,
-            :topics => [topic0]
+            :topics => topics
           }
         ]
       })
@@ -153,6 +160,38 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     error_message = &"Cannot fetch logs for the block range #{from_block}..#{to_block}. Error: #{inspect(&1)}"
 
     repeated_call(&json_rpc/2, [req, json_rpc_named_arguments], error_message, retries)
+  end
+
+  @spec get_logs(
+          non_neg_integer() | binary(),
+          non_neg_integer() | binary(),
+          binary(),
+          binary(),
+          list(),
+          non_neg_integer()
+        ) :: {:ok, list()} | {:error, term()}
+  def get_logs(from_block, to_block, address, topic0, json_rpc_named_arguments, retries) do
+    get_logs_by_topics(from_block, to_block, address, [topic0], json_rpc_named_arguments, retries)
+#    processed_from_block = if is_integer(from_block), do: integer_to_quantity(from_block), else: from_block
+#    processed_to_block = if is_integer(to_block), do: integer_to_quantity(to_block), else: to_block
+#
+#    req =
+#      request(%{
+#        id: 0,
+#        method: "eth_getLogs",
+#        params: [
+#          %{
+#            :fromBlock => processed_from_block,
+#            :toBlock => processed_to_block,
+#            :address => address,
+#            :topics => [topic0]
+#          }
+#        ]
+#      })
+#
+#    error_message = &"Cannot fetch logs for the block range #{from_block}..#{to_block}. Error: #{inspect(&1)}"
+#
+#    repeated_call(&json_rpc/2, [req, json_rpc_named_arguments], error_message, retries)
   end
 
   defp get_transaction_by_hash(hash, _json_rpc_named_arguments, _retries_left) when is_nil(hash), do: {:ok, nil}
@@ -371,7 +410,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   end
 
   @spec init_l1(
-          Explorer.Chain.PlatonAppchain.L1Events | Explorer.Chain.PlatonAppchain.L2Events,
+          Indexer.Fetcher.PlatonAppchain.L1Event | Indexer.Fetcher.PlatonAppchain.L1Execute | Indexer.Fetcher.PlatonAppchain.Checkpoint,
           list(),
           pid(),
           binary(),
@@ -380,7 +419,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
           binary()
         ) :: {:ok, map()} | :ignore
   def init_l1(table, env, pid, contract_address, contract_name, table_name, entity_name)
-      when table in [Explorer.Chain.PlatonAppchain.L1Events, Explorer.Chain.PlatonAppchain.L2Executes] do
+      when table in [Indexer.Fetcher.PlatonAppchain.L1Event | Indexer.Fetcher.PlatonAppchain.L1Execute | Indexer.Fetcher.PlatonAppchain.Checkpoint] do
     with {:start_block_l1_undefined, false} <- {:start_block_l1_undefined, is_nil(env[:start_block_l1])},
          platon_appchain_l1_rpc = l1_rpc_url(),
          {:rpc_l1_undefined, false} <- {:rpc_l1_undefined, is_nil(platon_appchain_l1_rpc)},
@@ -458,7 +497,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
           list()
         ) :: {:ok, map()} | :ignore
   def init_l2(table, env, pid, contract_address, contract_name, table_name, entity_name, json_rpc_named_arguments)
-      when table in [Explorer.Chain.PlatonAppchain.L2Event, Explorer.Chain.PlatonAppchain.L2Execute] do
+      when table in [Explorer.Chain.PlatonAppchain.L2Event, Explorer.Chain.PlatonAppchain.L2Execute, Explorer.Chain.PlatonAppchain.L2ValidatorEvent] do
     with {:start_block_l2_undefined, false} <- {:start_block_l2_undefined, is_nil(env[:start_block_l2])},
          {:contract_address_valid, true} <- {:contract_address_valid, Helper.is_address_correct?(contract_address)},
          start_block_l2 = parse_integer(env[:start_block_l2]),
@@ -514,7 +553,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     end
   end
 
-  @spec handle_continue(map(), binary(), L1Events, atom()) :: {:noreply, map()}
+  @spec handle_continue(map(), binary(), Indexer.Fetcher.PlatonAppchain.L1Event, atom()) :: {:noreply, map()}
   def handle_continue(
         %{
           contract_address: contract_address,
@@ -527,7 +566,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
         calling_module,
         fetcher_name
       )
-      when calling_module in [L1Events] do
+      when calling_module in [Indexer.Fetcher.PlatonAppchain.L1Event] do
     time_before = Timex.now()
 
     eth_get_logs_range_size =
@@ -630,7 +669,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
 
   defp import_events(events, calling_module) do
     {import_data, event_name} =
-      if calling_module == L1Events do
+      if calling_module == Indexer.Fetcher.PlatonAppchain.L1Event do
         {%{l1_events: %{params: events}, timeout: :infinity}, "StateSynced"}
 #      else
 #        {%{l2_executes: %{params: events}, timeout: :infinity}, "ExitProcessed"}
@@ -706,6 +745,22 @@ defmodule Indexer.Fetcher.PlatonAppchain do
 
       count_acc + count
     end)
+  end
+
+  @spec fill_block_range_no_event_id(integer(), integer(), {module(), module()}, binary(), list()) :: integer()
+  def fill_block_range_no_event_id(start_block, end_block, {module, table}, contract_address, json_rpc_named_arguments) do
+    fill_block_range(start_block, end_block, module, contract_address, json_rpc_named_arguments, true)
+
+    {last_l2_block_number, _} = get_last_l2_item(table)
+
+    fill_block_range(
+      max(start_block, last_l2_block_number),
+      end_block,
+      module,
+      contract_address,
+      json_rpc_named_arguments,
+      false
+    )
   end
 
   @spec fill_block_range(integer(), integer(), {module(), module()}, binary(), list()) :: integer()

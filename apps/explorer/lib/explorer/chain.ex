@@ -63,13 +63,10 @@ defmodule Explorer.Chain do
     Token.Instance,
     TokenTransfer,
     Transaction,
-    Wei,
-    Withdrawal,
-    L2Validator
+    Wei
   }
 
   alias Explorer.Chain.Block.{EmissionReward, Reward}
-  alias Explorer.Chain.PlatonAppchain.L2Validator
 
   alias Explorer.Chain.Cache.{
     Accounts,
