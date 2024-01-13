@@ -419,7 +419,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
           binary()
         ) :: {:ok, map()} | :ignore
   def init_l1(table, env, pid, contract_address, contract_name, table_name, entity_name)
-      when table in [Indexer.Fetcher.PlatonAppchain.L1Event | Indexer.Fetcher.PlatonAppchain.L1Execute | Indexer.Fetcher.PlatonAppchain.Checkpoint] do
+      when table in [Indexer.Fetcher.PlatonAppchain.L1Event, Indexer.Fetcher.PlatonAppchain.L1Execute, Indexer.Fetcher.PlatonAppchain.Checkpoint] do
     with {:start_block_l1_undefined, false} <- {:start_block_l1_undefined, is_nil(env[:start_block_l1])},
          platon_appchain_l1_rpc = l1_rpc_url(),
          {:rpc_l1_undefined, false} <- {:rpc_l1_undefined, is_nil(platon_appchain_l1_rpc)},
@@ -487,7 +487,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   end
 
   @spec init_l2(
-          Explorer.Chain.PlatonAppchain.L2Event | Explorer.Chain.PlatonAppchain.L2Execute,
+          Explorer.Chain.PlatonAppchain.L2Event | Explorer.Chain.PlatonAppchain.L2Execute | Explorer.Chain.PlatonAppchain.L2ValidatorEvent,
           list(),
           pid(),
           binary(),
@@ -553,7 +553,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     end
   end
 
-  @spec handle_continue(map(), binary(), Indexer.Fetcher.PlatonAppchain.L1Event, atom()) :: {:noreply, map()}
+  @spec handle_continue(map(), binary(), Indexer.Fetcher.PlatonAppchain.L1Event | Indexer.Fetcher.PlatonAppchain.L1Execute | Indexer.Fetcher.PlatonAppchain.Checkpoint, atom()) :: {:noreply, map()}
   def handle_continue(
         %{
           contract_address: contract_address,
@@ -566,7 +566,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
         calling_module,
         fetcher_name
       )
-      when calling_module in [Indexer.Fetcher.PlatonAppchain.L1Event] do
+      when calling_module in [Indexer.Fetcher.PlatonAppchain.L1Event, Indexer.Fetcher.PlatonAppchain.L1Execute, Indexer.Fetcher.PlatonAppchain.Checkpoint] do
     time_before = Timex.now()
 
     eth_get_logs_range_size =
