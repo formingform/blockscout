@@ -56,7 +56,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Checkpoint do
 
   @impl GenServer
   def handle_info(:continue, state) do
-    PlatonAppchain.handle_continue(state, @checkpoint_submitted_event, __MODULE__, @fetcher_name)
+    PlatonAppchain.handle_continue_l1(state, @checkpoint_submitted_event, __MODULE__, @fetcher_name)
   end
 
 

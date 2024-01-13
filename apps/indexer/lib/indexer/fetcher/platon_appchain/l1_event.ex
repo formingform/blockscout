@@ -65,7 +65,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L1Event do
 
   @impl GenServer
   def handle_info(:continue, state) do
-    PlatonAppchain.handle_continue(state, @state_synced_event, __MODULE__, @fetcher_name)
+    PlatonAppchain.handle_continue_l1(state, @state_synced_event, __MODULE__, @fetcher_name)
   end
 
   @impl GenServer

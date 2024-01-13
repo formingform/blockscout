@@ -553,8 +553,8 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     end
   end
 
-  @spec handle_continue(map(), binary(), Indexer.Fetcher.PlatonAppchain.L1Event | Indexer.Fetcher.PlatonAppchain.L1Execute | Indexer.Fetcher.PlatonAppchain.Checkpoint, atom()) :: {:noreply, map()}
-  def handle_continue(
+  @spec handle_continue_l1(map(), binary(), Indexer.Fetcher.PlatonAppchain.L1Event | Indexer.Fetcher.PlatonAppchain.L1Execute | Indexer.Fetcher.PlatonAppchain.Checkpoint, atom()) :: {:noreply, map()}
+  def handle_continue_l1(
         %{
           contract_address: contract_address,
           block_check_interval: block_check_interval,
