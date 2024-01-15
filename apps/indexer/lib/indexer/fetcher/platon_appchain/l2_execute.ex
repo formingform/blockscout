@@ -136,7 +136,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
       hash: l2_transaction_hash,
       state_batch_hash: state_batch_hash,
       block_number: quantity_to_integer(l2_block_number),
-      status: quantity_to_integer(third_topic) != 0
+      status: Kernel.boolean(third_topic)
     }
   end
 
@@ -198,7 +198,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
     query =
       from(commitment in Commitment,
         select: {commitment.state_batch_hash},
-        where: commitment.start_id <= ^event_id and commitment_end_id >= ^event_id,
+        where: commitment.start_id <= ^event_id and commitment.end_id >= ^event_id,
         limit: 1
       )
     query
