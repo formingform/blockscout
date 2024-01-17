@@ -12,8 +12,6 @@ defmodule Indexer.Fetcher.PlatonAppchain.L1Event do
   import Explorer.Helper, only: [decode_data: 2]
 
   alias ABI.TypeDecoder
-  alias EthereumJSONRPC.Block.ByNumber
-  alias EthereumJSONRPC.Blocks
   alias Explorer.Chain.Events.Subscriber
   alias Explorer.Chain.PlatonAppchain.L1Event
   alias Indexer.Fetcher.PlatonAppchain
@@ -87,34 +85,34 @@ defmodule Indexer.Fetcher.PlatonAppchain.L1Event do
         case Base.encode16(sig, case: :lower) do
           @deposit_signature ->
             timestamps = PlatonAppchain.get_timestamps_by_events(events, json_rpc_named_arguments)
-            [_sig, sender, receiver, _amount] =
+            [_sig, sender, receiver, amount] =
               TypeDecoder.decode_raw(data_bytes, [{:bytes, 32}, :address, :address, {:uint, 256}])
 
-            {PlatonAppchain.l1_events_tx_type()[:deposit], sender, receiver, _amount, nil, Map.get(timestamps, l1_block_number)}
+            {PlatonAppchain.l1_events_tx_type()[:deposit], sender, receiver, amount, nil, Map.get(timestamps, l1_block_number)}
           @stake_signature ->
             timestamps = PlatonAppchain.get_timestamps_by_events(events, json_rpc_named_arguments)
-            [_sig, validator, owner, _amount, commissionRate, blsKey, pubKey] =
+            [_sig, validator, owner, amount, _commissionRate, _blsKey, _pubKey] =
               TypeDecoder.decode_raw(data_bytes, [{:bytes, 32}, :address, :address, {:uint, 256}, {:uint, 256}, :bytes, :bytes])
             # todo 需要确认from地址
-            {PlatonAppchain.l1_events_tx_type()[:stake], sender, validator, _amount, validator, Map.get(timestamps, l1_block_number)}
+            {PlatonAppchain.l1_events_tx_type()[:stake], validator, validator, amount, validator, Map.get(timestamps, l1_block_number)}
           @add_stake_signature ->
             timestamps = PlatonAppchain.get_timestamps_by_events(events, json_rpc_named_arguments)
-            [_sig, validator, _amount] =
+            [_sig, validator, amount] =
               TypeDecoder.decode_raw(data_bytes, [{:bytes, 32}, :address, {:uint, 256}])
             # todo 需要确认from地址
-            {PlatonAppchain.l1_events_tx_type()[:addStake], "", validator, _amount, validator, Map.get(timestamps, l1_block_number)}
+            {PlatonAppchain.l1_events_tx_type()[:addStake], "", validator, amount, validator, Map.get(timestamps, l1_block_number)}
           @delegate_signature ->
             timestamps = PlatonAppchain.get_timestamps_by_events(events, json_rpc_named_arguments)
-            [_sig, validator, delegator, _amount] =
+            [_sig, validator, delegator, amount] =
               TypeDecoder.decode_raw(data_bytes, [{:bytes, 32}, :address, :address, {:uint, 256}])
 
-            {PlatonAppchain.l1_events_tx_type()[:delegate], delegator, validator, _amount, validator, Map.get(timestamps, l1_block_number)}
+            {PlatonAppchain.l1_events_tx_type()[:delegate], delegator, validator, amount, validator, Map.get(timestamps, l1_block_number)}
           _ ->
             {nil, nil, nil, nil, nil, nil}
         end
 
       %{
-        event_Id: quantity_to_integer(Enum.at(event["topics"], 1)),
+        event_id: quantity_to_integer(Enum.at(event["topics"], 1)),
         tx_type: tx_type,
         amount: amount,
         from: from,

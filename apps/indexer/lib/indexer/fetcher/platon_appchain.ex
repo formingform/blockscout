@@ -13,9 +13,9 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   import Explorer.Helper, only: [parse_integer: 1]
 
   alias EthereumJSONRPC.Block.ByNumber
-  alias Explorer.Chain.Events.Publisher
+  alias EthereumJSONRPC.Blocks
   alias Explorer.{Chain, Repo}
-  alias Indexer.{BoundQueue, Helper}
+  alias Indexer.{Helper}
 
   # 周期类型：roung: 共识周期; epoch：结算周期
   @period_type [round: 1, epoch: 2]
@@ -27,6 +27,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
 
   # 缺省的出块间隔时间，毫秒
   @default_block_interval 1000
+  @block_check_interval_range_size 100
 
   # 0：201候选验证人；1：43 出块验证人； 2：备选验证人（质押人）
   @validator_status %{Active: 0, Verifying: 1, Candidate: 2}
@@ -213,7 +214,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     query =
       from(item in table,
         select: {item.block_number, item.hash},
-        order_by: [desc: item.event_Id],
+        order_by: [desc: item.event_id],
         limit: 1
       )
 
@@ -227,7 +228,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     query =
       from(item in table,
         select: {item.block_number, item.hash},
-        order_by: [desc: item.event_Id],
+        order_by: [desc: item.event_id],
         limit: 1
       )
 
@@ -272,7 +273,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     repeated_call(&json_rpc/2, [req, json_rpc_named_arguments], error_message, retries)
   end
 
-  @spec get_block_number_by_tag(list()) :: {:ok, non_neg_integer()} | {:error, atom()}
+  @spec get_latest_block_number(list()) :: {:ok, non_neg_integer()} | {:error, atom()}
   def get_latest_block_number(json_rpc_named_arguments) do
     get_block_number_by_tag("latest", json_rpc_named_arguments, 100_000_000)
   end
@@ -403,7 +404,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
 
     error_message = &"Cannot fetch blocks with batch request. Error: #{inspect(&1)}. Request: #{inspect(request)}"
 
-    case PlatonAppchain.repeated_request(request, error_message, json_rpc_named_arguments, retries) do
+    case repeated_request(request, error_message, json_rpc_named_arguments, retries) do
       {:ok, results} -> Enum.map(results, fn %{result: result} -> result end)
       {:error, _} -> []
     end
@@ -564,7 +565,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
         } = state,
         event_signature,
         calling_module,
-        fetcher_name
+        _fetcher_name
       )
       when calling_module in [Indexer.Fetcher.PlatonAppchain.L1Event, Indexer.Fetcher.PlatonAppchain.L1Execute, Indexer.Fetcher.PlatonAppchain.Checkpoint] do
     time_before = Timex.now()
@@ -845,6 +846,70 @@ defmodule Indexer.Fetcher.PlatonAppchain do
         fill_event_id_gaps(start_block_l2, table, calling_module, contract_address, json_rpc_named_arguments, false)
       end
     end
+  end
+
+  defp event_id_gap_starts(id_max, table)
+       when table in [Explorer.Chain.PlatonAppchain.L2Execute, Explorer.Chain.PlatonAppchain.L2Event] do
+    query =
+      if table == Explorer.Chain.PlatonAppchain.L2Execute do
+        from(item in table,
+          select: item.block_number,
+          order_by: item.event_id,
+          where:
+            fragment(
+              "NOT EXISTS (SELECT event_id FROM l2_executes WHERE event_id = (? + 1)) AND event_id != ?",
+              item.event_id,
+              ^id_max
+            )
+        )
+      else
+        from(item in table,
+          select: item.block_number,
+          order_by: item.event_id,
+          where:
+            fragment(
+              "NOT EXISTS (SELECT event_id FROM l2_events WHERE event_id = (? + 1)) AND event_id != ?",
+              item.event_id,
+              ^id_max
+            )
+        )
+      end
+
+    Repo.all(query)
+  end
+
+  defp event_id_gap_ends(id_min, table)
+       when table in [Explorer.Chain.PlatonAppchain.L2Execute, Explorer.Chain.PlatonAppchain.L2Event] do
+    query =
+      if table == Explorer.Chain.PlatonAppchain.L2Execute do
+        from(item in table,
+          select: item.block_number,
+          order_by: item.event_id,
+          where:
+            fragment(
+              "NOT EXISTS (SELECT event_id FROM l2_executes WHERE event_id = (? - 1)) AND event_id != ?",
+              item.event_id,
+              ^id_min
+            )
+        )
+      else
+        from(item in table,
+          select: item.block_number,
+          order_by: item.event_id,
+          where:
+            fragment(
+              "NOT EXISTS (SELECT event_id FROM l2_events WHERE event_id = (? - 1)) AND event_id != ?",
+              item.event_id,
+              ^id_min
+            )
+        )
+      end
+
+    Repo.all(query)
+  end
+
+  defp l2_block_number_by_event_id(id, table) do
+    Repo.one(from(item in table, select: item.block_number, where: item.event_id == ^id))
   end
 
   defp log_fill_event_id_gaps(scan_db, l2_block_start, l2_block_end, table, count) do

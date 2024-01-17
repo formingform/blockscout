@@ -8,6 +8,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Checkpoint do
 
   require Logger
 
+  import Ecto.Query
   import EthereumJSONRPC, only: [quantity_to_integer: 1]
   import Indexer.Fetcher.PlatonAppchain, only: [fill_block_range: 5, get_block_number_by_tag: 3]
 
@@ -75,6 +76,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Checkpoint do
         start_block_number = end_block_number - PlatonAppchain.l2_epoch_size() + 1
       end
 
+      l1_block_number = quantity_to_integer(event["blockNumber"])
       timestamps = PlatonAppchain.get_timestamps_by_events(events, json_rpc_named_arguments)
       #l2上的epoch，一个epoch长度的块高生成一个checkpoint
       %{epoch: quantity_to_integer(Enum.at(event["topics"], 1)),
@@ -82,8 +84,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.Checkpoint do
         end_block_number: end_block_number,
         event_root: event["data"],
         # event_counts: nil,
-        l1_block_number: quantity_to_integer(event["blockNumber"]),
-        l1_transaction_hash: quantity_to_integer(event["transactionHash"]),
+        l1_block_number: l1_block_number,
+        l1_transaction_hash: event["transactionHash"],
         l1_block_timestamp: Map.get(timestamps, l1_block_number)
       }
     end)
@@ -92,14 +94,12 @@ defmodule Indexer.Fetcher.PlatonAppchain.Checkpoint do
   def task_for_event_counts(start_block_number, end_block_number) do
     query =
       from(l2_events in L2Event,
-        select: fragment("count(*)")),
+        select: fragment("count(*)"),
         where:
           l2_events.block_number >= ^start_block_number and l2_events.block_number <= ^end_block_number
       )
     event_count = query
       |> Repo.one(timeout: :infinity)
-
-
 
   end
 end

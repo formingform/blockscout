@@ -14,12 +14,12 @@ defmodule Explorer.Chain.PlatonAppchain.L1Event do
 
   @optional_attrs ~w(amount block_timestamp validator)a
 
-  @required_attrs ~w(event_Id tx_type hash from to block_number)a
+  @required_attrs ~w(event_id tx_type hash from to block_number)a
 
   @allowed_attrs @optional_attrs ++ @required_attrs
 
   @typedoc """
-  * `event_Id` - msgId
+  * `event_id` - event id
   * `tx_type` - 交易类型
   * `amount` - 交易数据amount参数
   * `hash` - l1上交易hash
@@ -30,7 +30,7 @@ defmodule Explorer.Chain.PlatonAppchain.L1Event do
   * `validator` - 质押/委托对应L2上面验证人地址（如果是其它交易有可能没有值）
   """
   @type t :: %__MODULE__{
-               event_Id: non_neg_integer(),
+               event_id: non_neg_integer(),
                tx_type:  String.t(),
                amount:  non_neg_integer() | nil,
                hash:  Hash.t(),
@@ -41,12 +41,12 @@ defmodule Explorer.Chain.PlatonAppchain.L1Event do
                validator: Hash.Address.t() | nil,
              }
 
-  @primary_key {:hash, Hash, autogenerate: false}
+  @primary_key {:hash, Hash.Full, autogenerate: false}
   schema "l1_events" do
-    field(:event_Id, :integer)
+    field(:event_id, :integer)
     field(:tx_type, :string)
     field(:amount, :integer)
-    field(:hash, Hash.Full)
+#    field(:hash, Hash.Full)
     field(:from, Hash.Address)
     field(:to, Hash.Address)
     field(:block_number, :integer)

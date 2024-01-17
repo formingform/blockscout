@@ -8,7 +8,9 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2RoundValidator do
   require Logger
 
   alias Explorer.Chain
+  alias Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler
   alias Indexer.Fetcher.PlatonAppchain
+  alias Indexer.{Helper}
 
   def start_link(_) do
     GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
@@ -37,13 +39,12 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2RoundValidator do
   @spec handle_continue(map(), L2RoundValidator, atom()) :: {:noreply, map()}
   def handle_continue(
         %{
-          l2_validator_contract_address: l2_validator_contract_address,
           l2_rpc_arguments: l2_rpc_arguments,
           l2_round_size: l2_round_size,
           next_round_block: next_round_block
         } = state,
         calling_module,
-        fetcher_name
+        _fetcher_name
       )
       when calling_module in [L2RoundValidator] do
 
@@ -82,7 +83,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2RoundValidator do
       #          Logger.debug(fn -> "success to fetch l2_round_validators" end)
       #        {:error, reason} ->
       #          Logger.debug(fn -> "failed to fetch l2_round_validators: #{inspect reason}" end)
-      end
+#      end
     end
 
     # 计算下次获取round出块验证人的块高，并算出大概需要delay多久

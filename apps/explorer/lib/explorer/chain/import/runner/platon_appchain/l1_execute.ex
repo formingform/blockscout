@@ -16,9 +16,10 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L1Execute do
 
   @type imported :: [L1Execute.t()]
 
-
+  @impl Import.Runner
   def ecto_schema_module, do: L1Execute
 
+  @impl Import.Runner
   def option_key, do: :l1_executes
 
   @spec imported_table_row() :: %{:value_description => binary(), :value_type => binary()}
@@ -60,8 +61,8 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L1Execute do
   def insert(repo, changes_list, %{timeout: timeout, timestamps: timestamps} = options) when is_list(changes_list) do
     on_conflict = Map.get_lazy(options, :on_conflict, &default_on_conflict/0)
 
-    # 按event_Id排序
-    ordered_changes_list = Enum.sort_by(changes_list, & &1.event_Id)
+    # 按event_id排序
+    ordered_changes_list = Enum.sort_by(changes_list, & &1.event_id)
 
     Import.insert_changes_list(
       repo,
@@ -81,8 +82,8 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L1Execute do
       l in L1Execute,
       update: [
         set: [
-          # Don't update `event_Id` as it is a primary key and used for the conflict target
-          event_Id: fragment("EXCLUDED.event_Id"),
+          # Don't update `event_id` as it is a primary key and used for the conflict target
+          event_id: fragment("EXCLUDED.event_id"),
           hash: fragment("EXCLUDED.hash"),
           block_number: fragment("EXCLUDED.block_number"),
           state_batch_hash:  fragment("EXCLUDED.state_batch_hash"),
@@ -94,9 +95,9 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L1Execute do
       ],
       where:
         fragment(
-          "(EXCLUDED.event_Id,EXCLUDED.hash,EXCLUDED.block_number,EXCLUDED.state_batch_hash,EXCLUDED.replay_status,
+          "(EXCLUDED.event_id,EXCLUDED.hash,EXCLUDED.block_number,EXCLUDED.state_batch_hash,EXCLUDED.replay_status,
           EXCLUDED.status) IS DISTINCT FROM (?,?,?,?,?,?)", # 有冲突时只更新这些字段
-          l.event_Id,
+          l.event_id,
           l.hash,
           l.block_number,
           l.state_batch_hash,

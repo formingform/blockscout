@@ -129,7 +129,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
   end
 
   # 返回一个map的list
-  @spec event_to_l2_validator_event(binary(), binary(), binary(), binary(), binary()) :: list()
+  @spec event_to_l2_validator_event(binary(), binary(), binary(), binary(), binary(), non_neg_integer(), list()) :: list()
   def event_to_l2_validator_event(first_topic, second_topic, third_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
     [data_bytes] = decode_data(data, [:bytes])
 
@@ -243,7 +243,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
           from(log in Log,
             select: {log.second_topic, log.third_topic, log.data, log.transaction_hash, log.block_number},
             where:
-              (log.first_topic == @l2_biz_event_ValidatorRegistered || log.first_topic == @l2_biz_event_StakeAdded || log.first_topic == @l2_biz_event_DelegationAdded || log.first_topic == @l2_biz_event_UnStaked || log.first_topic == @l2_biz_event_UnDelegated || log.first_topic == @l2_biz_event_Slashed)
+              (log.first_topic == @l2_biz_event_ValidatorRegistered or log.first_topic == @l2_biz_event_StakeAdded or log.first_topic == @l2_biz_event_DelegationAdded or log.first_topic == @l2_biz_event_UnStaked or log.first_topic == @l2_biz_event_UnDelegated or log.first_topic == @l2_biz_event_Slashed)
               and log.address_hash == ^l2_stake_handler and
               log.block_number >= ^block_start and log.block_number <= ^block_end
           )

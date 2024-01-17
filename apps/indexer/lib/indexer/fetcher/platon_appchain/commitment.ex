@@ -12,7 +12,9 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
 
   import EthereumJSONRPC, only: [quantity_to_integer: 1]
   import Indexer.Fetcher.PlatonAppchain, only: [fill_block_range: 5, get_block_number_by_tag: 3]
+  import Explorer.Helper, only: [decode_data: 2]
 
+  alias ABI.TypeDecoder
   alias Explorer.{Chain, Repo}
   alias Explorer.Chain.Log
   alias Explorer.Chain.PlatonAppchain.Commitment
@@ -131,15 +133,15 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
     Repo.delete_all(from(de in Commitment, where: de.block_number >= ^starting_block))
   end
 
-  @spec event_to_commitment(map(), binary(), binary()) :: map()
-  def event_to_commitment(data, l2_transaction_hash, l2_block_number) do
+  @spec event_to_commitment(binary(), binary(), binary(), binary(), list()) :: map()
+  def event_to_commitment(data, contract_address, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
     [data_bytes] = decode_data(data, [:bytes])
 
     sig = binary_part(data_bytes, 0, 32)
 
     {start_id, end_id, state_root, miner, l2_timestamp} =
       if Base.encode16(sig, case: :lower) === @new_commitment_signature do
-        {:ok, miner, timestamps} = PlatonAppchain.get_block_miner_by_number(l2_block_number, json_rpc_named_arguments)
+        {:ok, miner, timestamps} = PlatonAppchain.get_block_miner_by_number(l2_block_number, json_rpc_named_arguments, 100_000_000)
         [_sig, start_id, end_id, state_root] =
           TypeDecoder.decode_raw(data_bytes, [{:bytes, 32}, {:uint, 256}, {:uint, 256}, {:bytes, 32}])
 
@@ -150,15 +152,15 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
 
     %{
       start_end_Id: Integer.to_string(start_id) + "-" + Integer.to_string(end_id),
-      state_batch_hash: event["transactionHash"],
+      state_batch_hash: l2_transaction_hash,
       state_root: state_root,
       start_id: start_id,
       end_id: end_id,
       tx_number: start_id - end_id + 1,
       from: miner,
-      to: event["address"],
+      to: contract_address,
       block_timestamp: l2_timestamp,
-      block_number: l2_block_number,
+      block_number: quantity_to_integer(l2_block_number),
     }
   end
 
@@ -174,7 +176,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
       if scan_db do
         query =
           from(log in Log,
-            select: {log.data, log.transaction_hash, log.block_number},
+            select: {log.data, log.address, log.transaction_hash, log.block_number},
             where:
               log.first_topic == @new_commitment_event and log.address_hash == ^state_receiver and
               log.block_number >= ^block_start and log.block_number <= ^block_end
@@ -182,8 +184,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
 
         query
         |> Repo.all(timeout: :infinity)
-        |> Enum.map(fn {data, l2_transaction_hash, l2_block_number} ->
-          event_to_commitment(data, l2_transaction_hash, l2_block_number)
+        |> Enum.map(fn {data, contract_address, l2_transaction_hash, l2_block_number} ->
+          event_to_commitment(data, contract_address, l2_transaction_hash, l2_block_number, json_rpc_named_arguments)
         end)
       else
         {:ok, result} =
@@ -199,8 +201,10 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
         Enum.map(result, fn event ->
           event_to_commitment(
             event["data"],
+            event["address"],
             event["transactionHash"],
-            event["blockNumber"]
+            event["blockNumber"],
+            json_rpc_named_arguments
           )
         end)
       end

@@ -30,12 +30,13 @@ defmodule Indexer.Transform.PlatonAppchain.L2Events do
         end)
         |> Enum.map(fn log ->
           Logger.info("L2 state synced event message found, id: #{log.second_topic}.")
-
+          json_rpc_named_arguments = Application.get_env(:explorer, :json_rpc_named_arguments)
           L2Event.event_to_l2_event(
             log.second_topic,
             log.data,
             log.transaction_hash,
-            log.block_number
+            log.block_number,
+            json_rpc_named_arguments
           )
         end)
       else

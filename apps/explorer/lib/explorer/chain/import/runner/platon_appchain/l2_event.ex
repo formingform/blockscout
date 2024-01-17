@@ -16,9 +16,10 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2Event do
 
   @type imported :: [L2Event.t()]
 
-
+  @impl Import.Runner
   def ecto_schema_module, do: L2Event
 
+  @impl Import.Runner
   def option_key, do: :l2_events
 
   @spec imported_table_row() :: %{:value_description => binary(), :value_type => binary()}
@@ -60,8 +61,8 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2Event do
   def insert(repo, changes_list, %{timeout: timeout, timestamps: timestamps} = options) when is_list(changes_list) do
     on_conflict = Map.get_lazy(options, :on_conflict, &default_on_conflict/0)
 
-    # 按event_Id排序
-    ordered_changes_list = Enum.sort_by(changes_list, & &1.event_Id)
+    # 按event_id排序
+    ordered_changes_list = Enum.sort_by(changes_list, & &1.event_id)
 
     Import.insert_changes_list(
       repo,
@@ -81,8 +82,8 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2Event do
       l in L2Event,
       update: [
         set: [
-          # Don't update `event_Id` as it is a primary key and used for the conflict target
-          event_Id: fragment("EXCLUDED.event_Id"),
+          # Don't update `event_id` as it is a primary key and used for the conflict target
+          event_id: fragment("EXCLUDED.event_id"),
           tx_type: fragment("EXCLUDED.tx_type"),
           amount: fragment("EXCLUDED.amount"),
           hash: fragment("EXCLUDED.hash"),
@@ -96,9 +97,9 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2Event do
       ],
       where:
         fragment(
-          "(EXCLUDED.event_Id,EXCLUDED.tx_type,EXCLUDED.amount,EXCLUDED.hash,EXCLUDED.from,EXCLUDED.to,
+          "(EXCLUDED.event_id,EXCLUDED.tx_type,EXCLUDED.amount,EXCLUDED.hash,EXCLUDED.from,EXCLUDED.to,
           EXCLUDED.block_number,EXCLUDED.block_timestamp) IS DISTINCT FROM (?,?,?,?,?,?,?,?)", # 有冲突时只更新这些字段
-          l.event_Id,
+          l.event_id,
           l.tx_type,
           l.amount,
           l.hash,
