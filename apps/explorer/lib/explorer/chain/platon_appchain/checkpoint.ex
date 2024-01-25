@@ -1,12 +1,6 @@
 defmodule Explorer.Chain.PlatonAppchain.Checkpoint do
   use Explorer.Schema
 
-  # alias Ecto.Changeset
-  alias Explorer.{
-    Chain,
-    PagingOptions
-    }
-
   alias Explorer.Chain.{
     Hash,
     Block
@@ -40,9 +34,9 @@ defmodule Explorer.Chain.PlatonAppchain.Checkpoint do
                block_timestamp:  non_neg_integer(),
              }
 
-  @primary_key {:integer, epoch, autogenerate: false}
+  @primary_key {:epoch, :integer, autogenerate: false}
   schema "checkpoints" do
-    field(:epoch, :integer)
+#    field(:epoch, :integer)
     field(:start_block_number, :integer)
     field(:end_block_number, :integer)
     field(:event_root, Hash.Full)
@@ -61,7 +55,7 @@ defmodule Explorer.Chain.PlatonAppchain.Checkpoint do
     module
     |> cast(attrs, @allowed_attrs)  # 确保@allowed_attrs中指定的key才会赋值到结构体中
     |> validate_required(@required_attrs)
-    |> unique_constraint(:state_batch_hash)
+    |> unique_constraint(:epoch)
   end
 
 end

@@ -132,37 +132,36 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
     Repo.delete_all(from(w in L2Event, where: w.block_number >= ^starting_block))
   end
 
-  @spec event_to_l2_event(binary(), map(), binary(), binary()) :: map()
-  def event_to_l2_event(second_topic, data, l2_transaction_hash, l2_block_number) do
+  @spec event_to_l2_event(binary(), binary(), binary(), non_neg_integer(), list()) :: map()
+  def event_to_l2_event(second_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
     [data_bytes] = decode_data(data, [:bytes])
 
     sig = binary_part(data_bytes, 0, 32)
 
-    {tx_type, from, to, amount, l2_timestamp} =
+    {:ok, l2_block_timestamp} = PlatonAppchain.get_block_timestamp_by_number(l2_block_number, json_rpc_named_arguments, 100_000_000)
+
+    {tx_type, from, to, amount} =
       case Base.encode16(sig, case: :lower) do
         @withdraw_signature ->
-          timestamps = PlatonAppchain.get_timestamps_by_events(events, json_rpc_named_arguments)
           # {WITHDRAW_SIG, withdrawer, recipient, amount}
           [_sig, withdrawer, recipient, amount] =
             TypeDecoder.decode_raw(data_bytes, [{:bytes, 32}, :address, :address, {:uint, 256}])
 
-        {PlatonAppchain.l2_events_tx_type()[:withdraw], withdrawer, recipient, amount, Map.get(timestamps, l1_block_number)}
+        {PlatonAppchain.l2_events_tx_type()[:withdraw], withdrawer, recipient, amount}
 
         @stake_withdraw_signature ->
-          timestamps = PlatonAppchain.get_timestamps_by_events(events, json_rpc_named_arguments)
           # {UNSTAKE_SIG, validatorAddr, amount}
           [_sig, validatorAddr, amount] =
             TypeDecoder.decode_raw(data_bytes, [{:bytes, 32}, :address, {:uint, 256}])
 
-          {PlatonAppchain.l2_events_tx_type()[:stakeWithdraw], validatorAddr, "", amount, Map.get(timestamps, l1_block_number)}
+          {PlatonAppchain.l2_events_tx_type()[:stakeWithdraw], validatorAddr, "", amount}
         @delegation_withdraw_signature ->
-          timestamps = PlatonAppchain.get_timestamps_by_events(events, json_rpc_named_arguments)
           # {UNDELEGATE_SIG, validatorAddr, delegatorAddr, amount}
           [_sig, validatorAddr, delegatorAddr, amount] =
             TypeDecoder.decode_raw(data_bytes, [{:bytes, 32}, :address, :address, {:uint, 256}])
-          {PlatonAppchain.l1_events_tx_type()[:degationWithdraw], delegatorAddr, validatorAddr, amount, Map.get(timestamps, l1_block_number)}
+          {PlatonAppchain.l1_events_tx_type()[:degationWithdraw], delegatorAddr, validatorAddr, amount}
         _ ->
-        {nil, nil, nil,  nil, nil}
+        {nil, nil, nil,  nil}
       end
 
     %{
@@ -173,7 +172,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
       amount: amount,
       l2_transaction_hash: l2_transaction_hash,
       l2_block_number: quantity_to_integer(l2_block_number),
-      block_timestamp: l2_timestamp,
+      block_timestamp: l2_block_timestamp,
     }
   end
 
@@ -198,7 +197,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
         query
         |> Repo.all(timeout: :infinity)
         |> Enum.map(fn {second_topic, data, l2_transaction_hash, l2_block_number} ->
-          event_to_l2_event(second_topic, data, l2_transaction_hash, l2_block_number)
+          event_to_l2_event(second_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments)
         end)
       else
         {:ok, result} =
@@ -216,7 +215,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
             Enum.at(event["topics"], 1), #topics[0]是合约方法签名，[1]是第一个带indexed的合约参数，这里是event_id
             event["data"],
             event["transactionHash"],
-            event["blockNumber"]
+            event["blockNumber"],
+            json_rpc_named_arguments
           )
         end)
       end
@@ -230,8 +230,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
     # Enum.count(withdrawals)
   end
 
-#  @spec l2_state_synced_event_signature() :: binary()
-#  def l2_state_synced_event_signature do
-#    @l2_state_synced_event
-#  end
+  @spec l2_state_synced_event_signature() :: binary()
+  def l2_state_synced_event_signature do
+    @l2_state_synced_event
+  end
 end

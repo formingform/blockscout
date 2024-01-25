@@ -133,7 +133,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
     # 关联commitment表获取state_batch_hash
     {state_batch_hash} = get_state_batch_hash_by_event_id(quantity_to_integer(second_topic))
     %{
-      event_Id: quantity_to_integer(second_topic),
+      event_id: quantity_to_integer(second_topic),
       hash: l2_transaction_hash,
       state_batch_hash: state_batch_hash,
       block_number: quantity_to_integer(l2_block_number),

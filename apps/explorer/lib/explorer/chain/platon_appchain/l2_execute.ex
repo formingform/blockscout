@@ -1,12 +1,6 @@
 defmodule Explorer.Chain.PlatonAppchain.L2Execute do
   use Explorer.Schema
 
-  # alias Ecto.Changeset
-  alias Explorer.{
-    Chain,
-    PagingOptions
-    }
-
   alias Explorer.Chain.{
     Hash,
     Block
@@ -14,12 +8,12 @@ defmodule Explorer.Chain.PlatonAppchain.L2Execute do
 
   @optional_attrs ~w(amount replay_status)a
 
-  @required_attrs ~w(event_Id tx_type hash state_batch_hash status)a
+  @required_attrs ~w(event_id tx_type hash state_batch_hash status)a
 
   @allowed_attrs @optional_attrs ++ @required_attrs
 
   @typedoc """
-  * `event_Id` - msgId
+  * `event_id` - event id
   * `hash` - l2上交易hash
   * `block_number` - l2批次交易所在区块
   * `state_batch_hash` - commit事件所在的批次hash
@@ -27,7 +21,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Execute do
   * `status` - L2上执行的最终状态
   """
   @type t :: %__MODULE__{
-               event_Id: non_neg_integer(),
+               event_id: non_neg_integer(),
                hash:  Hash.t(),
                block_number:  Block.block_number(),
                state_batch_hash:  Hash.t(),
@@ -35,10 +29,10 @@ defmodule Explorer.Chain.PlatonAppchain.L2Execute do
                status:  non_neg_integer()
              }
 
-  @primary_key {:hash, Hash, autogenerate: false}
+  @primary_key {:hash, Hash.Full, autogenerate: false}
   schema "l2_executes" do
-    field(:event_Id, :integer)
-    field(:hash, Hash.Full)
+    field(:event_id, :integer)
+#    field(:hash, Hash.Full)
     field(:block_number, :integer)
     field(:state_batch_hash, Hash.Full)
     field(:replay_status, :integer)

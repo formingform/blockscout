@@ -16,9 +16,10 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.Commitment do
 
   @type imported :: [Commitment.t()]
 
-
+  @impl Import.Runner
   def ecto_schema_module, do: Commitment
 
+  @impl Import.Runner
   def option_key, do: :commitments
 
   @spec imported_table_row() :: %{:value_description => binary(), :value_type => binary()}
@@ -60,7 +61,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.Commitment do
   def insert(repo, changes_list, %{timeout: timeout, timestamps: timestamps} = options) when is_list(changes_list) do
     on_conflict = Map.get_lazy(options, :on_conflict, &default_on_conflict/0)
 
-    # 按event_Id排序
+    # 按start_id排序
     ordered_changes_list = Enum.sort_by(changes_list, & &1.start_id)
 
     Import.insert_changes_list(
@@ -81,7 +82,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.Commitment do
       l in Commitment,
       update: [
         set: [
-          # Don't update `event_Id` as it is a primary key and used for the conflict target
+          # Don't update `state_batch_hash` as it is a primary key and used for the conflict target
           start_end_Id: fragment("EXCLUDED.start_end_Id"),
           state_batch_hash: fragment("EXCLUDED.state_batch_hash"),
           state_root: fragment("EXCLUDED.state_root"),

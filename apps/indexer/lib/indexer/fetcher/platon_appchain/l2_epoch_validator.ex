@@ -8,6 +8,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2EpochValidator do
   require Logger
 
   alias Explorer.Chain
+  alias Explorer.Helper
   alias Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler
   alias Indexer.Fetcher.PlatonAppchain
 

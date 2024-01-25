@@ -1,12 +1,6 @@
 defmodule Explorer.Chain.PlatonAppchain.Commitment do
   use Explorer.Schema
 
-  # alias Ecto.Changeset
-  alias Explorer.{
-    Chain,
-    PagingOptions
-    }
-
   alias Explorer.Chain.{
     Hash,
     Block
@@ -21,8 +15,8 @@ defmodule Explorer.Chain.PlatonAppchain.Commitment do
   * `start_end_Id` - （start_id+ end_id）组合id
   * `state_batch_hash` - 批次交易hash
   * `state_root` - 批次state root
-  * `start_id` - 批次起始msgId
-  * `end_id` - 批次结束msgId
+  * `start_id` - 批次起始event id
+  * `end_id` - 批次结束event id
   * `tx_number` - 批次总交易数（endId-startId+1）
   * `from` - 批次交易发起者
   * `to` - 批次交易接收者
@@ -42,10 +36,10 @@ defmodule Explorer.Chain.PlatonAppchain.Commitment do
                block_timestamp:  non_neg_integer() | nil,
              }
 
-  @primary_key {:hash, state_batch_hash, autogenerate: false}
+  @primary_key {:state_batch_hash,Hash.Full,autogenerate: false}
   schema "commitments" do
     field(:start_end_Id, :string)
-    field(:state_batch_hash, Hash.Full)
+#    field(:state_batch_hash, Hash.Full)
     field(:state_root, Hash.Full)
     field(:start_id, :integer)
     field(:end_id, :integer)

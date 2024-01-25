@@ -8,6 +8,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L1Execute do
 
   require Logger
 
+  import Ecto.Query
   import EthereumJSONRPC, only: [quantity_to_integer: 1]
   import Indexer.Fetcher.PlatonAppchain, only: [fill_block_range: 5, get_block_number_by_tag: 3]
 
@@ -67,12 +68,12 @@ defmodule Indexer.Fetcher.PlatonAppchain.L1Execute do
     {:noreply, state}
   end
 
-  @spec get_state_batch_hash_by_event_id(non_neg_integer()) :: {non_neg_integer() | nil}
+  @spec get_l2_block_number_by_event_id(non_neg_integer()) :: {non_neg_integer() | nil}
   def get_l2_block_number_by_event_id(event_id) do
     query =
-      from(l2_event in L2Event,
-        select: {l2_event.block_number},
-        where: l2_event.event_Id <= ^event_id,
+      from(l2_events in L2Event,
+        select: {l2_events.block_number},
+        where: l2_events.event_id <= ^event_id,
         limit: 1
       )
     query
@@ -80,12 +81,12 @@ defmodule Indexer.Fetcher.PlatonAppchain.L1Execute do
     |> Kernel.||({0, nil})
   end
 
-  @spec get_state_batch_hash_by_event_id(non_neg_integer()) :: {binary() | nil}
+  @spec get_state_batch_hash_by_block_number(non_neg_integer()) :: {binary() | nil}
   def get_state_batch_hash_by_block_number(block_number) do
     query =
-      from(checkpoint in Checkpoint,
-        select: {checkpoint.l1_transaction_hash},
-        where: checkpoint.start_block_number <= ^block_number and checkpoint.end_block_number >= ^event_id,
+      from(checkpoints in Checkpoint,
+        select: {checkpoints.l1_transaction_hash},
+        where: checkpoints.start_block_number <= ^block_number and checkpoints.end_block_number >= ^block_number,
         limit: 1
       )
     query
@@ -104,7 +105,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L1Execute do
       # 根据区块号去查寻对应的checkpoint交易的交易hash
       { checkpoint_tx_hash } = get_state_batch_hash_by_block_number(l2_blockNumber)
       %{
-        event_Id: event_id,
+        event_id: event_id,
         hash: event["transactionHash"],
         state_batch_hash: checkpoint_tx_hash,
         status: Kernel.boolean(status)

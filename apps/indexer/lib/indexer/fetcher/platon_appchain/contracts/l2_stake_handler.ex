@@ -93,7 +93,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler do
   ## Returns
     * All Validator Info array for query
   """
-  defp getAllValidators(all \\ [], start \\ <<>>, size \\ @default_size) do
+  def getAllValidators(all \\ [], start \\ <<>>, size \\ @default_size) do
     if size == 0 do
       all
     else

@@ -16,9 +16,10 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2Validators do
 
   @type imported :: [L2Validator.t()]
 
-
+  @impl Import.Runner
   def ecto_schema_module, do: L2Validator
 
+  @impl Import.Runner
   def option_key, do: :l2_validators
 
   @spec imported_table_row() :: %{:value_description => binary(), :value_type => binary()}
