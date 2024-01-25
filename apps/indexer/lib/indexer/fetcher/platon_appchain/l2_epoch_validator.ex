@@ -59,7 +59,13 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2EpochValidator do
       # 更新所有质押人
       all_candidates = L2StakeHandler.getAllValidators()
       # 设置验证人类型
-      all_candidates = Enum.map(all_candidates, fn(candidate) ->  Map.put(candidate, :status, PlatonAppchain.validator_status()[:Candidate]) end)
+      all_candidates = Enum.map(all_candidates, fn(candidate) ->  Map.put(candidate, :status, PlatonAppchain.validator_role()[:Candidate]) end)
+
+      #把列表中的序号，作为rank赋值给所有质押节点
+      all_candidates
+      |> Enum.with_index(1)
+      |> Enum.map(fn {element, idx} -> Map.put(element, :rank, idx) end)
+
       PlatonAppchain.log_validators(all_candidates, "Candidate", "epoch", epoch, latest_block, "L2")
 
       # 更新出块验证人候选人列表(201)
@@ -68,16 +74,17 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2EpochValidator do
 
       # epoch_validators = L2StakeHandler.getValidatorsWithAddr(epoch_validator_addresses)
       # 设置验证人类型
-      # epoch_validators = Enum.map(epoch_validators, fn(validator) ->  Map.put(validator, :status, PlatonAppchain.validator_status()[:Active]) end)
+      # epoch_validators = Enum.map(epoch_validators, fn(validator) ->  Map.put(validator, :status, PlatonAppchain.validator_role()[:Active]) end)
 
-      # 合并两个列表。
+      # 合并两个列表，把all_candidates中，地址在epoch_validators中的，更新为201候选人的角色
       Enum.map(all_candidates, fn(candidate) ->
         if Enum.member?(epoch_validator_addresses, candidate[:validatorAddr]) do
-          Map.put(candidate, :status, PlatonAppchain.validator_status()[:Active])
+          Map.put(candidate, :status, PlatonAppchain.validator_role()[:Active])
         else candidate
         end
       end)
       # todo:
+      # 1. 这里需要做upsert操作，在on_conflict时，需要设置哪些字段更新的
       # 1. 需要修改相应changeset, 配置on_conflict
       # 2. 这里直接import, 是属于另外的事务了吗？如果是，有什么影响吗？
      {:ok, _} =

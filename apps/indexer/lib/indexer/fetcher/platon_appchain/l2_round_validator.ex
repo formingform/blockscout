@@ -56,9 +56,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2RoundValidator do
       round_validator_addresses = L2StakeHandler.getValidatorAddrs(PlatonAppchain.period_type()[:round], round)
       round_validators = L2StakeHandler.getValidatorsWithAddr(round_validator_addresses)
       # 设置验证人类型
-      round_validators = Enum.map(round_validators, fn(validator) ->  Map.put(validator, :status, PlatonAppchain.validator_status()[:Verifying]) end)
+      round_validators = Enum.map(round_validators, fn(validator) ->  Map.put(validator, :status, PlatonAppchain.validator_role()[:Verifying]) end)
       PlatonAppchain.log_validators(round_validators, "Verifying", "round", round, latest_block, "L2")
-
 
 #      {:ok, _} = Repo.insert(
 #        l2_validators, # L2Validators.upsert, #todo: 定义changeset
@@ -69,8 +68,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2RoundValidator do
 #        returning: true
 #      )
       # todo:
-      # 1. 需要修改相应changeset, 配置on_conflict
-      # 2. 这里直接import, 是属于另外的事务了吗？如果是，有什么影响吗？
+      # 1. 首先要把原记录中的role=Verifying的记录，更新为role=active
+      # 2. 在upsert新记录，需要修改相应changeset, 配置on_conflict
       {:ok, _} =
         Chain.import(%{
           l2_validators: %{params: round_validators},
@@ -83,7 +82,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2RoundValidator do
       #        {:error, reason} ->
       #          Logger.debug(fn -> "failed to fetch l2_round_validators: #{inspect reason}" end)
       end
-    end
+
 
     # 计算下次获取round出块验证人的块高，并算出大概需要delay多久
     nextRoundBlockNumber = round * l2_round_size + 1

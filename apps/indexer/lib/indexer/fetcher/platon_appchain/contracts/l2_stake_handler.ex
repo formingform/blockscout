@@ -10,27 +10,26 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler do
 
   defp convertValidatorToJSON(validator) do
     data = %{
-      "validatorAddr" => elem(validator, 0),
-      "owner" => elem(validator, 1),
-      "stakeAmount" => elem(validator, 2),
-      "delegateAmount"=> elem(validator, 3),
-      "commissionRate"=> elem(validator, 4),
-      "status"=> elem(validator, 5),
-      "epoch"=> elem(validator, 6),
-      "stakeIndex"=> elem(validator, 7),
-      "pubKey"=> Base.encode16(elem(validator, 8)),
-      "blsKey"=> Base.encode16(elem(validator, 9))
+      validator_hash: elem(validator, 0),
+      owner_hash: elem(validator, 1),
+      stake_amount: elem(validator, 2),
+      delegate_amount: elem(validator, 3),
+      commission_rate: elem(validator, 4),
+      status: elem(validator, 5),
+      stake_epoch: elem(validator, 6)
+      #stakeIndex: elem(validator, 7),
+      #pubKey: Base.encode16(elem(validator, 8)),
+      #blsKey: Base.encode16(elem(validator, 9))
     }
-    data
   end
 
   defp convertDelegationToJSON(delegation) do
     data = %{
-      "validatorAddr" => elem(delegation, 0),
-      "delegatorAddr:" => elem(delegation, 1),
-      "amount" => elem(delegation, 2),
-      "stakeEpoch"=> elem(delegation, 3),
-      "delegateEpoch"=> elem(delegation, 4),
+      validator_hash: elem(delegation, 0),
+      delegator_hash:  elem(delegation, 1),
+      delegate_amount: elem(delegation, 2)
+      #delegate_amount: elem(delegation, 3),
+      #delegateEpoch: elem(delegation, 4),
     }
     data
   end
@@ -135,6 +134,22 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler do
     validatorsJson = validators |> Enum.map(fn validator -> convertValidatorToJSON(validator) end)
     validatorsJson
   end
+
+  """
+        validator_hash: elem(validator, 0),
+        owner_hash: elem(validator, 1),
+        stake_amount: elem(validator, 2),
+        delegate_amount: elem(validator, 3),
+        commission_rate: elem(validator, 4),
+        status: elem(validator, 5),
+        stake_epoch: elem(validator, 6)
+  """
+  def getValidator(validator_hash) do
+    result = get_validators_with_addr([validator_hash]) |> Ethers.call(rpc_opts: @rpc_opts)
+    {:ok, validators} = result
+    convertValidatorToJSON(List.first(validators))
+  end
+
 
   @doc """
   Query the list of validators for a certain period。For the convenience of expanding the list of validators with multiple period properties

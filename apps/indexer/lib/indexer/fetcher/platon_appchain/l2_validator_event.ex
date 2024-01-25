@@ -19,6 +19,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
   alias Explorer.Chain.Log
   alias Explorer.Chain.PlatonAppchain.L2ValidatorEvent
   alias Indexer.Fetcher.PlatonAppchain
+  alias Indexer.Fetcher.PlatonAppchain.L2ValidatorService
 
   @fetcher_name :platon_appchain_l2_validator_event
 
@@ -31,6 +32,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
   @l2_biz_event_UnStaked "0x79d3df6837cc49ff0e09fd3258e6e45594e0703445bb06825e9d75156eaee8f0"
   @l2_biz_event_UnDelegated "0x33f37c4c8173c3f236d2b74f93b425280ea2f7f2924a98ec73744fbc04f9ee35"
   @l2_biz_event_Slashed "0xd2f2b50d0c108d01a95cfb6ee87668e30a20c08be7facf9f28146548f82a8ab7"
+  @l2_biz_event_UpdateValidatorStatus "0x85ff997a3e90354ca8883205ac49293eed56e342aa01c0223bd70027118943c2"
+
 
   def child_spec(start_link_arguments) do
     spec = %{
@@ -133,25 +136,30 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
   def event_to_l2_validator_event(first_topic, second_topic, third_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
     [data_bytes] = decode_data(data, [:bytes])
 
+
     timestamp = PlatonAppchain.get_block_timestamp_by_number(l2_block_number, json_rpc_named_arguments, 100_000_000)
     block_number = quantity_to_integer(l2_block_number)
 
     {validator_hash, block_nubmer, transaction_hash, action_type, amount, block_timestamp} =
       case first_topic do
         @l2_biz_event_ValidatorRegistered ->
+          [owner, commission_rate, _pubKey, _blsKey] = TypeDecoder.decode_raw(data_bytes, [:address, {:uint, 256}], {:bytes, 64},  {:bytes, 48})
+          # 增加L2_validator记录
+          L2ValidatorService.add_new_validator(second_topic)
           [%{
             validator_hash: second_topic,
             block_number: block_number,
             transaction_hash: l2_transaction_hash,
             action_type: PlatonAppchain.l2_validator_event_action_type()[:ValidatorRegistered],
-            action_desc: nil,
+            action_desc: "owner: #{owner}, commission_rate: #{commission_rate}",
             amount: 0,
             block_timestamp: timestamp
           }]
 
         @l2_biz_event_StakeAdded ->
           [amount] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
-
+          # 更新L2_validator记录，增加质押金额
+          L2ValidatorService.increase_stake(second_topic, amount)
           [%{
             validator_hash: second_topic,
             block_number: block_number,
@@ -162,17 +170,16 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
             block_timestamp: timestamp
           }]
 
-
         @l2_biz_event_DelegationAdded ->
-
           [amount] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
-
+          # 更新L2_validator记录，增加委托金额
+          L2ValidatorService.increase_delegation(third_topic, amount)
           [%{
             validator_hash: third_topic,
             block_number: block_number,
             transaction_hash: l2_transaction_hash,
             action_type: PlatonAppchain.l2_validator_event_action_type()[:DelegationAdded],
-            action_desc: nil,
+            action_desc: "delegator: #{second_topic}",
             amount: 0,
             block_timestamp: timestamp
           }]
@@ -180,6 +187,9 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
         @l2_biz_event_UnStaked ->
 
           [amount] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
+
+          # 更新L2_validator记录，减少质押
+          L2ValidatorService.decrease_stake(second_topic, amount)
 
           [%{
             validator_hash: second_topic,
@@ -194,23 +204,29 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
         @l2_biz_event_UnDelegated ->
 
           [amount] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
+          # 更新L2_validator记录，减少委托
+          L2ValidatorService.decrease_delegation(third_topic, amount)
 
           [%{
             validator_hash: third_topic,
             block_number: block_number,
             transaction_hash: l2_transaction_hash,
             action_type: PlatonAppchain.l2_validator_event_action_type()[:UnDelegated],
-            action_desc: nil,
+            action_desc: "delegator: #{second_topic}",
             amount: amount,
             block_timestamp: timestamp
           }]
 
         @l2_biz_event_Slashed ->
 
-         action_type = PlatonAppchain.l2_validator_event_action_type()[:UnDelegated]
+         action_type = PlatonAppchain.l2_validator_event_action_type()[:Slashed]
 
-         [validators, amounts] = TypeDecoder.decode_raw(data_bytes, [:address, {:uint, 256}])
+         [validators, amounts] = TypeDecoder.decode_raw(data_bytes, [{:array, :address}, {:array, {:uint, 256}}])
+         #把两个列表，变成一个元组的列表
          zipped = Enum.zip(validators, amounts)
+
+         # 更新L2_validator记录，惩罚节点
+         L2ValidatorService.slash(zipped)
 
          Enum.map(zipped, fn {validator, amount} ->
            %{
@@ -223,6 +239,12 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
               block_timestamp: timestamp
            }
          end)
+
+       @l2_biz_event_UpdateValidatorStatus->
+         [current_status] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
+         # 更新L2_validator记录，惩罚节点
+         L2ValidatorService.update_validator_status(second_topic, current_status)
+
         _ ->
         []
       end
@@ -282,6 +304,15 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
         l2_validator_events: %{params: l2_validator_events},
         timeout: :infinity
       })
+
+    #todo: 根据  l2_validator_events, 更新l2_validators表。
+
+  end
+
+
+  defp new_l2_validator(validator_hash) do
+
+
   end
 
 end

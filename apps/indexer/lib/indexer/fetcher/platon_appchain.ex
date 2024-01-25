@@ -25,11 +25,13 @@ defmodule Indexer.Fetcher.PlatonAppchain do
 
   @l2_validator_event_action_type [ValidatorRegistered: 1, StakeAdded: 2, DegationAdded: 3, UnStaked: 4, UnDelegated: 5, Slashed: 6]
 
+  @l2_validator_status [Valid: 0b0000, Invalid: 0b0001, LowBlocks: 0b0010, LowThreshold: 0b0100, Duplicated: 0b1000, Unstaked: 0b00100000, Slashing: 0b01000000]
+
   # 缺省的出块间隔时间，毫秒
   @default_block_interval 1000
 
-  # 0：201候选验证人；1：43 出块验证人； 2：备选验证人（质押人）
-  @validator_status %{Active: 0, Verifying: 1, Candidate: 2}
+  # 0-candidate(质押节点) 1-active(201共识节点后续人) 2-verifying(43共识节点)
+  @l2_validator_role %{Active: 0, Verifying: 1, Candidate: 2}
 
   def l2_round_size() do
     Application.get_all_env(:indexer)[Indexer.Fetcher.PlatonAppchain][:l2_round_size]
@@ -84,8 +86,36 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   end
 
 
-  def validator_status() do
-    @validator_status
+  def l2_validator_role() do
+    @l2_validator_role
+  end
+
+  def l2_validator_status() do
+    @l2_validator_status
+  end
+
+  def l2_validator_is_slashed(status) do
+    @l2_validator_status[:Slashing] == band(@l2_validator_status[:Slashing], status)
+  end
+
+  def l2_validator_is_unstaked(status) do
+    @l2_validator_status[:Unstaked] == band(@l2_validator_status[:Unstaked], status)
+  end
+
+  def l2_validator_is_duplicated(status) do
+    @l2_validator_status[:Duplicated] == band(@l2_validator_status[:Duplicated], status)
+  end
+
+  def l2_validator_is_lowBlocks(status) do
+    @l2_validator_status[:LowBlocks] == band(@l2_validator_status[:LowBlocks], status)
+  end
+
+  def l2_validator_is_lowThreshold(status) do
+    @l2_validator_status[:LowThreshold] == band(@l2_validator_status[:LowThreshold], status)
+  end
+
+  def l2_validator_is_invalid(status) do
+    @l2_validator_status[:Invalid] == band(@l2_validator_status[:Invalid], status)
   end
 
   def calculateL2Round(current_block_number, round_size) do
