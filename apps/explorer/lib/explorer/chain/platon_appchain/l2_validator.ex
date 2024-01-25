@@ -129,14 +129,14 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
   end
 
   # 惩罚验证人，减少每个验证人的质押金额
-  def slash(slashTupleList) do
+  def slash(slash_tuple_list) do
     Ecto.Multi.new()
-    |> do_slash(slashTupleList)
+    |> do_slash(slash_tuple_list)
     |> Repo.transaction()
   end
 
-  defp do_slash(multi, slashTupleList) do
-    Enum.reduce(slashTupleList, multi, fn tuple, multi ->
+  defp do_slash(multi, slash_tuple_list) do
+    Enum.reduce(slash_tuple_list, multi, fn tuple, multi ->
       Ecto.Multi.update_all(multi, {:slash_validator, elem(tuple, 0)}, from(v in __MODULE__, where: v.validator_hash == ^elem(tuple, 0)), [inc: [stake_amount: 0 - elem(tuple, 1)]])
     end)
   end
@@ -146,4 +146,15 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
     |> Repo.update_all([])
   end
 
+  def update_rank(rank_tuple_list) do
+    Ecto.Multi.new()
+    |> do_reset_rank(rank_tuple_list)
+    |> Repo.transaction()
+  end
+
+  defp do_reset_rank(multi, rank_tuple_list) do
+    Enum.reduce(rank_tuple_list, multi, fn tuple, multi ->
+      Ecto.Multi.update_all(multi, {:reset_validator_rank, elem(tuple, 0)}, from(v in __MODULE__, where: v.validator_hash == ^elem(tuple, 0)), [set: [rank: elem(tuple, 1)]])
+    end)
+  end
 end

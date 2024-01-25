@@ -39,9 +39,9 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorService do
     L2Validator.update_delegate_amount(validator_hash, 0-decrement)
   end
 
-  # [{validator_hash, amount},{}]
-  def slash(slashTupleList) do
-    L2Validator.slash(slashTupleList)
+  # [{validator_hash, amount},{...}]
+  def slash(slash_tuple_list) do
+    L2Validator.slash(slash_tuple_list)
   end
 
   def update_validator_status(validator_hash, current_status) do
@@ -58,6 +58,11 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorService do
         PlatonAppchain.l2_validator_status()[:LowThreshold]
      end
     L2Validator.update_status(validator_hash, extracted_status)
+  end
+
+  # [{validator_hash, rank},{...}]
+  def update_rank(rank_tuple_list) do
+    L2Validator.update_rank(rank_tuple_list)
   end
 
 end
