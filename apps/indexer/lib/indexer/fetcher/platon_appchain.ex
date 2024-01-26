@@ -2,6 +2,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   @moduledoc """
   Contains common functions for PlatonAppchain.* fetchers.
   """
+  use Bitwise
 
   require Logger
 
@@ -721,10 +722,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
         json_rpc_named_arguments,
         scan_db
       )
-      when calling_module in [
-    L2Execute,
-    L2Event
-  ] do
+      when calling_module in [L2Execute, L2Event, Commitment] do
     eth_get_logs_range_size =
       Application.get_all_env(:indexer)[Indexer.Fetcher.PlatonAppchain][:platon_appchain_eth_get_logs_range_size]
 
@@ -758,12 +756,11 @@ defmodule Indexer.Fetcher.PlatonAppchain do
           json_rpc_named_arguments
         )
 
-      event_name =
-        if calling_module == Indexer.Fetcher.PlatonAppchain.L2Execute do
-          "StateSyncResult"
-        else
-          "L2StateSynced"
-        end
+      event_name = cond do
+        calling_module == Indexer.Fetcher.PlatonAppchain.L2Execute -> "StateSyncResult"
+        calling_module == Indexer.Fetcher.PlatonAppchain.Commitment -> "NewCommitment"
+        true -> "L2StateSynced"
+      end
 
       log_blocks_chunk_handling(
         chunk_start,

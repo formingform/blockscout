@@ -47,7 +47,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
     field(:block_number, :integer)
     field(:block_timestamp, :integer)
     field(:log_index, :integer)
-    field(:hash, Hash.Full)
+    field(:transaction_hash, Hash.Full)
 
     timestamps()
   end

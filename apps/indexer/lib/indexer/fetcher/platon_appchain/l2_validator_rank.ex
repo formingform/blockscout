@@ -72,7 +72,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorRank do
 #      |> Enum.with_index(1)
 #      |> Enum.map(fn {element, idx} -> Map.put(element, :rank, idx) end)
 
-      L2ValidatorService.update_rank(rank_tuple_list)
+      L2ValidatorService.update_rank(all_candidates)
     end
 
     # 计算下次获取round出块验证人的块高，并算出大概需要delay多久
