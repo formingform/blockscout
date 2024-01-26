@@ -159,7 +159,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
     end)
   end
 
-  def move_to_history?(addr, exit_block, exit_desc) do
+  def unstake(addr, exit_block, exit_desc, unstake_enum) do
     query = from v in __MODULE__,
                  select: %{
                    validator_hash: v.validator_hash,
@@ -181,7 +181,8 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
                    block_rate: v.block_rate,
                    auth_status: v.auth_status,
                    role: v.role,
-                   status: v.status,
+                   #status: v.status,
+                   status: ^unstake_enum,
                    exit_block: ^exit_block,
                    inserted_at: v.inserted_at,
                    updated_at: v.updated_at},

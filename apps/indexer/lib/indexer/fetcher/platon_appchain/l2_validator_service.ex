@@ -46,21 +46,23 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorService do
   end
 
   def update_validator_status(validator_hash, current_status, block_number) do
-    extracted_status = cond do
+    cond do
       PlatonAppchain.l2_validator_is_slashed(current_status) ->
-        PlatonAppchain.l2_validator_status()[:Slashing]
+        L2Validator.update_status(validator_hash,  PlatonAppchain.l2_validator_status()[:Slashing])
+
       PlatonAppchain.l2_validator_is_duplicated(current_status) ->
-        PlatonAppchain.l2_validator_status()[:Duplicated]
+        L2Validator.update_status(validator_hash,  PlatonAppchain.l2_validator_status()[:Duplicated])
+
       PlatonAppchain.l2_validator_is_unstaked(current_status) ->
-        PlatonAppchain.l2_validator_status()[:Unstaked]
-        # 退出质押的节点信息，移动到历史表中
-        L2Validator.move_to_history?(validator_hash, block_number, "")
+        # 解质押，把节点信息从l2_validators表移动到l2_validator_historys表中，历史表中状态为：Unstaked
+        L2Validator.unstake(validator_hash, block_number, "", PlatonAppchain.l2_validator_status()[:Unstaked])
+
       PlatonAppchain.l2_validator_is_lowBlocks(current_status) ->
-        PlatonAppchain.l2_validator_status()[:LowBlocks]
+        L2Validator.update_status(validator_hash,  PlatonAppchain.l2_validator_status()[:LowBlocks])
+
       PlatonAppchain.l2_validator_is_lowThreshold(current_status) ->
-        PlatonAppchain.l2_validator_status()[:LowThreshold]
+        L2Validator.update_status(validator_hash,  PlatonAppchain.l2_validator_status()[:LowThreshold])
      end
-    L2Validator.update_status(validator_hash, extracted_status)
   end
 
   # [{validator_hash, rank},{...}]
