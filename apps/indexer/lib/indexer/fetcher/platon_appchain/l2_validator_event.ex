@@ -140,10 +140,10 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
     timestamp = PlatonAppchain.get_block_timestamp_by_number(l2_block_number, json_rpc_named_arguments, 100_000_000)
     block_number = quantity_to_integer(l2_block_number)
 
-    {validator_hash, block_nubmer, transaction_hash, action_type, amount, block_timestamp} =
+    {validator_hash, block_number, transaction_hash, action_type, amount, block_timestamp} =
       case first_topic do
         @l2_biz_event_ValidatorRegistered ->
-          [owner, commission_rate, _pubKey, _blsKey] = TypeDecoder.decode_raw(data_bytes, [:address, {:uint, 256}], {:bytes, 64},  {:bytes, 48})
+          [owner, commission_rate, _pubKey, _blsKey] = TypeDecoder.decode_raw(data_bytes, [:address, {:uint, 256}, {:bytes, 64},  {:bytes, 48}])
           # 增加L2_validator记录
           L2ValidatorService.add_new_validator(second_topic)
           [%{
@@ -243,7 +243,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
        @l2_biz_event_UpdateValidatorStatus->
          [current_status] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
          # 更新L2_validator记录，惩罚节点
-         L2ValidatorService.update_validator_status(second_topic, current_status)
+         L2ValidatorService.update_validator_status(second_topic, current_status, block_number)
 
         _ ->
         []
@@ -309,10 +309,5 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
 
   end
 
-
-  defp new_l2_validator(validator_hash) do
-
-
-  end
 
 end

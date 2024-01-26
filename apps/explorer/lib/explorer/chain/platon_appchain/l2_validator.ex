@@ -108,7 +108,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
     |> unique_constraint(:validator_hash)
   end
 
-  # 增加新的质押节点，如果节点hash已经存在，则更新
+  # 增加新的质押节点，如果节点hash已经存在，则更新（实际上，不会有重复主键的，因为解质押的节点信息，已经被移入历史表中）
   def add_new_validator(dataMap) do
     changeset(dataMap)
     |> Repo.insert(
@@ -157,5 +157,46 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
     Enum.reduce(rank_tuple_list, multi, fn tuple, multi ->
       Ecto.Multi.update_all(multi, {:reset_validator_rank, elem(tuple, 0)}, from(v in __MODULE__, where: v.validator_hash == ^elem(tuple, 0)), [set: [rank: elem(tuple, 1)]])
     end)
+  end
+
+  def move_to_history?(addr, exit_block, exit_desc) do
+    query = from v in __MODULE__,
+                 select: %{
+                   validator_hash: v.validator_hash,
+                   stake_epoch: v.stake_epoch,
+                   owner_hash: v.owner_hash,
+                   commission_rate: v.commission_rate,
+                   stake_amount: v.stake_amount,
+                   locking_stake_amount: v.locking_stake_amount,
+                   withdrawal_stake_amount: v.withdrawal_stake_amount,
+                   delegate_amount: v.delegate_amount,
+                   stake_reward: v.stake_reward,
+                   delegate_reward: v.delegate_reward,
+                   rank: v.rank,
+                   name: v.name,
+                   detail: v.detail,
+                   logo: v.logo,
+                   website: v.website,
+                   expect_apr: v.expect_apr,
+                   block_rate: v.block_rate,
+                   auth_status: v.auth_status,
+                   role: v.role,
+                   status: v.status,
+                   exit_block: ^exit_block,
+                   inserted_at: v.inserted_at,
+                   updated_at: v.updated_at},
+                 where: v.validator_hash == ^addr
+
+    Ecto.Multi.new()
+    |> Ecto.Multi.insert_all(
+        :backup,
+        Explorer.Chain.PlatonAppchain.L2ValidatorHistory,
+        query,
+        on_conflict: :replace_all, #{:replace_all_except, [:inserted_at, :updated_at]},
+        conflict_target: [:validator_hash])
+    |> Ecto.Multi.delete_all(
+         :delete,
+         from(x in __MODULE__, where: x.validator_hash == ^addr),
+         [])
   end
 end

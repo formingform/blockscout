@@ -20,6 +20,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorService do
   """
   def add_new_validator(validator_hash) do
     newValidatorMap = L2StakeHandler.getValidator(validator_hash)
+    L2Validator.back
     L2Validator.add_new_validator(newValidatorMap)
   end
 
@@ -44,7 +45,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorService do
     L2Validator.slash(slash_tuple_list)
   end
 
-  def update_validator_status(validator_hash, current_status) do
+  def update_validator_status(validator_hash, current_status, block_number) do
     extracted_status = cond do
       PlatonAppchain.l2_validator_is_slashed(current_status) ->
         PlatonAppchain.l2_validator_status()[:Slashing]
@@ -52,6 +53,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorService do
         PlatonAppchain.l2_validator_status()[:Duplicated]
       PlatonAppchain.l2_validator_is_unstaked(current_status) ->
         PlatonAppchain.l2_validator_status()[:Unstaked]
+        # 退出质押的节点信息，移动到历史表中
+        L2Validator.move_to_history?(validator_hash, block_number, "")
       PlatonAppchain.l2_validator_is_lowBlocks(current_status) ->
         PlatonAppchain.l2_validator_status()[:LowBlocks]
       PlatonAppchain.l2_validator_is_lowThreshold(current_status) ->
