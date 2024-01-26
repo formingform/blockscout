@@ -29,10 +29,10 @@ defmodule Explorer.Chain.PlatonAppchain.L1Execute do
                status:  non_neg_integer()
              }
 
-  @primary_key {:hash, Hash.Full, autogenerate: false}
+  @primary_key false
   schema "l1_executes" do
-    field(:event_id, :integer)
-#    field(:hash, Hash.Full)
+    field(:event_id, :integer, primary_key: true)
+    field(:hash, Hash.Full)
     field(:block_number, :integer)
     field(:state_batch_hash, Hash.Full)
     field(:replay_status, :integer)

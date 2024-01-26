@@ -4,13 +4,13 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2Txs do
   def change do
     create table(:l2_events, primary_key: false) do
       # 交易计数器 msgId
-      add(:event_Id, :bigint, null: false)
+      add(:event_Id, :bigint, null: false, primary_key: true)
       # 与tx表中一致（待定具体类型值）
       add(:tx_type, :integer, null: false)
       # 金额（不同的tx_type可能有不同的值
       add(:amount, :numeric, precision: 100, null: true)
       # l2上交易hash
-      add(:hash, :bytea, null: false, primary_key: true)
+      add(:hash, :bytea, null: false)
       # 交易发起者
       add(:from, :bytea, null: false)
       # 交易接收者(l1上面接收合约)

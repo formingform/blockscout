@@ -3,8 +3,6 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateCommitments do
 
   def change do
     create table(:commitments, primary_key: false) do
-      # （start_id+ end_id）组合id
-      add(:start_end_Id, :string, null: false, primary_key: true)
       # 批次hash
       add(:state_batch_hash, :bytea, null: false, primary_key: true)
       # 批次state root

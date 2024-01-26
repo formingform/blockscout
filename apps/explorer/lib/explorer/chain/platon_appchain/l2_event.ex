@@ -35,12 +35,12 @@ defmodule Explorer.Chain.PlatonAppchain.L2Event do
                validator: Hash.Address.t() | nil,
              }
 
-  @primary_key {:hash, Hash.Full, autogenerate: false}
+  @primary_key false
   schema "l2_events" do
-    field(:event_id, :integer)
+    field(:event_id, :integer, primary_key: true)
     field(:tx_type, :string)
     field(:amount, :integer)
-#    field(:hash, Hash.Full)
+    field(:hash, Hash.Full)
     field(:from, Hash.Address)
     field(:to, Hash.Address)
     field(:block_number, :integer)

@@ -62,8 +62,9 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
                status:  non_neg_integer()
              }
 
-  @primary_key {:validator_hash, Hash.Address, autogenerate: false}
+  @primary_key false
   schema "l2_validators" do
+    field(:validator_hash, Hash.Address, primary_key: true)
     field(:stake_epoch, :integer)
     field(:owner_hash, Hash.Address)
     field(:commission_rate, :integer)

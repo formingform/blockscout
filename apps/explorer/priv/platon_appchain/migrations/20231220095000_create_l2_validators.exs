@@ -5,7 +5,7 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2Validators do
     create table(:l2_validators, primary_key: false) do
       # 验证人地址, validator_hash
       add(:validator_hash, :bytea, null: false, primary_key: true)
-      # 质押成为验证人的epoch
+      # 质押成为验证人的epoch，这个不需要作为主键的一部分，如果insert的时候发现validator_hash存在，说明就是新的质押，直接替换stake_epoch。旧的数据移动到history即可
       add(:stake_epoch, :bigint, null: false)
       # 验证人owner地址
       add(:owner_hash, :bytea, null: false)

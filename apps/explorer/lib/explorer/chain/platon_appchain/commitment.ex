@@ -24,7 +24,6 @@ defmodule Explorer.Chain.PlatonAppchain.Commitment do
   * `block_timestamp` - 批次交易所在区块时间戳
   """
   @type t :: %__MODULE__{
-               start_end_Id: non_neg_integer(),
                state_batch_hash:  Hash.t(),
                state_root:  Hash.t(),
                start_id:  non_neg_integer(),
@@ -36,10 +35,9 @@ defmodule Explorer.Chain.PlatonAppchain.Commitment do
                block_timestamp:  non_neg_integer() | nil,
              }
 
-  @primary_key {:state_batch_hash,Hash.Full,autogenerate: false}
+  @primary_key false
   schema "commitments" do
-    field(:start_end_Id, :string)
-#    field(:state_batch_hash, Hash.Full)
+    field(:state_batch_hash, Hash.Full, primary_key: true)
     field(:state_root, Hash.Full)
     field(:start_id, :integer)
     field(:end_id, :integer)

@@ -34,9 +34,9 @@ defmodule Explorer.Chain.PlatonAppchain.Checkpoint do
                block_timestamp:  non_neg_integer(),
              }
 
-  @primary_key {:epoch, :integer, autogenerate: false}
+  @primary_key false
   schema "checkpoints" do
-#    field(:epoch, :integer)
+    field(:epoch, :integer, primary_key: true)
     field(:start_block_number, :integer)
     field(:end_block_number, :integer)
     field(:event_root, Hash.Full)
