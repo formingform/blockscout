@@ -13,8 +13,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Checkpoint do
   import EthereumJSONRPC, only: [quantity_to_integer: 1]
   import Indexer.Fetcher.PlatonAppchain, only: [fill_block_range: 5, get_block_number_by_tag: 3]
 
-  alias Explorer.{Chain, Repo}
-  alias Explorer.Chain.Log
+  alias Explorer.Repo
   alias Explorer.Chain.PlatonAppchain.Checkpoint
   alias Indexer.Fetcher.PlatonAppchain
 
@@ -94,13 +93,10 @@ defmodule Indexer.Fetcher.PlatonAppchain.Checkpoint do
 
   # 统计在区块间, l2发生的包括在checkpoint的事件数量（需要同步到L1的事件）
   defp get_event_counts(start_block_number, end_block_number) do
-    query =
-      from(l2_events in L2Event,
+    from(l2_events in L2Event,
         select: fragment("count(*)"),
         where:
-          l2_events.block_number >= ^start_block_number and l2_events.block_number <= ^end_block_number
-      )
-    event_count = query
-      |> Repo.one(timeout: :infinity)
+          l2_events.block_number >= ^start_block_number and l2_events.block_number <= ^end_block_number)
+   |> Repo.one(timeout: :infinity)
   end
 end
