@@ -10,12 +10,12 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorRank do
 
   require Logger
 
-  alias Explorer.Chain
-  alias Explorer.Helper
+  alias Indexer.Helper
   alias Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler
   alias Indexer.Fetcher.PlatonAppchain
   alias Indexer.Fetcher.PlatonAppchain.L2ValidatorService
 
+  @fetcher_name :platon_appchain_l2_validator_rank
   @default_update_interval :timer.seconds(3)
   @period_type [round: 1, epoch: 2]
 
@@ -45,7 +45,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorRank do
   @spec handle_continue(map(), L2ValidatorRank, atom()) :: {:noreply, map()}
   def handle_continue(
         %{
-          l2_validator_contract_address: l2_validator_contract_address,
+#          l2_validator_contract_address: l2_validator_contract_address,
           l2_rpc_arguments: l2_rpc_arguments,
           l2_epoch_size: l2_epoch_size,
           next_epoch_block: next_epoch_block

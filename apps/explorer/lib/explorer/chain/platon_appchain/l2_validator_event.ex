@@ -1,12 +1,6 @@
 defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
   use Explorer.Schema
 
-  # alias Ecto.Changeset
-  alias Explorer.{
-    Chain,
-    PagingOptions
-    }
-
   alias Explorer.Chain.{
     Hash,
     Block

@@ -2,11 +2,11 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   @moduledoc """
   Contains common functions for PlatonAppchain.* fetchers.
   """
-  use Bitwise
 
   require Logger
 
   import Ecto.Query
+  import Bitwise
 
   import EthereumJSONRPC,
          only: [fetch_block_number_by_tag: 2, json_rpc: 2, integer_to_quantity: 1, quantity_to_integer: 1, request: 1]
