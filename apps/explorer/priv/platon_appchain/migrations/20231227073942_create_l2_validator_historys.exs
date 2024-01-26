@@ -7,7 +7,7 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2ValidatorHistorys do
       # 验证人地址, validator_hash
       add(:validator_hash, :bytea, null: false, primary_key: true)
       # 质押成为验证人的epoch，这个不需要作为主键的一部分，如果验证人多次退出，则只保留最近退出的信息
-      add(:stake_epoch, :bigint, null: false, primary_key: true)
+      add(:stake_epoch, :bigint, null: false)
       # 验证人owner地址
       add(:owner_hash, :bytea, null: false)
       # 拥金比例, 每个结算周期，每个验证人获得总奖励，首先按此金额扣除CommissionRate，剩余的再按质押/委托金额比例分配。
@@ -55,9 +55,9 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2ValidatorHistorys do
       add(:role, :integer, null: false, default: 0)
 
       # 退出区块
-      add(:exit_number, :bigint, null: false)
+      add(:exit_block, :bigint, null: false)
       # 退出内容
-      add(:event, :string, null: true)
+      add(:exit_desc, :string, null: true)
 
       timestamps(null: false, type: :utc_datetime_usec)
     end
