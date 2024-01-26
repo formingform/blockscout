@@ -145,7 +145,7 @@ defmodule Indexer.Supervisor do
         {Indexer.Fetcher.PlatonAppchain.L1Execute.Supervisor, [[memory_monitor: memory_monitor]]},
         {Indexer.Fetcher.PlatonAppchain.Checkpoint.Supervisor, [[memory_monitor: memory_monitor]]},
         {Indexer.Fetcher.PlatonAppchain.L2Event.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
-        {Indexer.Fetcher.PlatonAppchain.commitment.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
+        {Indexer.Fetcher.PlatonAppchain.Commitment.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
         {Indexer.Fetcher.PlatonAppchain.L2Execute.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
         {Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
         {Indexer.Fetcher.PlatonAppchain.L2ValidatorRank.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
@@ -178,8 +178,7 @@ defmodule Indexer.Supervisor do
            %{block_fetcher: block_fetcher, block_interval: block_interval, memory_monitor: memory_monitor},
            [name: BlockCatchup.Supervisor]
          ]},
-        {Withdrawal.Supervisor, [[json_rpc_named_arguments: json_rpc_named_arguments]]},
-        {L2Validator, [[]]}
+        {Withdrawal.Supervisor, [[json_rpc_named_arguments: json_rpc_named_arguments]]}
       ]
       |> List.flatten()
 
