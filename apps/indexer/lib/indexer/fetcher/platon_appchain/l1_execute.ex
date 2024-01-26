@@ -12,7 +12,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L1Execute do
   import EthereumJSONRPC, only: [quantity_to_integer: 1]
   import Indexer.Fetcher.PlatonAppchain, only: [fill_block_range: 5, get_block_number_by_tag: 3]
 
-  alias Explorer.{Chain, Repo}
+  alias Explorer.Repo
   alias Explorer.Chain.Log
   alias Explorer.Chain.PlatonAppchain.L2Event
   alias Explorer.Chain.PlatonAppchain.Checkpoint
