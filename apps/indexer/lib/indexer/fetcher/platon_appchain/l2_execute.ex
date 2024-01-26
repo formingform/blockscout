@@ -51,7 +51,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
       L2Execute,
       env,
       self(),
-      env[:state_receiver],
+      env[:l2_state_receiver],
       "StateReceiver",
       "l2_executes",
       "L2 Executes",
@@ -144,7 +144,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
   @spec find_and_save_entities(boolean(), binary(), non_neg_integer(), non_neg_integer(), list()) :: non_neg_integer()
   def find_and_save_entities(
         scan_db,
-        state_receiver,
+        l2_state_receiver,
         block_start,
         block_end,
         json_rpc_named_arguments
@@ -155,7 +155,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
           from(log in Log,
             select: {log.second_topic, log.third_topic, log.transaction_hash, log.block_number},
             where:
-              log.first_topic == @state_sync_result_event and log.address_hash == ^state_receiver and
+              log.first_topic == @state_sync_result_event and log.address_hash == ^l2_state_receiver and
               log.block_number >= ^block_start and log.block_number <= ^block_end
           )
 
@@ -169,7 +169,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
           PlatonAppchain.get_logs(
             block_start,
             block_end,
-            state_receiver,
+            l2_state_receiver,
             @state_sync_result_event,
             json_rpc_named_arguments,
             100_000_000

@@ -61,7 +61,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
       L2ValidatorEvent,
       env,
       self(),
-      env[:l2_stake_hander],
+      env[:l2_stake_handler],
       "L2StakeHandler",
       "l2_validator_events",
       "L2ValidatorEvents",

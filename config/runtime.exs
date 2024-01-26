@@ -586,23 +586,62 @@ config :indexer, Indexer.Fetcher.Withdrawal.Supervisor,
 
 config :indexer, Indexer.Fetcher.Withdrawal, first_block: System.get_env("WITHDRAWALS_FIRST_BLOCK")
 
+# todo: 这个是啥意思？
 L2_STATE_SENDER_CONTRACT
 
 config :indexer, Indexer.Fetcher.PlatonAppchain.Supervisor, disabled?: !(chain_type == "platon_appchain")
 
+config :indexer, Indexer.Fetcher.PlatonAppchain.L1Event.Supervisor, disabled?: !(chain_type == "platon_appchain")
+config :indexer, Indexer.Fetcher.PlatonAppchain.commitment.Supervisor, disabled?: !(chain_type == "platon_appchain")
+config :indexer, Indexer.Fetcher.PlatonAppchain.L1Execute.Supervisor, disabled?: !(chain_type == "platon_appchain")
+config :indexer, Indexer.Fetcher.PlatonAppchain.L2Event.Supervisor, disabled?: !(chain_type == "platon_appchain")
+config :indexer, Indexer.Fetcher.PlatonAppchain.L2Execute.Supervisor, disabled?: !(chain_type == "platon_appchain")
+config :indexer, Indexer.Fetcher.PlatonAppchain.Checkpoint.Supervisor, disabled?: !(chain_type == "platon_appchain")
+config :indexer, Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent.Supervisor, disabled?: !(chain_type == "platon_appchain")
+config :indexer, Indexer.Fetcher.PlatonAppchain.L2ValidatorRank.Supervisor, disabled?: !(chain_type == "platon_appchain")
+
+# 配置 Indexer.Fetcher.PlatonAppchain 级别的环境参数
 config :indexer, Indexer.Fetcher.PlatonAppchain,
   platon_appchain_l1_rpc: System.get_env("INDEXER_PLATON_APPCHAIN_L1_RPC"),
-  platon_appchain_eth_get_logs_range_size:
-    ConfigHelper.parse_integer_env_var("INDEXER_PLATON_APPCHAIN_ETH_GET_LOGS_RANGE_SIZE", 1000)
+  platon_appchain_eth_get_logs_range_size: ConfigHelper.parse_integer_env_var("INDEXER_PLATON_APPCHAIN_ETH_GET_LOGS_RANGE_SIZE", 1000),
+  l2_validator_contract_address: System.get_env("INDEXER_PLATON_APPCHAIN_L2_VALIDATOR_CONTRACT_ADDRESS"),
+
 
 config :indexer, Indexer.Fetcher.PlatonAppchain.Contracts,
   l1_stake_manager: System.get_env("INDEXED_PLATON_APPCHAIN_L1_STAKE_MANAGER_CONTRACT"),
   l2_stake_handler: System.get_env("INDEXED_PLATON_APPCHAIN_L2_STAKE_HANDLER_CONTRACT"),
   l2_reward_manager: System.get_env("INDEXED_PLATON_APPCHAIN_L2_REWARD_MANAGER_CONTRACT")
 
-config :indexer, Indexer.Fetcher.PlatonAppchain.L1Events,
+# 配置 Indexer.Fetcher.PlatonAppchain.L1Event 级别的环境参数
+config :indexer, Indexer.Fetcher.PlatonAppchain.L1Event,
   start_block_l1: System.get_env("INDEXER_PLATON_APPCHAIN_L1_START_BLOCK"),
   state_sender: System.get_env("INDEXER_PLATON_APPCHAIN_L1_STATE_SENDER_CONTRACT")
+
+# 配置 Indexer.Fetcher.PlatonAppchain.L1Execute 级别的环境参数
+config :indexer, Indexer.Fetcher.PlatonAppchain.L1Execute,
+  start_block_l1: System.get_env("INDEXER_PLATON_APPCHAIN_L1_START_BLOCK"),
+  exit_helper: System.get_env("INDEXER_PLATON_APPCHAIN_L1_EXIT_HELPER_CONTRACT")
+
+# 配置 Indexer.Fetcher.PlatonAppchain.Checkpoint 级别的环境参数
+config :indexer, Indexer.Fetcher.PlatonAppchain.Checkpoint,
+  start_block_l1: System.get_env("INDEXER_PLATON_APPCHAIN_L1_START_BLOCK"),
+  checkpoint_manager: System.get_env("INDEXER_PLATON_APPCHAIN_L1_CHECKPOINT_MANAGER_CONTRACT")
+
+config :indexer, Indexer.Fetcher.PlatonAppchain.L2Event,
+  start_block_l2: System.get_env("INDEXER_PLATON_APPCHAIN_L2_START_BLOCK"),
+  l2_state_sender: System.get_env("INDEXER_PLATON_APPCHAIN_L2_STATE_SENDER_CONTRACT")
+
+config :indexer, Indexer.Fetcher.PlatonAppchain.Commitment,
+  start_block_l2: System.get_env("INDEXER_PLATON_APPCHAIN_L2_START_BLOCK"),
+  l2_state_receiver: System.get_env("INDEXER_PLATON_APPCHAIN_L2_STATE_RECEIVER_CONTRACT")
+
+config :indexer, Indexer.Fetcher.PlatonAppchain.L2Execute,
+  start_block_l2: System.get_env("INDEXER_PLATON_APPCHAIN_L2_START_BLOCK"),
+  l2_state_receiver: System.get_env("INDEXER_PLATON_APPCHAIN_L2_STATE_RECEIVER_CONTRACT")
+
+config :indexer, Indexer.Fetcher.PlatonAppchain.ValidatorEvent,
+  start_block_l2: System.get_env("INDEXER_PLATON_APPCHAIN_L2_START_BLOCK"),
+  l2_stake_handler: System.get_env("INDEXER_PLATON_APPCHAIN_L2_STAKE_HANDLER_CONTRACT")
 
 config :indexer, Indexer.Fetcher.PolygonEdge.Supervisor, disabled?: !(chain_type == "polygon_edge")
 

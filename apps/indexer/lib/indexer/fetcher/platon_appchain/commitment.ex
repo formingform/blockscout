@@ -54,7 +54,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
       Commitment,
       env,
       self(),
-      env[:state_receiver],
+      env[:l2_state_receiver],
       "StateReceiver",
       "commitments",
       "Commitments",
@@ -167,7 +167,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
   @spec find_and_save_entities(boolean(), binary(), non_neg_integer(), non_neg_integer(), list()) :: non_neg_integer()
   def find_and_save_entities(
         scan_db,
-        state_receiver,
+        l2_state_receiver,
         block_start,
         block_end,
         json_rpc_named_arguments
@@ -178,7 +178,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
           from(log in Log,
             select: {log.data, log.address, log.transaction_hash, log.block_number},
             where:
-              log.first_topic == @new_commitment_event and log.address_hash == ^state_receiver and
+              log.first_topic == @new_commitment_event and log.address_hash == ^l2_state_receiver and
               log.block_number >= ^block_start and log.block_number <= ^block_end
           )
 
@@ -192,7 +192,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
           PlatonAppchain.get_logs(
             block_start,
             block_end,
-            state_receiver,
+            l2_state_receiver,
             @new_commitment_event,
             json_rpc_named_arguments,
             100_000_000

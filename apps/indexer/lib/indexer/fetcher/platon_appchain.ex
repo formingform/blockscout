@@ -63,9 +63,6 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     Application.get_all_env(:indexer)[Indexer.Fetcher.PlatonAppchain][:l2_validator_contract_address]
   end
 
-  def l1_validator_contract_address() do
-    Application.get_all_env(:indexer)[Indexer.Fetcher.PlatonAppchain][:l2_validator_contract_address]
-  end
 
   def default_block_interval() do
     @default_block_interval
