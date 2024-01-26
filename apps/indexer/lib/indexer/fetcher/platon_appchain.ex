@@ -519,7 +519,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   end
 
   @spec init_l2(
-          Explorer.Chain.PlatonAppchain.L2Event | Explorer.Chain.PlatonAppchain.L2Execute | Explorer.Chain.PlatonAppchain.L2ValidatorEvent,
+          Explorer.Chain.PlatonAppchain.L2Event | Explorer.Chain.PlatonAppchain.L2Execute | Explorer.Chain.PlatonAppchain.L2ValidatorEvent | Explorer.Chain.PlatonAppchain.Commitment,
           list(),
           pid(),
           binary(),
@@ -529,7 +529,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
           list()
         ) :: {:ok, map()} | :ignore
   def init_l2(table, env, pid, contract_address, contract_name, table_name, entity_name, json_rpc_named_arguments)
-      when table in [Explorer.Chain.PlatonAppchain.L2Event, Explorer.Chain.PlatonAppchain.L2Execute, Explorer.Chain.PlatonAppchain.L2ValidatorEvent] do
+      when table in [Explorer.Chain.PlatonAppchain.L2Event, Explorer.Chain.PlatonAppchain.L2Execute, Explorer.Chain.PlatonAppchain.L2ValidatorEvent, Explorer.Chain.PlatonAppchain.Commitment] do
     with {:start_block_l2_undefined, false} <- {:start_block_l2_undefined, is_nil(env[:start_block_l2])},
          {:contract_address_valid, true} <- {:contract_address_valid, Helper.is_address_correct?(contract_address)},
          start_block_l2 = parse_integer(env[:start_block_l2]),
