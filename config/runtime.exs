@@ -586,9 +586,7 @@ config :indexer, Indexer.Fetcher.Withdrawal.Supervisor,
 
 config :indexer, Indexer.Fetcher.Withdrawal, first_block: System.get_env("WITHDRAWALS_FIRST_BLOCK")
 
-# todo: 这个是啥意思？
-L2_STATE_SENDER_CONTRACT
-
+## for Platon Appchain
 config :indexer, Indexer.Fetcher.PlatonAppchain.Supervisor, disabled?: !(chain_type == "platon_appchain")
 
 config :indexer, Indexer.Fetcher.PlatonAppchain.L1Event.Supervisor, disabled?: !(chain_type == "platon_appchain")
