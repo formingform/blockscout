@@ -441,7 +441,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   end
 
   @spec init_l1(
-          Indexer.Fetcher.PlatonAppchain.L1Event | Indexer.Fetcher.PlatonAppchain.L1Execute | Indexer.Fetcher.PlatonAppchain.Checkpoint,
+          Explorer.Chain.PlatonAppchain.L1Event | Explorer.Chain.PlatonAppchain.L1Execute | Explorer.Chain.PlatonAppchain.Checkpoint,
           list(),
           pid(),
           binary(),
@@ -450,7 +450,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
           binary()
         ) :: {:ok, map()} | :ignore
   def init_l1(table, env, pid, contract_address, contract_name, table_name, entity_name)
-      when table in [Indexer.Fetcher.PlatonAppchain.L1Event, Indexer.Fetcher.PlatonAppchain.L1Execute, Indexer.Fetcher.PlatonAppchain.Checkpoint] do
+      when table in [Explorer.Chain.PlatonAppchain.L1Event, Explorer.Chain.PlatonAppchain.L1Execute, Explorer.Chain.PlatonAppchain.Checkpoint] do
     with {:start_block_l1_undefined, false} <- {:start_block_l1_undefined, is_nil(env[:start_block_l1])},
          platon_appchain_l1_rpc = l1_rpc_url(),
          {:rpc_l1_undefined, false} <- {:rpc_l1_undefined, is_nil(platon_appchain_l1_rpc)},
