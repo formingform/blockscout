@@ -45,7 +45,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorService do
   end
 
   def update_validator_status(validator_hash, current_status) do
-    extracted_status = cond current_status do
+    extracted_status = cond do
       PlatonAppchain.l2_validator_is_slashed(current_status) ->
         PlatonAppchain.l2_validator_status()[:Slashing]
       PlatonAppchain.l2_validator_is_duplicated(current_status) ->
@@ -54,7 +54,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorService do
         PlatonAppchain.l2_validator_status()[:Unstaked]
       PlatonAppchain.l2_validator_is_lowBlocks(current_status) ->
         PlatonAppchain.l2_validator_status()[:LowBlocks]
-      latonAppchain.l2_validator_is_lowThreshold(current_status) ->
+      PlatonAppchain.l2_validator_is_lowThreshold(current_status) ->
         PlatonAppchain.l2_validator_status()[:LowThreshold]
      end
     L2Validator.update_status(validator_hash, extracted_status)

@@ -73,13 +73,13 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
       ) do
 
     # todo 这里需要实现类似fill_event_id_gaps的函数
-#    PlatonAppchain.fill_event_id_gaps(
-#      start_block_l2,
-#      Commitment,
-#      __MODULE__,
-#      contract_address,
-#      json_rpc_named_arguments
-#    )
+    PlatonAppchain.fill_event_id_gaps(
+      start_block_l2,
+      L2Execute,
+      __MODULE__,
+      contract_address,
+      json_rpc_named_arguments
+    )
 
     Process.send(self(), :find_new_events, [])
     {:noreply, state}
