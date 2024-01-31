@@ -11,10 +11,10 @@ defmodule Indexer.Fetcher.PlatonAppchain.Checkpoint do
   import Ecto.Query
 
   import EthereumJSONRPC, only: [quantity_to_integer: 1]
-  import Indexer.Fetcher.PlatonAppchain, only: [fill_block_range: 5, get_block_number_by_tag: 3]
 
-  alias Explorer.Repo
+  alias Explorer.{Repo}
   alias Explorer.Chain.PlatonAppchain.Checkpoint
+  alias Explorer.Chain.PlatonAppchain.L2Event
   alias Indexer.Fetcher.PlatonAppchain
 
 
@@ -96,7 +96,15 @@ defmodule Indexer.Fetcher.PlatonAppchain.Checkpoint do
     from(l2_events in L2Event,
         select: fragment("count(*)"),
         where:
+<<<<<<< HEAD
           l2_events.block_number >= ^start_block_number and l2_events.block_number <= ^end_block_number)
    |> Repo.one(timeout: :infinity)
+=======
+          l2_events.block_number >= ^start_block_number and l2_events.block_number <= ^end_block_number
+      )
+    event_count = query
+      |> Repo.one(timeout: :infinity)
+    event_count
+>>>>>>> 3c905aa91 (Fix compile warning)
   end
 end

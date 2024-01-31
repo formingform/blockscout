@@ -10,10 +10,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L1Execute do
 
   import Ecto.Query
   import EthereumJSONRPC, only: [quantity_to_integer: 1]
-  import Indexer.Fetcher.PlatonAppchain, only: [fill_block_range: 5, get_block_number_by_tag: 3]
 
-  alias Explorer.Repo
-  alias Explorer.Chain.Log
+  alias Explorer.{Repo}
   alias Explorer.Chain.PlatonAppchain.L2Event
   alias Explorer.Chain.PlatonAppchain.Checkpoint
   alias Explorer.Chain.PlatonAppchain.L1Execute
@@ -58,7 +56,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L1Execute do
 
   @impl GenServer
   def handle_info(:continue, state) do
-    PlatonAppchain.handle_continue_l1(state, @checkpoint_submitted_event, __MODULE__, @fetcher_name)
+    PlatonAppchain.handle_continue_l1(state, @exit_helper_event, __MODULE__, @fetcher_name)
   end
 
 
@@ -95,7 +93,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L1Execute do
   end
 
   @spec prepare_events(list(), list()) :: list()
-  def prepare_events(events, json_rpc_named_arguments) do
+  def prepare_events(events, _json_rpc_named_arguments) do
     Enum.map(events, fn event ->
       event_id = quantity_to_integer(Enum.at(event["topics"], 1)) #l2上收集状态变更事件组成checkpoint的截至块高（L2上生成checkpoint的块高的前3个块高）。事实上，checkpoint收集的装备变更事件，是跨epoch的。
       status = Enum.at(event["topics"], 2)

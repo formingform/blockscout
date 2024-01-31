@@ -1,12 +1,6 @@
 defmodule Explorer.Chain.PlatonAppchain.L1Event do
   use Explorer.Schema
 
-  # alias Ecto.Changeset
-  alias Explorer.{
-    Chain,
-    PagingOptions
-    }
-
   alias Explorer.Chain.{
     Hash,
     Block

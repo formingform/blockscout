@@ -3,7 +3,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler do
   Stake handler contract interface encapsulation
   """
   alias Ethers
-  use Ethers.Contract, abi_file: "config/abi/L2_StakeHandler.json", default_address: Application.get_env(:indexer, __MODULE__)[:l2_stake_handler]
+  use Ethers.Contract, abi_file: "config/abi/L2_StakeHandler.json", default_address: Application.compile_env(:indexer, __MODULE__)[:l2_stake_handler]
 
   @rpc_opts [url: System.get_env("ETHEREUM_JSONRPC_HTTP_URL"), http_headers: [{"Content-Type", "application/json"}]]
   @default_size 10
@@ -21,6 +21,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler do
       #pubKey: Base.encode16(elem(validator, 8)),
       #blsKey: Base.encode16(elem(validator, 9))
     }
+    data
   end
 
   defp convertDelegationToJSON(delegation) do
@@ -135,7 +136,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler do
     validatorsJson
   end
 
-  """
+  @doc """
         validator_hash: elem(validator, 0),
         owner_hash: elem(validator, 1),
         stake_amount: elem(validator, 2),
