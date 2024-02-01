@@ -5,9 +5,9 @@ defmodule Explorer.Chain.PlatonAppchain.Commitment do
     Hash,
     Block
     }
-  @optional_attrs ~w()a
+  @optional_attrs ~w(tx_number)a
 
-  @required_attrs ~w(start_end_Id state_batch_hash state_root start_id end_id tx_number from to block_number block_timestamp)a
+  @required_attrs ~w(state_batch_hash state_root state_root start_id end_id from to block_number block_timestamp)a
 
   @allowed_attrs @optional_attrs ++ @required_attrs
 
@@ -39,12 +39,13 @@ defmodule Explorer.Chain.PlatonAppchain.Commitment do
   schema "commitments" do
     field(:state_batch_hash, Hash.Full, primary_key: true)
     field(:state_root, Hash.Full)
+    field(:hash, Hash.Full)
+    field(:block_number, :integer)
     field(:start_id, :integer)
     field(:end_id, :integer)
     field(:tx_number, :integer)
     field(:from, Hash.Address)
     field(:to, Hash.Address)
-    field(:block_number, :integer)
     field(:block_timestamp, :integer)
 
     timestamps()

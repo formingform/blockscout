@@ -7,6 +7,8 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateCommitments do
       add(:state_batch_hash, :bytea, null: false, primary_key: true)
       # 批次state root
       add(:state_root, :bytea, null: false)
+      # 交易hash
+      add(:hash, :bytea, null: false)
       # 交易所在区块
       add(:block_number, :bigint, null: false)
       # 批次起始msgId
@@ -21,8 +23,6 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateCommitments do
       add(:to, :bytea, null: false)
       # 交易时间
       add(:block_timestamp, :utc_datetime_usec, null: false)
-      # 0-waiting for state root 1-Ready for replay 2-Replayed
-      add(:status, :integer, null: false)
 
       timestamps(null: false, type: :utc_datetime_usec)
     end

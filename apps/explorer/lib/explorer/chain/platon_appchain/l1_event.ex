@@ -6,9 +6,9 @@ defmodule Explorer.Chain.PlatonAppchain.L1Event do
     Block
     }
 
-  @optional_attrs ~w(amount block_timestamp validator)a
+  @optional_attrs ~w(amount validator)a
 
-  @required_attrs ~w(event_id tx_type hash from to block_number)a
+  @required_attrs ~w(event_id tx_type hash from to block_number block_timestamp)a
 
   @allowed_attrs @optional_attrs ++ @required_attrs
 

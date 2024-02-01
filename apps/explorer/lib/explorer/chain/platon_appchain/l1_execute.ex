@@ -8,7 +8,7 @@ defmodule Explorer.Chain.PlatonAppchain.L1Execute do
 
   @optional_attrs ~w(amount replay_status)a
 
-  @required_attrs ~w(event_id tx_type hash state_batch_hash status)a
+  @required_attrs ~w(event_id tx_type hash block_number state_batch_hash status)a
 
   @allowed_attrs @optional_attrs ++ @required_attrs
 

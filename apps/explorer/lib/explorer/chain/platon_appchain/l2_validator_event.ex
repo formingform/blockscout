@@ -8,7 +8,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
 
   @optional_attrs ~w(action_desc amount)a
 
-  @required_attrs ~w(validator_hash action_type block_number block_timestamp log_index transaction_hash)a
+  @required_attrs ~w(validator_hash action_type block_number block_timestamp log_index hash)a
 
   @allowed_attrs @optional_attrs ++ @required_attrs
 
@@ -30,7 +30,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
                block_number: Block.block_number(),
                block_timestamp: non_neg_integer(),
                log_index: non_neg_integer(),
-               transaction_hash: Hash.t(),
+               hash: Hash.t(),
              }
 
   schema "l2_validator_events" do
@@ -41,7 +41,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
     field(:block_number, :integer)
     field(:block_timestamp, :integer)
     field(:log_index, :integer)
-    field(:transaction_hash, Hash.Full)
+    field(:hash, Hash.Full)
 
     timestamps()
   end

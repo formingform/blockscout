@@ -8,7 +8,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Event do
 
   @optional_attrs ~w(amount block_timestamp)a
 
-  @required_attrs ~w(event_id tx_type hash from to block_number)a
+  @required_attrs ~w(event_id tx_type hash block_number from to)a
 
   @allowed_attrs @optional_attrs ++ @required_attrs
 

@@ -7,7 +7,7 @@ defmodule Explorer.Chain.PlatonAppchain.Checkpoint do
     }
   @optional_attrs ~w()a
 
-  @required_attrs ~w(epoch start_block_number end_block_number event_root event_counts l1_block_number l1_transaction_hash l1_block_timestamp)a
+  @required_attrs ~w(epoch start_block_number end_block_number event_root event_counts block_number hash block_timestamp)a
 
   @allowed_attrs @optional_attrs ++ @required_attrs
 

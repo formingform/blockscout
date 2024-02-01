@@ -266,7 +266,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     repeated_call(&json_rpc/2, [req, json_rpc_named_arguments], error_message, retries)
   end
 
-  defp get_last_l1_item(table) do
+  defp get_last_l1_item(table) when table in [Explorer.Chain.PlatonAppchain.L1Event, Explorer.Chain.PlatonAppchain.L1Execute] do
     query =
       from(item in table,
         select: {item.block_number, item.hash},
@@ -278,9 +278,21 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     |> Repo.one()
     |> Kernel.||({0, nil})
   end
+  defp get_last_l1_item(table) when table in [Explorer.Chain.PlatonAppchain.Checkpoint] do
+    query =  from(item in table,
+      select: {item.block_number, item.hash},
+      order_by: [desc: item.block_number],
+      limit: 1
+    )
+
+    query
+    |> Repo.one()
+    |> Kernel.||({0, nil})
+  end
+
 
   @spec get_last_l2_item(module()) :: {non_neg_integer(), binary() | nil}
-  def get_last_l2_item(table) do
+  def get_last_l2_item(table) when table in [Explorer.Chain.PlatonAppchain.L2Event, Explorer.Chain.PlatonAppchain.L2Execute] do
     query =
       from(item in table,
         select: {item.block_number, item.hash},
@@ -292,6 +304,20 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     |> Repo.one()
     |> Kernel.||({0, nil})
   end
+
+  def get_last_l2_item(table) when table in [Explorer.Chain.PlatonAppchain.L2ValidatorEvent, Explorer.Chain.PlatonAppchain.Commitment] do
+    query =
+      from(item in table,
+        select: {item.block_number, item.hash},
+        order_by: [desc: item.block_number],
+        limit: 1
+      )
+
+    query
+    |> Repo.one()
+    |> Kernel.||({0, nil})
+  end
+
 
   defp get_block_check_interval(json_rpc_named_arguments) do
     {last_safe_block, _} = get_safe_block(json_rpc_named_arguments)
