@@ -2,6 +2,8 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   @moduledoc """
   Contains common functions for PlatonAppchain.* fetchers.
   """
+  use GenServer
+  use Indexer.Fetcher
 
   require Logger
 
@@ -17,6 +19,32 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   alias EthereumJSONRPC.Blocks
   alias Explorer.{Chain, Repo}
   alias Indexer.{Helper}
+
+
+  @fetcher_name :platon_appchain
+
+  def child_spec(start_link_arguments) do
+    spec = %{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, start_link_arguments},
+      restart: :transient,
+      type: :worker
+    }
+
+    Supervisor.child_spec(spec, [])
+  end
+
+  def start_link(args, gen_server_options \\ []) do
+    GenServer.start_link(__MODULE__, args, Keyword.put_new(gen_server_options, :name, __MODULE__))
+  end
+
+  @impl GenServer
+  def init(_args) do
+    Logger.metadata(fetcher: @fetcher_name)
+
+    :ignore
+  end
+
 
   # 周期类型：roung: 共识周期; epoch：结算周期
   @period_type [round: 1, epoch: 2]

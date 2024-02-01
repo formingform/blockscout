@@ -7,6 +7,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorRank do
 
 
   use GenServer
+  use Indexer.Fetcher
 
   require Logger
 
@@ -18,6 +19,17 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorRank do
   @fetcher_name :platon_appchain_l2_validator_rank
   @default_update_interval :timer.seconds(3)
   @period_type [round: 1, epoch: 2]
+
+  def child_spec(start_link_arguments) do
+    spec = %{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, start_link_arguments},
+      restart: :transient,
+      type: :worker
+    }
+
+    Supervisor.child_spec(spec, [])
+  end
 
   def start_link(_) do
     GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
