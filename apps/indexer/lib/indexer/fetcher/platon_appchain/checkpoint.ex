@@ -93,18 +93,14 @@ defmodule Indexer.Fetcher.PlatonAppchain.Checkpoint do
 
   # 统计在区块间, l2发生的包括在checkpoint的事件数量（需要同步到L1的事件）
   defp get_event_counts(start_block_number, end_block_number) do
-    from(l2_events in L2Event,
+    query =
+      from(l2_events in L2Event,
         select: fragment("count(*)"),
         where:
-<<<<<<< HEAD
-          l2_events.block_number >= ^start_block_number and l2_events.block_number <= ^end_block_number)
-   |> Repo.one(timeout: :infinity)
-=======
           l2_events.block_number >= ^start_block_number and l2_events.block_number <= ^end_block_number
       )
     event_count = query
       |> Repo.one(timeout: :infinity)
     event_count
->>>>>>> 3c905aa91 (Fix compile warning)
   end
 end
