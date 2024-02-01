@@ -750,7 +750,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     end
   end
 
-  defp import_events(events, calling_module) do
+  defp import_events(events, calling_module) when length(events) > 0 do
     {import_data, event_name} =
       if calling_module == Indexer.Fetcher.PlatonAppchain.L1Event do
         {%{l1_events: %{params: events}, timeout: :infinity}, "StateSynced"}

@@ -98,7 +98,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
       ) do
     # find and fill all events between start_block and "safe" block
     # the "safe" block can be "latest" (when safe_block_is_latest == true)
-    fill_block_range_no_event_id(
+    PlatonAppchain.fill_block_range_no_event_id(
       start_block,
       safe_block,
       {__MODULE__, Commitment},
@@ -110,7 +110,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
       # find and fill all events between "safe" and "latest" block (excluding "safe")
       {:ok, latest_block} = get_block_number_by_tag("latest", json_rpc_named_arguments, 100_000_000)
 
-      fill_block_range_no_event_id(
+      PlatonAppchain.fill_block_range_no_event_id(
         safe_block + 1,
         latest_block,
         {__MODULE__, Commitment},

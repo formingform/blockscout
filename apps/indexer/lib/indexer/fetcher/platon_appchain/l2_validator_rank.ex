@@ -31,8 +31,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorRank do
     Supervisor.child_spec(spec, [])
   end
 
-  def start_link(_) do
-    GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
+  def start_link(args, gen_server_options \\ []) do
+    GenServer.start_link(__MODULE__, args, Keyword.put_new(gen_server_options, :name, __MODULE__))
   end
 
   def init(_) do
