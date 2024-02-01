@@ -71,7 +71,7 @@ config :explorer, Explorer.Chain.Cache.NewVerifiedContractsCounter,
   update_interval_in_milliseconds: update_interval_in_milliseconds_default
 
 config :explorer, Explorer.Chain.Cache.WithdrawalsSum,
-  enabled: true,
+  enabled: false,
   enable_consolidation: true,
   update_interval_in_milliseconds: update_interval_in_milliseconds_default
 

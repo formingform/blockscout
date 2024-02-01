@@ -27,10 +27,8 @@ defmodule Explorer.Chain.PlatonAppchain.Checkpoint do
                end_block_number:  Block.block_number(),
                event_root:  Hash.t(),
                event_counts: non_neg_integer(),
-               l1_block_number: Block.block_number(),
-               l1_transaction_hash:  Hash.t(),
-               l1_block_timestamp:  non_neg_integer(),
-               block_number:  Block.block_number(),
+               block_number: Block.block_number(),
+               hash:  Hash.t(),
                block_timestamp:  non_neg_integer(),
              }
 
@@ -41,10 +39,8 @@ defmodule Explorer.Chain.PlatonAppchain.Checkpoint do
     field(:end_block_number, :integer)
     field(:event_root, Hash.Full)
     field(:event_counts, :integer)
-    field(:l1_block_number, :integer)
-    field(:l1_transaction_hash, Hash.Full)
-    field(:l1_block_timestamp, :integer)
     field(:block_number, :integer)
+    field(:hash, Hash.Full)
     field(:block_timestamp, :integer)
 
     timestamps()

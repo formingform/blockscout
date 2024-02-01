@@ -14,11 +14,11 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateCheckPoints do
       # checkpoint中包含的事件数（另起线程统计l2_events中数据，缺省就是null, 如果是null表示还没有统计。)
       add(:event_counts, :integer, null: true)
       # 交易所在L1区块
-      add(:l1_block_number, :bigint, null: false)
+      add(:block_number, :bigint, null: false)
       # checkpoint 批次在L1上的hash
-      add(:l1_transaction_hash, :bytea, null: false)
+      add(:hash, :bytea, null: false)
       # checkpoint交易所在L1交易时间
-      add(:l1_block_timestamp, :utc_datetime_usec, null: false)
+      add(:block_timestamp, :utc_datetime_usec, null: false)
 
       #record timestamp
       timestamps(null: false, type: :utc_datetime_usec)

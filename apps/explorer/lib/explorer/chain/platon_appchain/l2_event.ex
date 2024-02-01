@@ -32,7 +32,6 @@ defmodule Explorer.Chain.PlatonAppchain.L2Event do
                to:  Hash.Address.t(),
                block_number:  Block.block_number(),
                block_timestamp:  non_neg_integer() | nil,
-               validator: Hash.Address.t() | nil,
              }
 
   @primary_key false
@@ -45,7 +44,6 @@ defmodule Explorer.Chain.PlatonAppchain.L2Event do
     field(:to, Hash.Address)
     field(:block_number, :integer)
     field(:block_timestamp, :integer)
-    field(:validator, Hash.Address)
 
     timestamps()
   end

@@ -34,6 +34,8 @@ defmodule Explorer.Chain.PlatonAppchain.L2Execute do
     field(:event_id, :integer, primary_key: true)
     field(:hash, Hash.Full)
     field(:block_number, :integer)
+    field(:tx_type, :integer)
+    field(:amount, :integer)
     field(:state_batch_hash, Hash.Full)
     field(:replay_status, :integer)
     field(:status, :integer)
