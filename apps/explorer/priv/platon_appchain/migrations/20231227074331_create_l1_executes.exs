@@ -4,7 +4,7 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL1TxExecutes do
   def change do
     create table(:l1_executes, primary_key: false) do
       # 交易计数器 msgId
-      add(:event_Id, :bigint, null: false, primary_key: true)
+      add(:event_id, :bigint, null: false, primary_key: true)
       # 与tx表中一致（待定具体类型值）
       add(:tx_type, :integer, null: false)
       # 金额（不同的tx_type可能有不同的值
