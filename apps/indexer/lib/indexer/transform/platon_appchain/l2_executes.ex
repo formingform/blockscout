@@ -19,7 +19,7 @@ defmodule Indexer.Transform.PlatonAppchain.L2Executes do
     items =
       with false <-
              is_nil(Application.get_env(:indexer, L2Execute)[:start_block_l2]),
-           state_receiver = Application.get_env(:indexer, L2Execute)[:state_receiver],
+           state_receiver = Application.get_env(:indexer, L2Execute)[:l2_state_receiver],
            true <- Helper.is_address_correct?(state_receiver) do
         state_receiver = String.downcase(state_receiver)
         state_sync_result_event_signature = L2Execute.state_sync_result_event_signature()

@@ -97,7 +97,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
       ) do
     # find and fill all events between start_block and "safe" block
     # the "safe" block can be "latest" (when safe_block_is_latest == true)
-    PlatonAppchain.fill_block_range(
+    fill_block_range(
       start_block,
       safe_block,
       {__MODULE__, L2Event},
@@ -109,7 +109,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
       # find and fill all events between "safe" and "latest" block (excluding "safe")
       {:ok, latest_block} = PlatonAppchain.get_block_number_by_tag("latest", json_rpc_named_arguments, 100_000_000)
 
-      PlatonAppchain.fill_block_range(
+      fill_block_range(
         safe_block + 1,
         latest_block,
         {__MODULE__, L2Event},
@@ -227,7 +227,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
         timeout: :infinity
       })
 
-    # Enum.count(withdrawals)
+    Enum.count(l2_events)
   end
 
   @spec l2_state_synced_event_signature() :: binary()

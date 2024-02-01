@@ -15,10 +15,12 @@ defmodule Indexer.Transform.PlatonAppchain.L2Events do
   def parse(logs) do
     prev_metadata = Logger.metadata()
     Logger.metadata(fetcher: :platon_appchan_l2_events_realtime)
+    IO.inspect("******************: #{Application.get_env(:indexer, L2Event)[:l2_state_sender]}")
+    IO.inspect("******************: #{Application.get_env(:indexer, L2Event)[:start_block_l2]}")
 
     items =
       with false <- is_nil(Application.get_env(:indexer, L2Event)[:start_block_l2]),
-           state_sender = Application.get_env(:indexer, L2Event)[:state_sender],
+           state_sender = Application.get_env(:indexer, L2Event)[:l2_state_sender],
            true <- Helper.is_address_correct?(state_sender) do
         state_sender = String.downcase(state_sender)
         l2_state_synced_event_signature = L2Event.l2_state_synced_event_signature()

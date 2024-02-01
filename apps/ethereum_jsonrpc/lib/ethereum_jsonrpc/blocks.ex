@@ -46,11 +46,11 @@ defmodule EthereumJSONRPC.Blocks do
 
     elixir_blocks = to_elixir(blocks)
 
-    elixir_uncles = elixir_to_uncles(elixir_blocks)
+#    elixir_uncles = elixir_to_uncles(elixir_blocks)
     elixir_transactions = elixir_to_transactions(elixir_blocks)
     elixir_withdrawals = elixir_to_withdrawals(elixir_blocks)
 
-    block_second_degree_relations_params = Uncles.elixir_to_params(elixir_uncles)
+#    block_second_degree_relations_params = Uncles.elixir_to_params(elixir_blocks)
     transactions_params = Transactions.elixir_to_params(elixir_transactions)
     withdrawals_params = Withdrawals.elixir_to_params(elixir_withdrawals)
     blocks_params = elixir_to_params(elixir_blocks)
@@ -58,7 +58,7 @@ defmodule EthereumJSONRPC.Blocks do
     %__MODULE__{
       errors: errors,
       blocks_params: blocks_params,
-      block_second_degree_relations_params: block_second_degree_relations_params,
+#      block_second_degree_relations_params: block_second_degree_relations_params,
       transactions_params: transactions_params,
       withdrawals_params: withdrawals_params
     }
