@@ -19,6 +19,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   alias EthereumJSONRPC.Blocks
   alias Explorer.{Chain, Repo}
   alias Indexer.{Helper}
+  alias Indexer.Fetcher.PlatonAppchain.{L1Event, L1Execute, L2Event, L2Execute, Commitment}
 
 
   @fetcher_name :platon_appchain
@@ -649,7 +650,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
         calling_module,
         _fetcher_name
       )
-      when calling_module in [Indexer.Fetcher.PlatonAppchain.L1Event, Indexer.Fetcher.PlatonAppchain.L1Execute, Indexer.Fetcher.PlatonAppchain.Checkpoint] do
+      when calling_module in [L1Event, L1Execute, Checkpoint] do
     time_before = Timex.now()
 
     eth_get_logs_range_size =
@@ -806,7 +807,6 @@ defmodule Indexer.Fetcher.PlatonAppchain do
           chunk_end,
           json_rpc_named_arguments
         )
-
       event_name = cond do
         calling_module == Indexer.Fetcher.PlatonAppchain.L2Execute -> "StateSyncResult"
         calling_module == Indexer.Fetcher.PlatonAppchain.Commitment -> "NewCommitment"

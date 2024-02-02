@@ -45,6 +45,12 @@ defmodule Explorer.Chain.Import.Stage.BlockReferencing do
       "platon_appchain" ->
         @default_runners ++
         [
+          Runner.PlatonAppchain.L1Event,
+          Runner.PlatonAppchain.L1Execute,
+          Runner.PlatonAppchain.L2Event,
+          Runner.PlatonAppchain.L2Execute,
+          Runner.PlatonAppchain.Commitment,
+          Runner.PlatonAppchain.Checkpoint,
           Runner.PlatonAppchain.L2Validators
         ]
 
