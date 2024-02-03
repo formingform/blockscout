@@ -681,7 +681,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
           {events, event_name} =
             result
             |> calling_module.prepare_events(json_rpc_named_arguments)
-            |> import_events(calling_module)
+            |> __MODULE__.import_events(calling_module)
 
           log_blocks_chunk_handling(
             chunk_start,
