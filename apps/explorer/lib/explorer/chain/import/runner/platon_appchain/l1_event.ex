@@ -67,7 +67,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L1Event do
     Import.insert_changes_list(
       repo,
       ordered_changes_list,
-      conflict_target: :hash,
+      conflict_target: :event_id,
       on_conflict: on_conflict,
       for: L1Event,
       returning: true,
@@ -83,7 +83,6 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L1Event do
       update: [
         set: [
           # Don't update `event_id` as it is a primary key and used for the conflict target
-          event_id: fragment("EXCLUDED.event_id"),
           tx_type: fragment("EXCLUDED.tx_type"),
           amount: fragment("EXCLUDED.amount"),
           hash: fragment("EXCLUDED.hash"),
@@ -98,9 +97,8 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L1Event do
       ],
       where:
         fragment(
-          "(EXCLUDED.event_id,EXCLUDED.tx_type,EXCLUDED.amount,EXCLUDED.hash,EXCLUDED.from,EXCLUDED.to,
-          EXCLUDED.block_number,EXCLUDED.block_timestamp,EXCLUDED.validator) IS DISTINCT FROM (?,?,?,?,?,?,?,?,?)", # 有冲突时只更新这些字段
-          l.event_id,
+          "(EXCLUDED.tx_type,EXCLUDED.amount,EXCLUDED.hash,EXCLUDED.from,EXCLUDED.to,
+          EXCLUDED.block_number,EXCLUDED.block_timestamp,EXCLUDED.validator) IS DISTINCT FROM (?,?,?,?,?,?,?,?)", # 有冲突时只更新这些字段
           l.tx_type,
           l.amount,
           l.hash,

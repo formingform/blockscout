@@ -61,13 +61,13 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.Checkpoint do
   def insert(repo, changes_list, %{timeout: timeout, timestamps: timestamps} = options) when is_list(changes_list) do
     on_conflict = Map.get_lazy(options, :on_conflict, &default_on_conflict/0)
 
-    # 按event_id排序
-    ordered_changes_list = Enum.sort_by(changes_list, & &1.start_id)
+    # 按epoch排序
+    ordered_changes_list = Enum.sort_by(changes_list, & &1.epoch)
 
     Import.insert_changes_list(
       repo,
       ordered_changes_list,
-      conflict_target: :hash,
+      conflict_target: :epoch,
       on_conflict: on_conflict,
       for: Checkpoint,
       returning: true,
@@ -83,30 +83,28 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.Checkpoint do
       update: [
         set: [
           # Don't update `epoch` as it is a primary key and used for the conflict target
-          epoch: fragment("EXCLUDED.epoch"),
           start_block_number: fragment("EXCLUDED.start_block_number"),
           end_block_number: fragment("EXCLUDED.end_block_number"),
           event_root: fragment("EXCLUDED.event_root"),
           event_counts: fragment("EXCLUDED.event_counts"),
-          l1_block_number: fragment("EXCLUDED.l1_block_number"),
-          l1_transaction_hash: fragment("EXCLUDED.l1_transaction_hash"),
-          l1_block_timestamp: fragment("EXCLUDED.l1_block_timestamp"),
+          block_number: fragment("EXCLUDED.block_number"),
+          hash: fragment("EXCLUDED.hash"),
+          block_timestamp: fragment("EXCLUDED.block_timestamp"),
           inserted_at: fragment("LEAST(?, EXCLUDED.inserted_at)", l.inserted_at), # LEAST返回给定的最小值 EXCLUDED.inserted_at 表示已存在的值
           updated_at: fragment("GREATEST(?, EXCLUDED.updated_at)", l.updated_at)
         ]
       ],
       where:
         fragment(
-          "(EXCLUDED.epoch,EXCLUDED.start_block_number,EXCLUDED.end_block_number,EXCLUDED.event_root,EXCLUDED.event_counts,EXCLUDED.l1_block_number,
-          EXCLUDED.l1_transaction_hash,EXCLUDED.l1_block_timestamp) IS DISTINCT FROM (?,?,?,?,?,?,?,?)", # 有冲突时只更新这些字段
-          l.epoch,
+          "(EXCLUDED.start_block_number,EXCLUDED.end_block_number,EXCLUDED.event_root,EXCLUDED.event_counts,EXCLUDED.block_number,
+          EXCLUDED.hash,EXCLUDED.block_timestamp) IS DISTINCT FROM (?,?,?,?,?,?,?)", # 有冲突时只更新这些字段
           l.start_block_number,
           l.end_block_number,
           l.event_root,
           l.event_counts,
-          l.l1_block_number,
-          l.l1_transaction_hash,
-          l.l1_block_timestamp
+          l.block_number,
+          l.hash,
+          l.block_timestamp
         )
     )
   end

@@ -19,7 +19,8 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   alias EthereumJSONRPC.Blocks
   alias Explorer.{Chain, Repo}
   alias Indexer.{Helper}
-  alias Indexer.Fetcher.PlatonAppchain.{L1Event, L1Execute, L2Event, L2Execute, Commitment}
+  alias Explorer.Chain.PlatonAppchain
+  alias Indexer.Fetcher.PlatonAppchain.{L1Event, L1Execute, L2Event, L2Execute, Commitment, Checkpoint}
 
 
   @fetcher_name :platon_appchain
@@ -467,10 +468,9 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     |> get_blocks_by_events(json_rpc_named_arguments, 100_000_000)
     |> Enum.reduce(%{}, fn block, acc ->
       block_number = quantity_to_integer(Map.get(block, "number"))
-      {:ok, timestamp} = quantity_to_integer(Map.get(block, "timestamp"))
-      Map.put(acc, block_number, timestamp)
+      timestamp = quantity_to_integer(Map.get(block, "timestamp"))
       miner = Map.get(block, "miner")
-      Map.put(acc, "#{block_number}_miner", miner)
+      Map.put(acc, "#{block_number}_miner", miner) |> Map.put(block_number, timestamp)
     end)
   end
 
@@ -637,7 +637,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     end
   end
 
-  @spec handle_continue_l1(map(), binary(), Indexer.Fetcher.PlatonAppchain.L1Event | Indexer.Fetcher.PlatonAppchain.L1Execute | Indexer.Fetcher.PlatonAppchain.Checkpoint, atom()) :: {:noreply, map()}
+  @spec handle_continue_l1(map(), binary(), L1Event | L1Execute | Checkpoint, atom()) :: {:noreply, map()}
   def handle_continue_l1(
         %{
           contract_address: contract_address,
@@ -681,7 +681,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
           {events, event_name} =
             result
             |> calling_module.prepare_events(json_rpc_named_arguments)
-            |> __MODULE__.import_events(calling_module)
+            |> import_events(calling_module)
 
           log_blocks_chunk_handling(
             chunk_start,
@@ -751,12 +751,15 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     end
   end
 
-  defp import_events(events, calling_module) when length(events) > 0 do
+  defp import_events(events, calling_module) do
     {import_data, event_name} =
-      if calling_module == Indexer.Fetcher.PlatonAppchain.L1Event do
-        {%{l1_events: %{params: events}, timeout: :infinity}, "StateSynced"}
-#      else
-#        {%{l2_executes: %{params: events}, timeout: :infinity}, "ExitProcessed"}
+      cond do
+        calling_module == L1Event ->
+          {%{l1_events: %{params: events}, timeout: :infinity}, "StateSynced"}
+        calling_module == L1Execute ->
+          {%{l1_executes: %{params: events}, timeout: :infinity}, "ExitProcessed"}
+        calling_module == Checkpoint ->
+          {%{checkpoints: %{params: events}, timeout: :infinity}, "CheckpointSubmitted"}
       end
 
     {:ok, _} = Chain.import(import_data)
@@ -808,8 +811,8 @@ defmodule Indexer.Fetcher.PlatonAppchain do
           json_rpc_named_arguments
         )
       event_name = cond do
-        calling_module == Indexer.Fetcher.PlatonAppchain.L2Execute -> "StateSyncResult"
-        calling_module == Indexer.Fetcher.PlatonAppchain.Commitment -> "NewCommitment"
+        calling_module == L2Execute -> "StateSyncResult"
+        calling_module == Commitment -> "NewCommitment"
         true -> "L2StateSynced"
       end
 

@@ -17,9 +17,9 @@ defmodule Explorer.Chain.PlatonAppchain.Checkpoint do
   * `end_block_number` - checkpoint收集事件的l2上截至块高（epoch结束的前3个块高）
   * `event_root` - event root
   * `event_counts` - checkpoint总包含的事件数（另起线程统计l2_events中数据）
-  * `l1_block_number` - 交易所在L1区块
-  * `l1_transaction_hash` - checkpoint交易在L1上的hash
-  * `l1_block_timestamp` - checkpoint交易所在L1交易时间
+  * `block_number` - 交易所在L1区块
+  * `hash` - checkpoint交易在L1上的hash
+  * `block_timestamp` - checkpoint交易所在L1交易时间
   """
   @type t :: %__MODULE__{
                epoch: non_neg_integer(),

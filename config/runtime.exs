@@ -606,6 +606,7 @@ config :indexer, Indexer.Fetcher.PlatonAppchain,
   l2_epoch_size: System.get_env("INDEXER_PLATON_APPCHAIN_L2_EPOCH_SIZE"),
   l2_round_size: System.get_env("INDEXER_PLATON_APPCHAIN_L2_ROUND_SIZE")
 
+
 config :indexer, Indexer.Fetcher.PlatonAppchain.Contracts,
   l1_stake_manager: System.get_env("INDEXED_PLATON_APPCHAIN_L1_STAKE_MANAGER_CONTRACT"),
   l2_stake_handler: System.get_env("INDEXED_PLATON_APPCHAIN_L2_STAKE_HANDLER_CONTRACT"),

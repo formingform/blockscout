@@ -18,7 +18,7 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2Txs do
       # 交易所在区块
       add(:block_number, :bigint, null: false)
       # 交易时间 客户端算根据此值计算（age）
-      add(:block_timestamp, :utc_datetime_usec, default: fragment("NULL"), null: true)
+      add(:block_timestamp, :bigint, default: fragment("NULL"), null: true)
 
       timestamps(null: false, type: :utc_datetime_usec)
     end

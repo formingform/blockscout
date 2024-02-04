@@ -15,8 +15,6 @@ defmodule Indexer.Transform.PlatonAppchain.L2Events do
   def parse(logs) do
     prev_metadata = Logger.metadata()
     Logger.metadata(fetcher: :platon_appchan_l2_events_realtime)
-    IO.inspect("******************: #{Application.get_env(:indexer, L2Event)[:l2_state_sender]}")
-    IO.inspect("******************: #{Application.get_env(:indexer, L2Event)[:start_block_l2]}")
 
     items =
       with false <- is_nil(Application.get_env(:indexer, L2Event)[:start_block_l2]),
