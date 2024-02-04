@@ -602,8 +602,9 @@ config :indexer, Indexer.Fetcher.PlatonAppchain.L2ValidatorRank.Supervisor, disa
 config :indexer, Indexer.Fetcher.PlatonAppchain,
   platon_appchain_l1_rpc: System.get_env("INDEXER_PLATON_APPCHAIN_L1_RPC"),
   platon_appchain_eth_get_logs_range_size: ConfigHelper.parse_integer_env_var("INDEXER_PLATON_APPCHAIN_ETH_GET_LOGS_RANGE_SIZE", 1000),
-  l2_validator_contract_address: System.get_env("INDEXER_PLATON_APPCHAIN_L2_VALIDATOR_CONTRACT_ADDRESS")
-
+  l2_validator_contract_address: System.get_env("INDEXER_PLATON_APPCHAIN_L2_VALIDATOR_CONTRACT_ADDRESS"),
+  l2_epoch_size: System.get_env("INDEXER_PLATON_APPCHAIN_L2_EPOCH_SIZE"),
+  l2_round_size: System.get_env("INDEXER_PLATON_APPCHAIN_L2_ROUND_SIZE")
 
 config :indexer, Indexer.Fetcher.PlatonAppchain.Contracts,
   l1_stake_manager: System.get_env("INDEXED_PLATON_APPCHAIN_L1_STAKE_MANAGER_CONTRACT"),
