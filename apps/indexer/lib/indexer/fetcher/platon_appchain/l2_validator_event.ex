@@ -259,11 +259,12 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
         block_end,
         json_rpc_named_arguments
       ) do
+    IO.inspect binding()
     l2_validator_events =
       if scan_db do
         query =
           from(log in Log,
-            select: {log.second_topic, log.third_topic, log.data, log.transaction_hash, log.block_number},
+            select: {log.first_topic, log.second_topic, log.third_topic, log.data, log.transaction_hash, log.block_number},
             where:
               (log.first_topic == @l2_biz_event_ValidatorRegistered or log.first_topic == @l2_biz_event_StakeAdded or log.first_topic == @l2_biz_event_DelegationAdded or log.first_topic == @l2_biz_event_UnStaked or log.first_topic == @l2_biz_event_UnDelegated or log.first_topic == @l2_biz_event_Slashed)
               and log.address_hash == ^l2_stake_handler and
@@ -281,10 +282,10 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
             block_start,
             block_end,
             l2_stake_handler,
-            [@l2_biz_event_ValidatorRegistered, @l2_biz_event_StakeAdded, @l2_biz_event_DelegationAdded, @l2_biz_event_UnStaked, @l2_biz_event_UnDelegated, @l2_biz_event_Slashed],
+            event_signatures(),
             json_rpc_named_arguments,
             100_000_000
-          )
+          ) |> dbg()
 
         Enum.map(result, fn event ->
           event_to_l2_validator_event(
@@ -305,8 +306,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
         timeout: :infinity
       })
 
-    #todo: 根据  l2_validator_events, 更新l2_validators表。
-
+    Enum.count(l2_validator_events)
   end
 
   @spec event_signatures() :: list()

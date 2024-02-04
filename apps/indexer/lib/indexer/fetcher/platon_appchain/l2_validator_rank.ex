@@ -38,34 +38,24 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorRank do
   def init(_) do
     l2_epoch_size = PlatonAppchain.l2_epoch_size()
     l2_rpc_arguments = PlatonAppchain.l2_rpc_arguments()
-    l2_validator_contract_address = PlatonAppchain.l2_validator_contract_address()
-    if Helper.is_address_correct?(l2_validator_contract_address) do
-      Process.send(self(), :continue, [])
-      {:ok,
-        %{
-          l2_validator_contract_address: l2_validator_contract_address,
-          l2_rpc_arguments: l2_rpc_arguments,
-          l2_epoch_size: l2_epoch_size,
-          next_epoch_block: 0
-        }}
-    else
-      Logger.error("L2 validator contract address: #{l2_validator_contract_address} is invalid or not defined. PlatonAppchain is not started.")
-      :ignore
-    end
+    Process.send(self(), :continue, [])
+    {:ok,
+      %{
+        l2_rpc_arguments: l2_rpc_arguments,
+        l2_epoch_size: l2_epoch_size,
+        next_epoch_block: 0
+      }}
   end
 
-  @spec handle_continue(map(), L2ValidatorRank, atom()) :: {:noreply, map()}
-  def handle_continue(
+  @impl GenServer
+  def handle_info(
+        :continue,
         %{
-#          l2_validator_contract_address: l2_validator_contract_address,
           l2_rpc_arguments: l2_rpc_arguments,
           l2_epoch_size: l2_epoch_size,
           next_epoch_block: next_epoch_block
-        } = state,
-        calling_module,
-        fetcher_name
-      )
-      when calling_module in [L2ValidatorRank] do
+        } = state
+      ) do
 
     {:ok, latest_block} = PlatonAppchain.get_latest_block_number(l2_rpc_arguments)
     epoch = PlatonAppchain.calculateL2Epoch(latest_block, l2_epoch_size)

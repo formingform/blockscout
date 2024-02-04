@@ -20,7 +20,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   alias Explorer.{Chain, Repo}
   alias Indexer.{Helper}
   alias Explorer.Chain.PlatonAppchain
-  alias Indexer.Fetcher.PlatonAppchain.{L1Event, L1Execute, L2Event, L2Execute, Commitment, Checkpoint}
+  alias Indexer.Fetcher.PlatonAppchain.{L1Event, L1Execute, L2Event, L2Execute, L2ValidatorEvent, Commitment, Checkpoint}
 
 
   @fetcher_name :platon_appchain
@@ -653,7 +653,6 @@ defmodule Indexer.Fetcher.PlatonAppchain do
         _fetcher_name
       )
       when calling_module in [L1Event, L1Execute, Checkpoint] do
-    IO.inspect binding()
 
     time_before = Timex.now()
 
@@ -756,7 +755,6 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   end
 
   defp import_events(events, calling_module) do
-    IO.inspect binding()
     {import_data, event_name} =
       cond do
         calling_module == L1Event ->
@@ -773,7 +771,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   end
 
 
-  @spec fill_block_range(integer(), integer(), L2Execute | L2Event, binary(), list(), boolean()) :: integer()
+  @spec fill_block_range(integer(), integer(), L2Execute | L2Event | Commitment | L2ValidatorEvent, binary(), list(), boolean()) :: integer()
   def fill_block_range(
         l2_block_start,
         l2_block_end,
@@ -782,7 +780,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
         json_rpc_named_arguments,
         scan_db
       )
-      when calling_module in [L2Execute, L2Event, Commitment] do
+      when calling_module in [L2Execute, L2Event, Commitment, L2ValidatorEvent] do
     eth_get_logs_range_size =
       Application.get_all_env(:indexer)[Indexer.Fetcher.PlatonAppchain][:platon_appchain_eth_get_logs_range_size]
 
@@ -818,7 +816,8 @@ defmodule Indexer.Fetcher.PlatonAppchain do
       event_name = cond do
         calling_module == L2Execute -> "StateSyncResult"
         calling_module == Commitment -> "NewCommitment"
-        true -> "L2StateSynced"
+        calling_module == L2Event -> "L2StateSynced"
+        calling_module == L2ValidatorEvent -> "L2StakeEvent"
       end
 
       log_blocks_chunk_handling(

@@ -165,7 +165,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
       if scan_db do
         query =
           from(log in Log,
-            select: {log.data, log.address, log.transaction_hash, log.block_number},
+            select: {log.data, log.address_hash, log.transaction_hash, log.block_number},
             where:
               log.first_topic == @new_commitment_event and log.address_hash == ^l2_state_receiver and
               log.block_number >= ^block_start and log.block_number <= ^block_end
