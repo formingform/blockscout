@@ -639,7 +639,7 @@ config :indexer, Indexer.Fetcher.PlatonAppchain.L2Execute,
   start_block_l2: System.get_env("INDEXER_PLATON_APPCHAIN_L2_START_BLOCK"),
   l2_state_receiver: System.get_env("INDEXER_PLATON_APPCHAIN_L2_STATE_RECEIVER_CONTRACT")
 
-config :indexer, Indexer.Fetcher.PlatonAppchain.ValidatorEvent,
+config :indexer, Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent,
   start_block_l2: System.get_env("INDEXER_PLATON_APPCHAIN_L2_START_BLOCK"),
   l2_stake_handler: System.get_env("INDEXER_PLATON_APPCHAIN_L2_STAKE_HANDLER_CONTRACT")
 
