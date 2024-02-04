@@ -681,7 +681,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
           {events, event_name} =
             result
             |> calling_module.prepare_events(json_rpc_named_arguments)
-            |> __MODULE__.import_events(calling_module)
+            |> import_events(calling_module)
 
           log_blocks_chunk_handling(
             chunk_start,
@@ -762,8 +762,6 @@ defmodule Indexer.Fetcher.PlatonAppchain do
           {%{checkpoints: %{params: events}, timeout: :infinity}, "CheckpointSubmitted"}
       end
 
-    IO.inspect("##########################: #{event_name}")
-    IO.inspect(import_data)
     {:ok, _} = Chain.import(import_data)
 
     {events, event_name}

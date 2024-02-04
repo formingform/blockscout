@@ -62,7 +62,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2Validators do
     on_conflict = Map.get_lazy(options, :on_conflict, &default_on_conflict/0)
 
     # 按validator_hash排序
-    ordered_changes_list = Enum.sort_by(changes_list, & &1.validator_hash)
+    ordered_changes_list = Enum.sort_by(changes_list, & &1.rank)
 
     Import.insert_changes_list(
       repo,
@@ -77,54 +77,62 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2Validators do
 
   end
 
+  field(:role, :integer)
+  field(:status, :integer)
+
   defp default_on_conflict do
     from(
       l in L2Validator,
       update: [
         set: [
           # Don't update `msg_id` as it is a primary key and used for the conflict target
+          stake_epoch: fragment("EXCLUDED.stake_epoch"),
+          owner_hash: fragment("EXCLUDED.owner_hash"),
+          commission_rate: fragment("EXCLUDED.commission_rate"),
+          stake_amount: fragment("EXCLUDED.stake_amount"),
+          locking_stake_amount: fragment("EXCLUDED.locking_stake_amount"),
+          withdrawal_stake_amount: fragment("EXCLUDED.withdrawal_stake_amount"),
+          delegate_amount: fragment("EXCLUDED.delegate_amount"),
+          stake_reward: fragment("EXCLUDED.stake_reward"),
+          delegate_reward: fragment("EXCLUDED.delegate_reward"),
           rank: fragment("EXCLUDED.rank"),
           name: fragment("EXCLUDED.rank"),
           detail: fragment("EXCLUDED.rank"),
           logo: fragment("EXCLUDED.rank"),
           website: fragment("EXCLUDED.rank"),
-          owner_hash: fragment("EXCLUDED.owner_hash"),
-          commission: fragment("EXCLUDED.commission"),
-          self_bonded: fragment("EXCLUDED.self_bonded"),
-          unbondeding: fragment("EXCLUDED.unbondeding"),
-          pending_withdrawal_bonded: fragment("EXCLUDED.pending_withdrawal_bonded"),
-          total_delegation: fragment("EXCLUDED.total_delegation"),
-          validator_reward: fragment("EXCLUDED.validator_reward"),
-          delegator_reward: fragment("EXCLUDED.delegator_reward"),
           expect_apr: fragment("EXCLUDED.expect_apr"),
           block_rate: fragment("EXCLUDED.block_rate"),
           auth_status: fragment("EXCLUDED.auth_status"),
+          role: fragment("EXCLUDED.role"),
           status: fragment("EXCLUDED.status"),
-          stake_epoch: fragment("EXCLUDED.stake_epoch"),
-          epoch: fragment("EXCLUDED.epoch"),
           inserted_at: fragment("LEAST(?, EXCLUDED.inserted_at)", l.inserted_at), # LEAST返回给定的最小值 EXCLUDED.inserted_at 表示已存在的值
           updated_at: fragment("GREATEST(?, EXCLUDED.updated_at)", l.updated_at)
         ]
       ],
       where:
         fragment(
-          "(EXCLUDED.rank,EXCLUDED.owner_hash,EXCLUDED.validator_hash,EXCLUDED.commission,EXCLUDED.self_bonded,EXCLUDED.unbondeding,
-          EXCLUDED.pending_withdrawal_bonded,EXCLUDED.total_delegation,EXCLUDED.validator_reward,EXCLUDED.delegator_reward,EXCLUDED.auth_status,
-          EXCLUDED.status,EXCLUDED.stake_epoch,EXCLUDED.epoch) IS DISTINCT FROM (?,?,?,?,?,?,?,?,?,?,?,?,?,?)", # 有冲突时只更新这些字段
-          l.rank,
-          l.owner_hash,
-          l.validator_hash,
-          l.commission,
-          l.self_bonded,
-          l.unbondeding,
-          l.pending_withdrawal_bonded,
-          l.total_delegation,
-          l.validator_reward,
-          l.delegator_reward,
-          l.auth_status,
-          l.status,
+          "(EXCLUDED.stake_epoch,EXCLUDED.owner_hash,EXCLUDED.commission_rate,EXCLUDED.stake_amount,EXCLUDED.locking_stake_amount,EXCLUDED.withdrawal_stake_amount,
+          EXCLUDED.delegate_amount,EXCLUDED.stake_reward,EXCLUDED.delegate_reward,EXCLUDED.rank,EXCLUDED.name,EXCLUDED.detail,EXCLUDED.logo,EXCLUDED.website,
+          EXCLUDED.expect_apr,EXCLUDED.block_rate,EXCLUDED.auth_status,EXCLUDED.role,EXCLUDED.status) IS DISTINCT FROM (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", # 有冲突时只更新这些字段
           l.stake_epoch,
-          l.epoch
+          l.owner_hash,
+          l.commission_rate,
+          l.stake_amount,
+          l.locking_stake_amount,
+          l.withdrawal_stake_amount,
+          l.delegate_amount,
+          l.stake_reward,
+          l.delegate_reward,
+          l.rank,
+          l.name,
+          l.detail,
+          l.logo,
+          l.website,
+          l.expect_apr,
+          l.block_rate,
+          l.auth_status,
+          l.role,
+          l.status,
         )
     )
   end

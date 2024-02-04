@@ -83,7 +83,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L1Execute do
   def get_state_batch_hash_by_block_number(block_number) do
     query =
       from(checkpoints in Checkpoint,
-        select: {checkpoints.l1_transaction_hash},
+        select: {checkpoints.hash},
         where: checkpoints.start_block_number <= ^block_number and checkpoints.end_block_number >= ^block_number,
         limit: 1
       )

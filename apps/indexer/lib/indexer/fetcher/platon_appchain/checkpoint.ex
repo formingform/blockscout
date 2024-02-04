@@ -84,9 +84,9 @@ defmodule Indexer.Fetcher.PlatonAppchain.Checkpoint do
         end_block_number: end_block_number,
         event_root: event["data"],
         event_counts: get_event_counts(start_block_number, end_block_number),
-        l1_block_number: l1_block_number,
-        l1_transaction_hash: event["transactionHash"],
-        l1_block_timestamp: Map.get(timestamps, l1_block_number)
+        block_number: l1_block_number,
+        hash: event["transactionHash"],
+        block_timestamp: Map.get(timestamps, l1_block_number)
       }
     end)
   end
