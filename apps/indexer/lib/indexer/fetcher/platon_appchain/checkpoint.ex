@@ -71,9 +71,12 @@ defmodule Indexer.Fetcher.PlatonAppchain.Checkpoint do
   def prepare_events(events, json_rpc_named_arguments) do
     Enum.map(events, fn event ->
       end_block_number = quantity_to_integer(Enum.at(event["topics"], 2)) #l2上收集状态变更事件组成checkpoint的截至块高（L2上生成checkpoint的块高的前3个块高）。事实上，checkpoint收集的装备变更事件，是跨epoch的。
-      start_block_number = 1
-      if end_block_number > PlatonAppchain.l2_epoch_size() do
-        start_block_number = end_block_number - PlatonAppchain.l2_epoch_size() + 1
+      round_size = quantity_to_integer(PlatonAppchain.l2_round_size())
+      start_block_number = cond do
+        end_block_number > round_size ->
+          end_block_number - round_size + 1
+        true ->
+          1
       end
 
       l1_block_number = quantity_to_integer(event["blockNumber"])

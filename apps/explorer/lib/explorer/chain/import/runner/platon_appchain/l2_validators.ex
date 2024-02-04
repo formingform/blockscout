@@ -77,9 +77,6 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2Validators do
 
   end
 
-  field(:role, :integer)
-  field(:status, :integer)
-
   defp default_on_conflict do
     from(
       l in L2Validator,
@@ -132,7 +129,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2Validators do
           l.block_rate,
           l.auth_status,
           l.role,
-          l.status,
+          l.status
         )
     )
   end

@@ -18,6 +18,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
   alias Explorer.{Chain, Repo}
   alias Explorer.Chain.Log
   alias Explorer.Chain.PlatonAppchain.Commitment
+  alias Explorer.Chain.PlatonAppchain.L2Execute
   alias Indexer.Fetcher.PlatonAppchain
 
   @fetcher_name :platon_appchain_Commitment
