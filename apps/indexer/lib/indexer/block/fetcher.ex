@@ -42,7 +42,7 @@ defmodule Indexer.Block.Fetcher do
     TransactionActions
   }
 
-  alias Indexer.Transform.PlatonAppchain.{L2Executes, L2Events}
+  alias Indexer.Transform.PlatonAppchain.{L2Executes, L2Events, L2ValidatorEvents, Commitments}
 
   alias Indexer.Transform.Blocks, as: TransformBlocks
 
@@ -145,13 +145,24 @@ defmodule Indexer.Block.Fetcher do
          %{transaction_actions: transaction_actions} = TransactionActions.parse(logs),
          %{mint_transfers: mint_transfers} = MintTransfers.parse(logs),
 
-         platon_appchain_l2_events =
+         l2_events =
            if(callback_module == Indexer.Block.Realtime.Fetcher, do: L2Events.parse(logs), else: []),
-         platon_appchain_l2_executes =
+         l2_executes =
            if(callback_module == Indexer.Block.Realtime.Fetcher,
              do: L2Executes.parse(logs),
              else: []
            ),
+         l2_validator_events =
+           if(callback_module == Indexer.Block.Realtime.Fetcher,
+             do: L2ValidatorEvents.parse(logs, json_rpc_named_arguments),
+             else: []
+           ),
+         commitments =
+           if(callback_module == Indexer.Block.Realtime.Fetcher,
+             do: Commitments.parse(logs, json_rpc_named_arguments),
+             else: []
+           ),
+
 #         polygon_edge_withdrawals =
 #           if(callback_module == Indexer.Block.Realtime.Fetcher, do: Withdrawals.parse(logs), else: []),
 #         polygon_edge_deposit_executes =
@@ -222,8 +233,10 @@ defmodule Indexer.Block.Fetcher do
          import_options =
            (if Application.get_env(:explorer, :chain_type) == "platon_appchain" do
               basic_import_options
-              |> Map.put_new(:platon_appchain_l2_events, %{params: platon_appchain_l2_events})
-              |> Map.put_new(:platon_appchain_l2_executes, %{params: platon_appchain_l2_executes})
+              |> Map.put_new(:l2_events, %{params: l2_events})
+              |> Map.put_new(:l2_executes, %{params: l2_executes})
+              |> Map.put_new(:l2_validator_events, %{params: l2_validator_events})
+              |> Map.put_new(:commitments, %{params: commitments})
             else
               basic_import_options
             end),

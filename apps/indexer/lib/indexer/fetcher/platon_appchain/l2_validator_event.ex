@@ -309,5 +309,14 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
 
   end
 
-
+  @spec event_signatures() :: list()
+  def event_signatures() do
+    [ @l2_biz_event_ValidatorRegistered,
+      @l2_biz_event_StakeAdded,
+      @l2_biz_event_DelegationAdded,
+      @l2_biz_event_UnStaked,
+      @l2_biz_event_UnDelegated,
+      @l2_biz_event_Slashed,
+      @l2_biz_event_UpdateValidatorStatus]
+  end
 end

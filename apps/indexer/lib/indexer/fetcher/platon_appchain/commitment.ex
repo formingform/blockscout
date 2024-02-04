@@ -26,9 +26,6 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
   # 32-byte signature of the event NewCommitment(uint256 indexed startId, uint256 indexed endId, bytes32 root)
   @new_commitment_event "0x11efd893530b26afc66d488ff54cb15df117cb6e0e4a08c6dcb166d766c3bf3b"
 
-  # 32-byte representation of deposit signature, keccak256("NewCommitment")
-  @new_commitment_signature "a22e3e55b690d7d609fdd9acbb8a48098de7fa7874cf95d975b1264b0c24d161"
-
   def child_spec(start_link_arguments) do
     spec = %{
       id: __MODULE__,
@@ -134,36 +131,27 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
     Repo.delete_all(from(de in Commitment, where: de.block_number >= ^starting_block))
   end
 
-  @spec event_to_commitment(binary(), binary(), binary(), binary(), list()) :: map()
-  def event_to_commitment(data, contract_address, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
+  @spec event_to_commitment(binary(), binary(), binary(), binary(), non_neg_integer(), list()) :: map()
+  def event_to_commitment(second_topic, third_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
     [data_bytes] = decode_data(data, [:bytes])
 
-    sig = binary_part(data_bytes, 0, 32)
+    startId = Integer.to_string(second_topic)
+    endId = Integer.to_string(third_topic)
 
-    {start_id, end_id, state_root, miner, l2_timestamp} =
-      if Base.encode16(sig, case: :lower) === @new_commitment_signature do
-        {:ok, miner, timestamps} = PlatonAppchain.get_block_miner_by_number(l2_block_number, json_rpc_named_arguments, 100_000_000)
-        [_sig, start_id, end_id, state_root] =
-          TypeDecoder.decode_raw(data_bytes, [{:bytes, 32}, {:uint, 256}, {:uint, 256}, {:bytes, 32}])
-
-        {start_id, end_id, state_root, miner, timestamps}
-      else
-        {nil, nil, nil, nil, nil}
-      end
+    {:ok, miner, blockTimestamp} = PlatonAppchain.get_block_miner_by_number(l2_block_number, json_rpc_named_arguments, 100_000_000)
 
     %{
-      start_end_Id: Integer.to_string(start_id) + "-" + Integer.to_string(end_id),
-      state_batch_hash: l2_transaction_hash,
-      state_root: state_root,
-      start_id: start_id,
-      end_id: end_id,
-      tx_number: start_id - end_id + 1,
+      state_root: data_bytes,
+      hash: l2_transaction_hash,
+      start_Id: startId,
+      end_id: endId,
+      tx_number: startId - endId + 1,
       from: miner,
-      to: contract_address,
-      block_timestamp: l2_timestamp,
-      block_number: quantity_to_integer(l2_block_number),
+      block_number: l2_block_number,
+      block_timestamp: blockTimestamp,
     }
   end
+
 
   @spec find_and_save_entities(boolean(), binary(), non_neg_integer(), non_neg_integer(), list()) :: non_neg_integer()
   def find_and_save_entities(
@@ -185,8 +173,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
 
         query
         |> Repo.all(timeout: :infinity)
-        |> Enum.map(fn {data, contract_address, l2_transaction_hash, l2_block_number} ->
-          event_to_commitment(data, contract_address, l2_transaction_hash, l2_block_number, json_rpc_named_arguments)
+        |> Enum.map(fn {second_topic, third_topic, data, l2_transaction_hash, l2_block_number} ->
+          event_to_commitment(second_topic, third_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments)
         end)
       else
         {:ok, result} =
@@ -201,8 +189,9 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
 
         Enum.map(result, fn event ->
           event_to_commitment(
+            Enum.at(event["topics"], 1),
+            Enum.at(event["topics"], 2),
             event["data"],
-            event["address"],
             event["transactionHash"],
             event["blockNumber"],
             json_rpc_named_arguments

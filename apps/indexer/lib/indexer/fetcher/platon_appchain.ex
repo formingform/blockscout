@@ -342,14 +342,16 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   end
 
   defp get_safe_block(json_rpc_named_arguments) do
-    case get_block_number_by_tag("safe", json_rpc_named_arguments) do
-      {:ok, safe_block} ->
-        {safe_block, false}
-
-      {:error, :not_found} ->
-        {:ok, latest_block} = get_block_number_by_tag("latest", json_rpc_named_arguments, 100_000_000)
-        {latest_block, true}
-    end
+    {:ok, latest_block} = get_block_number_by_tag("latest", json_rpc_named_arguments, 100_000_000)
+    {latest_block, true}
+#    case get_block_number_by_tag("safe", json_rpc_named_arguments) do
+#      {:ok, safe_block} ->
+#        {safe_block, false}
+#
+#      {:error, :not_found} ->
+#        {:ok, latest_block} = get_block_number_by_tag("latest", json_rpc_named_arguments, 100_000_000)
+#        {latest_block, true}
+#    end
   end
 
   @spec repeated_request(list(), any(), list(), non_neg_integer()) :: {:ok, any()} | {:error, atom()}
@@ -651,6 +653,8 @@ defmodule Indexer.Fetcher.PlatonAppchain do
         _fetcher_name
       )
       when calling_module in [L1Event, L1Execute, Checkpoint] do
+    IO.inspect binding()
+
     time_before = Timex.now()
 
     eth_get_logs_range_size =
@@ -752,6 +756,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   end
 
   defp import_events(events, calling_module) do
+    IO.inspect binding()
     {import_data, event_name} =
       cond do
         calling_module == L1Event ->
