@@ -3,10 +3,8 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateCommitments do
 
   def change do
     create table(:commitments, primary_key: false) do
-      # 批次hash
-      add(:state_batch_hash, :bytea, null: false, primary_key: true)
       # 批次state root
-      add(:state_root, :bytea, null: false)
+      add(:state_root, :bytea, null: false, primary_key: true)
       # 交易hash
       add(:hash, :bytea, null: false)
       # 交易所在区块
@@ -19,8 +17,6 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateCommitments do
       add(:tx_number, :integer, null: false)
       # 批次交易发起者
       add(:from, :bytea, null: false)
-      # 批次交易接收者
-      add(:to, :bytea, null: false)
       # 交易时间
       add(:block_timestamp, :bigint, null: false)
 
