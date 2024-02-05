@@ -31,6 +31,11 @@ config :logger, :empty_blocks_to_refetch,
   path: Path.absname("logs/dev/indexer/empty_blocks_to_refetch.log"),
   metadata_filter: [fetcher: :empty_blocks_to_refetch]
 
+config :logger, :platon_appchain,
+       level: :debug,
+       path: Path.absname("logs/dev/indexer/platon_appchain.log"),
+       metadata_filter: [logger: :platon_appchain]
+
 config :logger, :block_import_timings,
   level: :debug,
   path: Path.absname("logs/dev/indexer/block_import_timings.log"),

@@ -37,6 +37,12 @@ config :logger, :empty_blocks_to_refetch,
   metadata_filter: [fetcher: :empty_blocks_to_refetch],
   rotate: %{max_bytes: 52_428_800, keep: 19}
 
+config :logger, :platon_appchain,
+  level: :debug,
+  path: Path.absname("logs/prod/indexer/platon_appchain.log"),
+  metadata_filter: [logger: :platon_appchain],
+  rotate: %{max_bytes: 52_428_800, keep: 19}
+
 config :logger, :block_import_timings,
   level: :debug,
   path: Path.absname("logs/prod/indexer/block_import_timings.log"),

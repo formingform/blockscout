@@ -259,7 +259,11 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
         block_end,
         json_rpc_named_arguments
       ) do
-    IO.inspect binding()
+
+#      Logger.info("to get l2 validator events, scan_db: #{scan_db}",
+#        logger: :platon_appchain
+#      )
+
     l2_validator_events =
       if scan_db do
         query =
@@ -276,35 +280,62 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
         |> Enum.map(fn {first_topic, second_topic, third_topic, data, l2_transaction_hash, l2_block_number} ->
           event_to_l2_validator_event(first_topic, second_topic, third_topic, data, l2_transaction_hash, l2_block_number,json_rpc_named_arguments)
         end)
+#        Logger.info("success to get l2 validator events from db",
+#          logger: :platon_appchain
+#        )
       else
-        {:ok, result} =
-          PlatonAppchain.get_logs_by_topics(
+        case PlatonAppchain.get_logs_by_topics(
             block_start,
             block_end,
             l2_stake_handler,
             event_signatures(),
             json_rpc_named_arguments,
             100_000_000
-          ) |> dbg()
+          ) do
 
-        Enum.map(result, fn event ->
-          event_to_l2_validator_event(
-            Enum.at(event["topics"], 0),
-            Enum.at(event["topics"], 1),
-            Enum.at(event["topics"], 2),
-            event["data"],
-            event["transactionHash"],
-            event["blockNumber"],
-            json_rpc_named_arguments
-          )
-        end)
+          {:ok, result} ->
+#            Logger.info("success to get l2 validator events from chain",
+#              logger: :platon_appchain
+#            )
+
+            Enum.map(result, fn event ->
+              event_to_l2_validator_event(
+                Enum.at(event["topics"], 0),
+                Enum.at(event["topics"], 1),
+                Enum.at(event["topics"], 2),
+                event["data"],
+                event["transactionHash"],
+                event["blockNumber"],
+                json_rpc_named_arguments
+              )
+            end)
+
+            {:error, reason} ->
+              # 返回值为空[]
+#              Logger.info("failed to get l2 validator events from db",
+#                logger: :platon_appchain
+#              )
+              []
+        end
       end
 
-    {:ok, _} =
-      Chain.import(%{
+#      Logger.info("to import l2 validator events, count:::::",
+#        logger: :platon_appchain
+#      )
+
+    case Chain.import(%{
         l2_validator_events: %{params: l2_validator_events},
         timeout: :infinity
-      })
+      }) do
+        {:ok, _} ->
+          Logger.info("success to import l2 validator events",
+            logger: :platon_appchain
+          )
+        {:error, reason} ->
+          Logger.info(fn -> "failed to import l2 validator events with reason (#{inspect(reason)}). Restarting" end ,
+            logger: :platon_appchain
+          )
+      end
 
     Enum.count(l2_validator_events)
   end
