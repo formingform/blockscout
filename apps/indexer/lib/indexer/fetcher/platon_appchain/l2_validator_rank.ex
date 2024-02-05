@@ -67,14 +67,14 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorRank do
       all_candidates = L2StakeHandler.getAllValidators()
 
       #把列表中的序号，作为rank赋值给所有质押节点
-      all_candidates
-      |> Enum.with_index(1)
-      |> Enum.map(fn {element, idx} ->  {element["validatorAddr"], idx} end)
+      rank_tuple_list = all_candidates
+        |> Enum.with_index(1)
+        |> Enum.map(fn {element, idx} ->  {element["validator_hash"], idx} end)
 #      all_candidates
 #      |> Enum.with_index(1)
 #      |> Enum.map(fn {element, idx} -> Map.put(element, :rank, idx) end)
 
-      L2ValidatorService.update_rank(all_candidates)
+      L2ValidatorService.update_rank(rank_tuple_list)
     end
 
     # 计算下次获取round出块验证人的块高，并算出大概需要delay多久
