@@ -1,11 +1,11 @@
-defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L1Event do
+defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2Executes do
 
   require Ecto.Query
 
   alias Ecto.{Changeset, Multi, Repo}
-  alias Explorer.Chain.{Import, L1Event}
+  alias Explorer.Chain.Import
+  alias Explorer.Chain.PlatonAppchain.L2Execute
   alias Explorer.Prometheus.Instrumenter
-  alias Explorer.Chain.PlatonAppchain.L1Event
 
   import Ecto.Query, only: [from: 2]
 
@@ -14,13 +14,13 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L1Event do
   # milliseconds
   @timeout 60_000
 
-  @type imported :: [L1Event.t()]
+  @type imported :: [L2Execute.t()]
 
   @impl Import.Runner
-  def ecto_schema_module, do: L1Event
+  def ecto_schema_module, do: L2Execute
 
   @impl Import.Runner
-  def option_key, do: :l1_events
+  def option_key, do: :l2_executes
 
   @spec imported_table_row() :: %{:value_description => binary(), :value_type => binary()}
 
@@ -42,12 +42,12 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L1Event do
       |> Map.put_new(:timeout, @timeout)
       |> Map.put(:timestamps, timestamps)
 
-    Multi.run(multi, :insert_l1_events, fn repo, _ ->
+    Multi.run(multi, :insert_l2_executes, fn repo, _ ->
       Instrumenter.block_import_stage_runner(
         fn -> insert(repo, changes_list, insert_options) end,
         :block_referencing,
-        :l1_events,
-        :l1_events
+        :l2_executes,
+        :l2_executes
       )
     end)
   end
@@ -56,7 +56,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L1Event do
   def timeout, do: @timeout
 
   @spec insert(Repo.t(), [map()], %{required(:timeout) => timeout(), required(:timestamps) => Import.timestamps()}) ::
-          {:ok, [L1Event.t()]}
+          {:ok, [L2Execute.t()]}
           | {:error, [Changeset.t()]}
   def insert(repo, changes_list, %{timeout: timeout, timestamps: timestamps} = options) when is_list(changes_list) do
     on_conflict = Map.get_lazy(options, :on_conflict, &default_on_conflict/0)
@@ -69,7 +69,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L1Event do
       ordered_changes_list,
       conflict_target: :event_id,
       on_conflict: on_conflict,
-      for: L1Event,
+      for: L2Execute,
       returning: true,
       timeout: timeout,
       timestamps: timestamps
@@ -79,34 +79,32 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L1Event do
 
   defp default_on_conflict do
     from(
-      l in L1Event,
+      l in L2Execute,
       update: [
         set: [
           # Don't update `event_id` as it is a primary key and used for the conflict target
           tx_type: fragment("EXCLUDED.tx_type"),
           amount: fragment("EXCLUDED.amount"),
           hash: fragment("EXCLUDED.hash"),
-          from: fragment("EXCLUDED.from"),
-          to: fragment("EXCLUDED.to"),
           block_number: fragment("EXCLUDED.block_number"),
-          block_timestamp: fragment("EXCLUDED.block_timestamp"),
-          validator: fragment("EXCLUDED.validator"),
+          state_batch_hash:  fragment("EXCLUDED.state_batch_hash"),
+          replay_status:  fragment("EXCLUDED.replay_status"),
+          status:  fragment("EXCLUDED.status"),
           inserted_at: fragment("LEAST(?, EXCLUDED.inserted_at)", l.inserted_at), # LEAST返回给定的最小值 EXCLUDED.inserted_at 表示已存在的值
           updated_at: fragment("GREATEST(?, EXCLUDED.updated_at)", l.updated_at)
         ]
       ],
       where:
         fragment(
-          "(EXCLUDED.tx_type,EXCLUDED.amount,EXCLUDED.hash,EXCLUDED.from,EXCLUDED.to,
-          EXCLUDED.block_number,EXCLUDED.block_timestamp,EXCLUDED.validator) IS DISTINCT FROM (?,?,?,?,?,?,?,?)", # 有冲突时只更新这些字段
+          "(EXCLUDED.tx_type,EXCLUDED.amount,EXCLUDED.hash,EXCLUDED.block_number,EXCLUDED.state_batch_hash,EXCLUDED.replay_status,
+          EXCLUDED.status) IS DISTINCT FROM (?,?,?,?,?,?,?)", # 有冲突时只更新这些字段
           l.tx_type,
           l.amount,
           l.hash,
-          l.from,
-          l.to,
           l.block_number,
-          l.block_timestamp,
-          l.validator
+          l.state_batch_hash,
+          l.replay_status,
+          l.status
         )
     )
   end

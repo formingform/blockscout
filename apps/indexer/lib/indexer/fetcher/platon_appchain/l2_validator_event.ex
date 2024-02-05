@@ -322,19 +322,20 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
 #      Logger.info("to import l2 validator events, count:::::",
 #        logger: :platon_appchain
 #      )
-
-    case Chain.import(%{
-        l2_validator_events: %{params: l2_validator_events},
-        timeout: :infinity
-      }) do
-        {:ok, _} ->
-          Logger.info("success to import l2 validator events",
-            logger: :platon_appchain
-          )
-        {:error, reason} ->
-          Logger.info(fn -> "failed to import l2 validator events with reason (#{inspect(reason)}). Restarting" end ,
-            logger: :platon_appchain
-          )
+    if Enum.count(l2_validator_events)> 0 do
+      case Chain.import(%{
+          l2_validator_events: %{params: l2_validator_events},
+          timeout: :infinity
+        }) do
+          {:ok, _} ->
+            Logger.info("success to import l2 validator events",
+              logger: :platon_appchain
+            )
+          {:error, reason} ->
+            Logger.info(fn -> "failed to import l2 validator events with reason (#{inspect(reason)}). Restarting" end ,
+              logger: :platon_appchain
+            )
+        end
       end
 
     Enum.count(l2_validator_events)

@@ -1,11 +1,11 @@
-defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2Execute do
+defmodule Explorer.Chain.Import.Runner.PlatonAppchain.Commitments do
 
   require Ecto.Query
 
   alias Ecto.{Changeset, Multi, Repo}
-  alias Explorer.Chain.{Import, L2Execute}
+  alias Explorer.Chain.Import
+  alias Explorer.Chain.PlatonAppchain.Commitment
   alias Explorer.Prometheus.Instrumenter
-  alias Explorer.Chain.PlatonAppchain.L2Execute
 
   import Ecto.Query, only: [from: 2]
 
@@ -14,13 +14,13 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2Execute do
   # milliseconds
   @timeout 60_000
 
-  @type imported :: [L2Execute.t()]
+  @type imported :: [Commitment.t()]
 
   @impl Import.Runner
-  def ecto_schema_module, do: L2Execute
+  def ecto_schema_module, do: Commitment
 
   @impl Import.Runner
-  def option_key, do: :l2_executes
+  def option_key, do: :commitments
 
   @spec imported_table_row() :: %{:value_description => binary(), :value_type => binary()}
 
@@ -42,12 +42,12 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2Execute do
       |> Map.put_new(:timeout, @timeout)
       |> Map.put(:timestamps, timestamps)
 
-    Multi.run(multi, :insert_l2_executes, fn repo, _ ->
+    Multi.run(multi, :insert_commitments, fn repo, _ ->
       Instrumenter.block_import_stage_runner(
         fn -> insert(repo, changes_list, insert_options) end,
         :block_referencing,
-        :l2_executes,
-        :l2_executes
+        :commitments,
+        :commitments
       )
     end)
   end
@@ -56,20 +56,20 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2Execute do
   def timeout, do: @timeout
 
   @spec insert(Repo.t(), [map()], %{required(:timeout) => timeout(), required(:timestamps) => Import.timestamps()}) ::
-          {:ok, [L2Execute.t()]}
+          {:ok, [Commitment.t()]}
           | {:error, [Changeset.t()]}
   def insert(repo, changes_list, %{timeout: timeout, timestamps: timestamps} = options) when is_list(changes_list) do
     on_conflict = Map.get_lazy(options, :on_conflict, &default_on_conflict/0)
 
-    # 按event_id排序
-    ordered_changes_list = Enum.sort_by(changes_list, & &1.event_id)
+    # 按start_id排序
+    ordered_changes_list = Enum.sort_by(changes_list, & &1.start_id)
 
     Import.insert_changes_list(
       repo,
       ordered_changes_list,
-      conflict_target: :event_id,
+      conflict_target: :state_root,
       on_conflict: on_conflict,
-      for: L2Execute,
+      for: Commitment,
       returning: true,
       timeout: timeout,
       timestamps: timestamps
@@ -79,28 +79,32 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2Execute do
 
   defp default_on_conflict do
     from(
-      l in L2Execute,
+      l in Commitment,
       update: [
         set: [
-          # Don't update `event_id` as it is a primary key and used for the conflict target
+          # Don't update `state_batch_hash` as it is a primary key and used for the conflict target
           hash: fragment("EXCLUDED.hash"),
           block_number: fragment("EXCLUDED.block_number"),
-          state_batch_hash:  fragment("EXCLUDED.state_batch_hash"),
-          replay_status:  fragment("EXCLUDED.replay_status"),
-          status:  fragment("EXCLUDED.status"),
+          start_id: fragment("EXCLUDED.start_id"),
+          end_id: fragment("EXCLUDED.end_id"),
+          tx_number: fragment("EXCLUDED.tx_number"),
+          from: fragment("EXCLUDED.from"),
+          block_timestamp: fragment("EXCLUDED.block_timestamp"),
           inserted_at: fragment("LEAST(?, EXCLUDED.inserted_at)", l.inserted_at), # LEAST返回给定的最小值 EXCLUDED.inserted_at 表示已存在的值
           updated_at: fragment("GREATEST(?, EXCLUDED.updated_at)", l.updated_at)
         ]
       ],
       where:
         fragment(
-          "(EXCLUDED.hash,EXCLUDED.block_number,EXCLUDED.state_batch_hash,EXCLUDED.replay_status,
-          EXCLUDED.status) IS DISTINCT FROM (?,?,?,?,?)", # 有冲突时只更新这些字段
+          "(EXCLUDED.hash,EXCLUDED.block_number,EXCLUDED.start_id,EXCLUDED.end_id,EXCLUDED.tx_number,EXCLUDED.from,
+          EXCLUDED.block_timestamp) IS DISTINCT FROM (?,?,?,?,?,?,?)", # 有冲突时只更新这些字段
           l.hash,
           l.block_number,
-          l.state_batch_hash,
-          l.replay_status,
-          l.status
+          l.start_id,
+          l.end_id,
+          l.tx_number,
+          l.from,
+          l.block_timestamp
         )
     )
   end

@@ -1,11 +1,12 @@
-defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2Event do
+defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2Events do
 
   require Ecto.Query
 
   alias Ecto.{Changeset, Multi, Repo}
-  alias Explorer.Chain.{Import, L2Event}
-  alias Explorer.Prometheus.Instrumenter
+  alias Explorer.Chain.Import
   alias Explorer.Chain.PlatonAppchain.L2Event
+  alias Explorer.Prometheus.Instrumenter
+
 
   import Ecto.Query, only: [from: 2]
 
