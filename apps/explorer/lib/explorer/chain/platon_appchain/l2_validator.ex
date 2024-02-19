@@ -7,9 +7,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
     Repo
   }
 
-  alias Explorer.Chain.{
-    Hash
-  }
+  alias Explorer.Chain.{Address, Block, Hash, Wei}
 
   @optional_attrs ~w(locking_stake_amount withdrawal_stake_amount stake_reward delegate_reward rank name detail logo website expect_apr block_rate auth_status role)a
 
@@ -44,12 +42,12 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
                stake_epoch:  non_neg_integer(),
                owner_hash:  Hash.Address.t(),
                commission_rate:  non_neg_integer(),
-               stake_amount:  Wei,
-               locking_stake_amount:  Wei,
-               withdrawal_stake_amount:  Wei,
-               delegate_amount:  Wei,
-               stake_reward:  Wei,
-               delegate_reward:  Wei,
+               stake_amount:  Wei.t(),
+               locking_stake_amount:  Wei.t(),
+               withdrawal_stake_amount:  Wei.t(),
+               delegate_amount:  Wei.t(),
+               stake_reward:  Wei.t(),
+               delegate_reward:  Wei.t(),
                rank: non_neg_integer(),
                name:  String.t(),
                detail:  String.t(),
@@ -68,12 +66,12 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
     field(:stake_epoch, :integer)
     field(:owner_hash, Hash.Address)
     field(:commission_rate, :integer)
-    field(:stake_amount, :decimal)
-    field(:locking_stake_amount, :decimal)
-    field(:withdrawal_stake_amount, :decimal)
-    field(:delegate_amount, :decimal)
-    field(:stake_reward, :decimal)
-    field(:delegate_reward, :decimal)
+    field(:stake_amount, Wei)
+    field(:locking_stake_amount, Wei)
+    field(:withdrawal_stake_amount, Wei)
+    field(:delegate_amount, Wei)
+    field(:stake_reward, Wei)
+    field(:delegate_reward, Wei)
     field(:rank, :integer)
     field(:name, :string)
     field(:detail, :string)

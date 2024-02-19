@@ -1,10 +1,7 @@
 defmodule Explorer.Chain.PlatonAppchain.L2Execute do
   use Explorer.Schema
 
-  alias Explorer.Chain.{
-    Hash,
-    Block
-    }
+  alias Explorer.Chain.{Address, Block, Hash, Wei}
 
   @optional_attrs ~w(amount replay_status)a
 
@@ -24,6 +21,8 @@ defmodule Explorer.Chain.PlatonAppchain.L2Execute do
                event_id: non_neg_integer(),
                hash:  Hash.t(),
                block_number:  Block.block_number(),
+               tx_type:  non_neg_integer(),
+               amount: Wei.t() | nil,
                commitment_hash:  Hash.t(),
                replay_status:  non_neg_integer() | nil,
                status:  non_neg_integer()
@@ -35,7 +34,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Execute do
     field(:hash, Hash.Full)
     field(:block_number, :integer)
     field(:tx_type, :integer)
-    field(:amount, :integer)
+    field(:amount, Wei)
     field(:commitment_hash, Hash.Full)
     field(:replay_status, :integer)
     field(:status, :integer)

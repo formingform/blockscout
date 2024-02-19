@@ -3,7 +3,8 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
 
   alias Explorer.Chain.{
     Hash,
-    Block
+    Block,
+    Wei
     }
 
   @optional_attrs ~w(action_desc amount)a
@@ -26,7 +27,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
                validator_hash: Hash.Address.t(),
                action_type: non_neg_integer(),
                action_desc: String.t() | nil,
-               amount: non_neg_integer() | nil,
+               amount: Wei.t() | nil,
                block_number: Block.block_number(),
                block_timestamp: non_neg_integer(),
                log_index: non_neg_integer(),
@@ -37,7 +38,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
     field(:validator_hash, Hash.Address)
     field(:action_type, :integer)
     field(:action_desc, :string)
-    field(:amount, :integer)
+    field(:amount, Wei)
     field(:block_number, :integer)
     field(:block_timestamp, :integer)
     field(:log_index, :integer)

@@ -1,10 +1,7 @@
 defmodule Explorer.Chain.PlatonAppchain.L2Event do
   use Explorer.Schema
 
-  alias Explorer.Chain.{
-    Hash,
-    Block
-    }
+  alias Explorer.Chain.{Address, Block, Hash, Wei}
 
   @optional_attrs ~w(amount block_timestamp)a
 
@@ -26,7 +23,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Event do
   @type t :: %__MODULE__{
                event_id: non_neg_integer(),
                tx_type: non_neg_integer(),
-               amount:  non_neg_integer() | nil,
+               amount:  Wei.t() | nil,
                hash:  Hash.t(),
                from:  Hash.Address.t(),
                to:  Hash.Address.t(),
@@ -38,7 +35,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Event do
   schema "l2_events" do
     field(:event_id, :integer, primary_key: true)
     field(:tx_type, :integer)
-    field(:amount, :integer)
+    field(:amount, Wei)
     field(:hash, Hash.Full)
     field(:from, Hash.Address)
     field(:to, Hash.Address)
