@@ -7,7 +7,7 @@ defmodule Explorer.Chain.PlatonAppchain.Checkpoint do
     }
   @optional_attrs ~w()a
 
-  @required_attrs ~w(epoch start_block_number end_block_number event_root event_counts block_number hash block_timestamp)a
+  @required_attrs ~w(epoch start_block_number end_block_number state_root event_counts block_number hash block_timestamp)a
 
   @allowed_attrs @optional_attrs ++ @required_attrs
 
@@ -25,7 +25,7 @@ defmodule Explorer.Chain.PlatonAppchain.Checkpoint do
                epoch: non_neg_integer(),
                start_block_number:  Block.block_number(),
                end_block_number:  Block.block_number(),
-               event_root:  Hash.t(),
+               state_root:  Hash.t(),
                event_counts: non_neg_integer(),
                block_number: Block.block_number(),
                hash:  Hash.t(),
@@ -37,7 +37,7 @@ defmodule Explorer.Chain.PlatonAppchain.Checkpoint do
     field(:epoch, :integer, primary_key: true)
     field(:start_block_number, :integer)
     field(:end_block_number, :integer)
-    field(:event_root, Hash.Full)
+    field(:state_root, Hash.Full)
     field(:event_counts, :integer)
     field(:block_number, :integer)
     field(:hash, Hash.Full)

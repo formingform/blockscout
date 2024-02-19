@@ -131,23 +131,23 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
     Repo.delete_all(from(de in Commitment, where: de.block_number >= ^starting_block))
   end
 
-  @spec event_to_commitment(binary(), binary(), binary(), binary(), non_neg_integer(), list()) :: map()
+  @spec event_to_commitment(binary(), binary(),  binary(), binary(), non_neg_integer(), list()) :: map()
   def event_to_commitment(second_topic, third_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
     [data_bytes] = decode_data(data, [:bytes])
 
-    startId = Integer.to_string(second_topic)
-    endId = Integer.to_string(third_topic)
+    startId = quantity_to_integer(second_topic)
+    endId = quantity_to_integer(third_topic)
 
     {:ok, miner, blockTimestamp} = PlatonAppchain.get_block_miner_by_number(l2_block_number, json_rpc_named_arguments, 100_000_000)
 
     %{
-      state_root: data_bytes,
       hash: l2_transaction_hash,
+      state_root: data_bytes,
       start_Id: startId,
       end_id: endId,
       tx_number: startId - endId + 1,
       from: miner,
-      block_number: l2_block_number,
+      block_number: quantity_to_integer(l2_block_number),
       block_timestamp: blockTimestamp,
     }
   end
@@ -165,7 +165,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
       if scan_db do
         query =
           from(log in Log,
-            select: {log.data, log.address_hash, log.transaction_hash, log.block_number},
+            select: {log.second_topic, log.third_topic, log.data, log.transaction_hash, log.block_number},
             where:
               log.first_topic == @new_commitment_event and log.address_hash == ^l2_state_receiver and
               log.block_number >= ^block_start and log.block_number <= ^block_end

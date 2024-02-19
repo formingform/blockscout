@@ -8,7 +8,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Execute do
 
   @optional_attrs ~w(amount replay_status)a
 
-  @required_attrs ~w(event_id tx_type hash block_number state_batch_hash status)a
+  @required_attrs ~w(event_id hash block_number tx_type commitment_hash status)a
 
   @allowed_attrs @optional_attrs ++ @required_attrs
 
@@ -16,7 +16,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Execute do
   * `event_id` - event id
   * `hash` - l2上交易hash
   * `block_number` - l2批次交易所在区块
-  * `state_batch_hash` - commit事件所在的批次hash
+  * `state_root` - commit事件所在的批次hash
   * `replay_status` - 回放状态(业务状态) 0-未知 1-成功 2-失败
   * `status` - L2上执行的最终状态
   """
@@ -24,7 +24,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Execute do
                event_id: non_neg_integer(),
                hash:  Hash.t(),
                block_number:  Block.block_number(),
-               state_batch_hash:  Hash.t(),
+               commitment_hash:  Hash.t(),
                replay_status:  non_neg_integer() | nil,
                status:  non_neg_integer()
              }
@@ -36,7 +36,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Execute do
     field(:block_number, :integer)
     field(:tx_type, :integer)
     field(:amount, :integer)
-    field(:state_batch_hash, Hash.Full)
+    field(:commitment_hash, Hash.Full)
     field(:replay_status, :integer)
     field(:status, :integer)
 

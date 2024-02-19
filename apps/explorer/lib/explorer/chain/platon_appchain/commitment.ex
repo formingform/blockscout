@@ -5,15 +5,14 @@ defmodule Explorer.Chain.PlatonAppchain.Commitment do
     Hash,
     Block
     }
-  @optional_attrs ~w(tx_number)a
+  @optional_attrs ~w()a
 
-  @required_attrs ~w(state_batch_hash state_root state_root start_id end_id from to block_number block_timestamp)a
+  @required_attrs ~w(hash state_root start_id end_id tx_number from to block_number block_timestamp)a
 
   @allowed_attrs @optional_attrs ++ @required_attrs
 
   @typedoc """
-  * `start_end_Id` - （start_id+ end_id）组合id
-  * `state_batch_hash` - 批次交易hash
+  * `hash` - 批次交易hash
   * `state_root` - 批次state root
   * `start_id` - 批次起始event id
   * `end_id` - 批次结束event id
@@ -24,7 +23,7 @@ defmodule Explorer.Chain.PlatonAppchain.Commitment do
   * `block_timestamp` - 批次交易所在区块时间戳
   """
   @type t :: %__MODULE__{
-               state_batch_hash:  Hash.t(),
+               hash:  Hash.t(),
                state_root:  Hash.t(),
                start_id:  non_neg_integer(),
                end_id: non_neg_integer(),
@@ -37,9 +36,8 @@ defmodule Explorer.Chain.PlatonAppchain.Commitment do
 
   @primary_key false
   schema "commitments" do
-    field(:state_batch_hash, Hash.Full, primary_key: true)
+    field(:hash, Hash.Full, primary_key: true)
     field(:state_root, Hash.Full)
-    field(:hash, Hash.Full)
     field(:block_number, :integer)
     field(:start_id, :integer)
     field(:end_id, :integer)

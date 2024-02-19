@@ -79,8 +79,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L1Execute do
     |> Kernel.||({0, nil})
   end
 
-  @spec get_state_batch_hash_by_block_number(non_neg_integer()) :: {binary() | nil}
-  def get_state_batch_hash_by_block_number(block_number) do
+  @spec get_checkpoint_hash_by_block_number(non_neg_integer()) :: {binary() | nil}
+  def get_checkpoint_hash_by_block_number(block_number) do
     query =
       from(checkpoints in Checkpoint,
         select: {checkpoints.hash},
@@ -101,11 +101,11 @@ defmodule Indexer.Fetcher.PlatonAppchain.L1Execute do
       # 查询event_id所属的交易事件在l2的区块号
       { l2_blockNumber } = get_l2_block_number_by_event_id(event_id)
       # 根据区块号去查寻对应的checkpoint交易的交易hash
-      { checkpoint_tx_hash } = get_state_batch_hash_by_block_number(l2_blockNumber)
+      { checkpoint_hash } = get_checkpoint_hash_by_block_number(l2_blockNumber)
       %{
         event_id: event_id,
         hash: event["transactionHash"],
-        state_batch_hash: checkpoint_tx_hash,
+        checkpoint_hash: checkpoint_hash,
         status: Kernel.boolean(status)
       }
     end)

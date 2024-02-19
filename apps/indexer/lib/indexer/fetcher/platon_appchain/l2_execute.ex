@@ -130,12 +130,14 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
 
   @spec event_to_l2_execute(binary(), binary(), binary(), binary()) :: map()
   def event_to_l2_execute(second_topic, third_topic, l2_transaction_hash, l2_block_number) do
-    # 关联commitment表获取state_batch_hash
-    {state_batch_hash} = get_state_batch_hash_by_event_id(quantity_to_integer(second_topic))
+    # 关联commitment表获取state_root
+    eventId = quantity_to_integer(second_topic)
+
+    {commitment_hash} = get_commitment_hash_by_event_id(eventId)
     %{
-      event_id: quantity_to_integer(second_topic),
+      event_id: eventId,
       hash: l2_transaction_hash,
-      state_batch_hash: state_batch_hash,
+      commitment_hash: commitment_hash,
       block_number: quantity_to_integer(l2_block_number),
       status: Kernel.boolean(third_topic)
     }
@@ -194,11 +196,11 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
     Enum.count(executes)
   end
 
-  @spec get_state_batch_hash_by_event_id(non_neg_integer()) :: {binary() | nil}
-  def get_state_batch_hash_by_event_id(event_id) do
+  @spec get_commitment_hash_by_event_id(non_neg_integer()) :: {binary() | nil}
+  def get_commitment_hash_by_event_id(event_id) do
     query =
       from(commitment in Commitment,
-        select: {commitment.state_batch_hash},
+        select: {commitment.hash},
         where: commitment.start_id <= ^event_id and commitment.end_id >= ^event_id,
         limit: 1
       )

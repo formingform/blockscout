@@ -13,8 +13,8 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2TxExecutes do
       add(:hash, :bytea, null: false)
       # 交易所在区块
       add(:block_number, :integer, null: false)
-      # 批次hash(关联commitments表用，后续看是否删除)
-      add(:state_batch_hash, :bytea, null: false)
+      # 关联commitments.hash
+      add(:commitment_hash, :bytea, null: false)
       # 回放状态(业务状态) 0-未知 1-成功 2-失败 后续调合约确认哪值表示成功
       add(:replay_status, :integer, null: true)
       # 交易状态

@@ -85,7 +85,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Checkpoint do
       %{epoch: quantity_to_integer(Enum.at(event["topics"], 1)),
         start_block_number: start_block_number,
         end_block_number: end_block_number,
-        event_root: event["data"],
+        state_root: event["data"],
         event_counts: get_event_counts(start_block_number, end_block_number),
         block_number: l1_block_number,
         hash: event["transactionHash"],

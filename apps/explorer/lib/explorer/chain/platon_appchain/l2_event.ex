@@ -25,7 +25,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Event do
   """
   @type t :: %__MODULE__{
                event_id: non_neg_integer(),
-               tx_type:  String.t(),
+               tx_type: non_neg_integer(),
                amount:  non_neg_integer() | nil,
                hash:  Hash.t(),
                from:  Hash.Address.t(),
@@ -37,7 +37,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Event do
   @primary_key false
   schema "l2_events" do
     field(:event_id, :integer, primary_key: true)
-    field(:tx_type, :string)
+    field(:tx_type, :integer)
     field(:amount, :integer)
     field(:hash, Hash.Full)
     field(:from, Hash.Address)

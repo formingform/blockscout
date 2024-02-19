@@ -364,10 +364,11 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     get_block_number_by_tag("latest", json_rpc_named_arguments, 100_000_000)
   end
 
+
   defp get_block_timestamp_by_number_inner(number, json_rpc_named_arguments) do
     result =
       %{id: 0, number: number}
-      |> ByNumber.request(false)
+      |> ByNumber.request(false, is_integer(number))
       |> json_rpc(json_rpc_named_arguments)
 
     with {:ok, block} <- result,

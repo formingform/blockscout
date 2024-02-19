@@ -9,8 +9,8 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateCheckPoints do
       add(:start_block_number, :bigint, null: false)
       # checkpoint收集事件的l2上截至块高（epoch结束的前3个块高）
       add(:end_block_number, :bigint, null: false)
-      # event_root
-      add(:event_root, :bytea, null: false)
+      # state_root
+      add(:state_root, :bytea, null: false)
       # checkpoint中包含的事件数（另起线程统计l2_events中数据，缺省就是null, 如果是null表示还没有统计。)
       add(:event_counts, :integer, null: true)
       # 交易所在L1区块
