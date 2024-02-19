@@ -132,9 +132,15 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
     Repo.delete_all(from(w in L2Event, where: w.block_number >= ^starting_block))
   end
 
-  @spec event_to_l2_event(binary(), binary(), binary(), binary(), list()) :: map()
-  def event_to_l2_event(second_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
-    [data_bytes] = decode_data(data, [:bytes])
+  @spec event_to_l2_event(boolean(), binary(), binary(), binary(), binary(), list()) :: map()
+  def event_to_l2_event(scan_db, second_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
+    data_bytes =
+      if scan_db do
+        data
+      else
+        [data_byte] = decode_data(data, [:bytes])
+        data_byte
+      end
 
     sig = binary_part(data_bytes, 0, 32)
 
@@ -197,7 +203,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
         query
         |> Repo.all(timeout: :infinity)
         |> Enum.map(fn {second_topic, data, l2_transaction_hash, l2_block_number} ->
-          event_to_l2_event(second_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments)
+          event_to_l2_event(scan_db, second_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments)
         end)
       else
         {:ok, result} =
@@ -212,6 +218,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
 
         Enum.map(result, fn event ->
           event_to_l2_event(
+            scan_db,
             Enum.at(event["topics"], 1), #topics[0]是合约方法签名，[1]是第一个带indexed的合约参数，这里是event_id
             event["data"],
             event["transactionHash"],
