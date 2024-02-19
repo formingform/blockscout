@@ -15,7 +15,7 @@ defmodule Explorer.Chain.PlatonAppchain.Checkpoint do
   * `epoch` - l2上的epoch
   * `start_block_number` - checkpoint收集的事件的L2开始块高（epoch开始的前3个块高）
   * `end_block_number` - checkpoint收集事件的l2上截至块高（epoch结束的前3个块高）
-  * `event_root` - event root
+  * `state_root` - state root
   * `event_counts` - checkpoint总包含的事件数（另起线程统计l2_events中数据）
   * `block_number` - 交易所在L1区块
   * `hash` - checkpoint交易在L1上的hash
