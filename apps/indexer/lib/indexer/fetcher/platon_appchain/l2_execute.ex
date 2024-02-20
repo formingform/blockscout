@@ -206,7 +206,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
       )
     query
     |> Repo.one()
-    |> Kernel.||({0, nil})
+    |> Kernel.||({nil})
   end
 
   @spec state_sync_result_event_signature() :: binary()

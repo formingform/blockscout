@@ -133,24 +133,30 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
 
   @spec event_to_commitment(boolean(), binary(), binary(),  binary(), binary(), non_neg_integer(), list()) :: map()
   def event_to_commitment(scan_db, second_topic, third_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
-
-    stateRoot =
-    if scan_db do
-      data
-    else
-      [data_byte] = decode_data(data, [:bytes])
-      data_byte
-    end
+    stateRoot = data
+    #stateRoot = decode_data(data, [:bytes])
+#    if scan_db do
+#      data
+#    else
+#      [data_byte] = decode_data(data, [:bytes])
+#      data_byte
+#    end
 
     startId = quantity_to_integer(second_topic)
     endId = quantity_to_integer(third_topic)
+    Logger.info(fn -> "event_to_commitment, stateRoot: #{stateRoot}" end ,
+      logger: :platon_appchain
+    )
+
+    Logger.info(fn -> "event_to_commitment, convert second_topic: #{second_topic} to startId: #{startId}, third_topic: #{third_topic} to endId: #{endId}" end ,
+      logger: :platon_appchain
+    )
 
     {:ok, miner, blockTimestamp} = PlatonAppchain.get_block_miner_by_number(l2_block_number, json_rpc_named_arguments, 100_000_000)
-
     %{
       hash: l2_transaction_hash,
       state_root: stateRoot,
-      start_Id: startId,
+      start_id: startId,
       end_id: endId,
       tx_number: startId - endId + 1,
       from: miner,
@@ -206,6 +212,10 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
           )
         end)
       end
+
+    Logger.info(fn -> "to import commitments: #{inspect(commitments)}" end ,
+      logger: :platon_appchain
+    )
 
     {:ok, _} =
       Chain.import(%{

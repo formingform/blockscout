@@ -100,7 +100,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L1Event do
             [_sig, validator, amount] =
               TypeDecoder.decode_raw(data_bytes, [{:bytes, 32}, :address, {:uint, 256}])
             # todo 需要确认from地址
-            {PlatonAppchain.l1_events_tx_type()[:addStake], "", validator, amount, validator, Map.get(timestamps, l1_block_number)}
+            {PlatonAppchain.l1_events_tx_type()[:addStake], validator, validator, amount, validator, Map.get(timestamps, l1_block_number)}
           @delegate_signature ->
             timestamps = PlatonAppchain.get_timestamps_by_events(events, json_rpc_named_arguments)
             [_sig, validator, delegator, amount] =

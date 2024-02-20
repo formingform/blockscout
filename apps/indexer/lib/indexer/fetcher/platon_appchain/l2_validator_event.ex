@@ -134,7 +134,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
   # 返回一个map的list
   @spec event_to_l2_validator_event(boolean(), binary(), binary(), binary(), binary(), binary(), non_neg_integer(), list()) :: list()
   def event_to_l2_validator_event(scan_db, first_topic, second_topic, third_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
-    data_bytes =
+    data_bytes = #decode_data(data, [:bytes])
       if scan_db do
         data
       else

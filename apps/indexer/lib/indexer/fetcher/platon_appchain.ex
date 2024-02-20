@@ -431,7 +431,8 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     case apply(func, args) do
       {:ok, _} = res ->
         res
-
+      {:ok, _, _} = res ->
+        res
       {:error, message} = err ->
         retries_left = retries_left - 1
 
@@ -473,6 +474,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
       block_number = quantity_to_integer(Map.get(block, "number"))
       timestamp = quantity_to_integer(Map.get(block, "timestamp"))
       miner = Map.get(block, "miner")
+      #from = Map.get(block, "from")
       Map.put(acc, "#{block_number}_miner", miner) |> Map.put(block_number, timestamp)
     end)
   end

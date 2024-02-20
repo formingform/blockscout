@@ -3,11 +3,12 @@ defmodule Explorer.Chain.PlatonAppchain.Commitment do
 
   alias Explorer.Chain.{
     Hash,
-    Block
+    Block,
+    Data
     }
   @optional_attrs ~w()a
 
-  @required_attrs ~w(hash state_root start_id end_id tx_number from to block_number block_timestamp)a
+  @required_attrs ~w(hash state_root block_number start_id end_id tx_number from block_timestamp)a
 
   @allowed_attrs @optional_attrs ++ @required_attrs
 
@@ -24,28 +25,25 @@ defmodule Explorer.Chain.PlatonAppchain.Commitment do
   """
   @type t :: %__MODULE__{
                hash:  Hash.t(),
-               state_root:  Hash.t(),
+               state_root:  Data.t(),
+               block_number:  Block.block_number(),
                start_id:  non_neg_integer(),
                end_id: non_neg_integer(),
                tx_number: non_neg_integer(),
                from:  Hash.Address.t(),
-               to:  Hash.Address.t(),
-               block_number:  Block.block_number(),
                block_timestamp:  non_neg_integer() | nil,
              }
 
   @primary_key false
   schema "commitments" do
     field(:hash, Hash.Full, primary_key: true)
-    field(:state_root, Hash.Full)
+    field(:state_root, Data)
     field(:block_number, :integer)
     field(:start_id, :integer)
     field(:end_id, :integer)
     field(:tx_number, :integer)
     field(:from, Hash.Address)
-    field(:to, Hash.Address)
     field(:block_timestamp, :integer)
-
     timestamps()
   end
 
@@ -54,7 +52,7 @@ defmodule Explorer.Chain.PlatonAppchain.Commitment do
     module
     |> cast(attrs, @allowed_attrs)  # 确保@allowed_attrs中指定的key才会赋值到结构体中
     |> validate_required(@required_attrs)
-    |> unique_constraint(:state_batch_hash)
+    |> unique_constraint(:hash)
   end
 
 end

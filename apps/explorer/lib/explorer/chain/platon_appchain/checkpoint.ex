@@ -3,7 +3,8 @@ defmodule Explorer.Chain.PlatonAppchain.Checkpoint do
 
   alias Explorer.Chain.{
     Hash,
-    Block
+    Block,
+    Data
     }
   @optional_attrs ~w()a
 
@@ -25,7 +26,7 @@ defmodule Explorer.Chain.PlatonAppchain.Checkpoint do
                epoch: non_neg_integer(),
                start_block_number:  Block.block_number(),
                end_block_number:  Block.block_number(),
-               state_root:  Hash.t(),
+               state_root:  Data.t(),
                event_counts: non_neg_integer(),
                block_number: Block.block_number(),
                hash:  Hash.t(),
@@ -37,7 +38,7 @@ defmodule Explorer.Chain.PlatonAppchain.Checkpoint do
     field(:epoch, :integer, primary_key: true)
     field(:start_block_number, :integer)
     field(:end_block_number, :integer)
-    field(:state_root, Hash.Full)
+    field(:state_root, Data)
     field(:event_counts, :integer)
     field(:block_number, :integer)
     field(:hash, Hash.Full)

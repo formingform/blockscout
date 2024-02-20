@@ -134,13 +134,18 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
 
   @spec event_to_l2_event(boolean(), binary(), binary(), binary(), binary(), list()) :: map()
   def event_to_l2_event(scan_db, second_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
-    data_bytes =
+    data_bytes = #decode_data(data, [:bytes])
       if scan_db do
         data
       else
         [data_byte] = decode_data(data, [:bytes])
         data_byte
       end
+
+    eventID = quantity_to_integer(second_topic)
+    Logger.info(fn -> "convert second_topic: #{second_topic} to eventID: #{eventID}" end ,
+      logger: :platon_appchain
+    )
 
     sig = binary_part(data_bytes, 0, 32)
 
@@ -171,7 +176,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
       end
 
     %{
-      event_id: quantity_to_integer(second_topic),
+      event_id: eventID,
       tx_type: tx_type,
       from: from,
       to: to,
