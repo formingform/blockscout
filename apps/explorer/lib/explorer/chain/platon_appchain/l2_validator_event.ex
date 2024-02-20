@@ -9,7 +9,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
 
   @optional_attrs ~w(action_desc amount)a
 
-  @required_attrs ~w(validator_hash action_type block_number block_timestamp log_index hash)a
+  @required_attrs ~w(hash log_index block_number validator_hash action_type block_timestamp)a
 
   @allowed_attrs @optional_attrs ++ @required_attrs
 
@@ -21,29 +21,28 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
   * `block_number` - 事件发生块高
   * `block_timestamp` - 交易所在区块时间戳
   * `log_index` - 日志索引
-  * `transaction_hash` - 事件所在交易hash
+  * `hash` - 事件所在交易hash
   """
   @type t :: %__MODULE__{
+               hash: Hash.t(),
+               log_index: non_neg_integer(),
+               block_number: Block.block_number(),
                validator_hash: Hash.Address.t(),
                action_type: non_neg_integer(),
                action_desc: String.t() | nil,
                amount: Wei.t() | nil,
-               block_number: Block.block_number(),
                block_timestamp: non_neg_integer(),
-               log_index: non_neg_integer(),
-               hash: Hash.t(),
              }
 
   schema "l2_validator_events" do
+    field(:hash, Hash.Full, primary_key: true)
+    field(:log_index, :integer, primary_key: true)
+    field(:block_number, :integer)
     field(:validator_hash, Hash.Address)
     field(:action_type, :integer)
     field(:action_desc, :string)
     field(:amount, Wei)
-    field(:block_number, :integer)
     field(:block_timestamp, :integer)
-    field(:log_index, :integer)
-    field(:hash, Hash.Full)
-
     timestamps()
   end
 
@@ -52,7 +51,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
     module
     |> cast(attrs, @allowed_attrs)
     |> validate_required(@required_attrs)
-    |> unique_constraint(:block_number, :log_index)
+    |> unique_constraint(:hash, :log_index)
   end
 
 end
