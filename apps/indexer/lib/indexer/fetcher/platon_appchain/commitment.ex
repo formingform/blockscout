@@ -131,16 +131,14 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
     Repo.delete_all(from(de in Commitment, where: de.block_number >= ^starting_block))
   end
 
-  @spec event_to_commitment(boolean(), binary(), binary(),  binary(), binary(), non_neg_integer(), list()) :: map()
-  def event_to_commitment(scan_db, second_topic, third_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
-    stateRoot = data
-    #stateRoot = decode_data(data, [:bytes])
-#    if scan_db do
-#      data
-#    else
-#      [data_byte] = decode_data(data, [:bytes])
-#      data_byte
-#    end
+  @spec event_to_commitment(binary(), binary(),  binary(), binary(), non_neg_integer(), list()) :: map()
+  def event_to_commitment(second_topic, third_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
+    Logger.info(fn -> "convert event to commitment, log.data: #{inspect(data)}" end ,
+      logger: :platon_appchain
+    )
+    Logger.error(fn -> "convert event to commitment, log.data: #{inspect(data)}" end )
+    stateRoot = decode_data(data, [:bytes])
+
 
     startId = quantity_to_integer(second_topic)
     endId = quantity_to_integer(third_topic)
@@ -180,7 +178,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
         query
         |> Repo.all(timeout: :infinity)
         |> Enum.map(fn {second_topic, third_topic, data, l2_transaction_hash, l2_block_number} ->
-          event_to_commitment(scan_db, second_topic, third_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments)
+          event_to_commitment(second_topic, third_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments)
         end)
       else
         {:ok, result} =
@@ -195,7 +193,6 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
 
         Enum.map(result, fn event ->
           event_to_commitment(
-            scan_db,
             Enum.at(event["topics"], 1),
             Enum.at(event["topics"], 2),
             event["data"],

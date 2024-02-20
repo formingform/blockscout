@@ -132,15 +132,13 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
   end
 
   # 返回一个map的list
-  @spec event_to_l2_validator_event(boolean(), binary(), binary(), binary(), binary(), binary(), non_neg_integer(), list()) :: list()
-  def event_to_l2_validator_event(scan_db, first_topic, second_topic, third_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
-    data_bytes = #decode_data(data, [:bytes])
-      if scan_db do
-        data
-      else
-        [data_byte] = decode_data(data, [:bytes])
-        data_byte
-      end
+  @spec event_to_l2_validator_event(binary(), binary(), binary(), binary(), binary(), non_neg_integer(), list()) :: list()
+  def event_to_l2_validator_event(first_topic, second_topic, third_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
+    Logger.info(fn -> "convert event to l2_validator_event, log.data: #{inspect(data)}" end ,
+      logger: :platon_appchain
+    )
+    Logger.error(fn -> "convert event to l2_validator_event, log.data: #{inspect(data)}" end)
+    data_bytes = decode_data(data, [:bytes])
 
     timestamp = PlatonAppchain.get_block_timestamp_by_number(l2_block_number, json_rpc_named_arguments, 100_000_000)
     block_number = quantity_to_integer(l2_block_number)
@@ -279,16 +277,18 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
               and log.address_hash == ^l2_stake_handler and
               log.block_number >= ^block_start and log.block_number <= ^block_end
           )
-
+        Logger.error(fn -> "find event from db" end )
         query
         |> Repo.all(timeout: :infinity)
         |> Enum.map(fn {first_topic, second_topic, third_topic, data, l2_transaction_hash, l2_block_number} ->
-          event_to_l2_validator_event(scan_db, first_topic, second_topic, third_topic, data, l2_transaction_hash, l2_block_number,json_rpc_named_arguments)
+
+          event_to_l2_validator_event(first_topic, second_topic, third_topic, data, l2_transaction_hash, l2_block_number,json_rpc_named_arguments)
         end)
 #        Logger.info("success to get l2 validator events from db",
 #          logger: :platon_appchain
 #        )
       else
+        Logger.error(fn -> "find event from chain" end )
         case PlatonAppchain.get_logs_by_topics(
             block_start,
             block_end,
@@ -305,7 +305,6 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
 
             Enum.map(result, fn event ->
               event_to_l2_validator_event(
-                scan_db,
                 Enum.at(event["topics"], 0),
                 Enum.at(event["topics"], 1),
                 Enum.at(event["topics"], 2),
