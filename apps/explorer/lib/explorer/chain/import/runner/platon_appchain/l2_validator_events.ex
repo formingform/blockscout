@@ -62,7 +62,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
     on_conflict = Map.get_lazy(options, :on_conflict, &default_on_conflict/0)
 
     # 按block_number排序
-    ordered_changes_list = Enum.sort_by(changes_list, & &1.block_number)
+    ordered_changes_list = Enum.sort_by(changes_list, &{&1.block_number, &1.hash, &1.log_index})
 
     Import.insert_changes_list(
       repo,
