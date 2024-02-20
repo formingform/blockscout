@@ -1,6 +1,7 @@
 defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2ValidatorEvents do
   use Ecto.Migration
 
+  # 是指L2上发生的和validator有关的所有业务事件
   def change do
     create table(:l2_validator_events) do
       # 验证人地址

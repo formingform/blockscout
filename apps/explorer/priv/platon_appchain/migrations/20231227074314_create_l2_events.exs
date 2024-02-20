@@ -1,6 +1,7 @@
 defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2Txs do
   use Ecto.Migration
 
+  # 指L2上发生，需要写入checkpoint，并同步到L1的事件
   def change do
     create table(:l2_events, primary_key: false) do
       # 交易计数器 msgId
