@@ -130,7 +130,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
 
   @spec event_to_l2_execute(binary(), binary(), binary(), binary()) :: map()
   def event_to_l2_execute(second_topic, third_topic, l2_transaction_hash, l2_block_number) do
-    # 关联commitment表获取state_root
+    # 关联commitment表获取commitment_hash
     eventId = quantity_to_integer(second_topic)
 
     {commitment_hash} = get_commitment_hash_by_event_id(eventId)
@@ -139,7 +139,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
       hash: l2_transaction_hash,
       commitment_hash: commitment_hash,
       block_number: quantity_to_integer(l2_block_number),
-      status: !!quantity_to_integer(third_topic)
+      status: quantity_to_integer(third_topic)
     }
   end
 

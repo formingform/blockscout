@@ -26,8 +26,13 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
   @l2_state_synced_event "0xedaf3c471ebd67d60c29efe34b639ede7d6a1d92eaeb3f503e784971e67118a5"
 
   @withdraw_signature "7a8dc26796a1e50e6e190b70259f58f6a4edd5b22280ceecc82b687b8e982869"
+
   @stake_withdraw_signature "8ca9a95e41b5eece253c93f5b31eed1253aed6b145d8a6e14d913fdf8e732293"
+  # 用户在L2上撤销委托后，将会锁定一段时间，同时有个业务事件，refer: @l2_biz_event_UnDelegated
+  # 用户在L2提取委托金时，才会同步有个UNDELEGATE_SIG的L2StateSynced事件给L1。这个事件和前面的那个事件没有关系，甚至前面撤销委托100，这里提款80。
   @delegation_withdraw_signature "58e580ca1cdbe518f27d857873b615e807a3c395584a93d75e80c921c991e50f"
+
+  @slash_signature "117f1d6f44fd34ccb7a58f1261fa59e5c4bf68e2712d65f246a8805167a93344"
 
   def child_spec(start_link_arguments) do
     spec = %{
@@ -132,21 +137,27 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
     Repo.delete_all(from(w in L2Event, where: w.block_number >= ^starting_block))
   end
 
-  @spec event_to_l2_event(binary(), binary(), binary(), binary(), list()) :: map()
+  @spec event_to_l2_event( binary(), binary(), binary(), binary(), list()) :: map()
   def event_to_l2_event(second_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
+    Logger.debug(fn -> "convert event to l2_event, log.data: #{inspect(data)}" end, logger: :platon_appchain)
 
-    Logger.info(fn -> "convert event to l2_event, log.data: #{inspect(data)}" end ,
-      logger: :platon_appchain
-    )
-    Logger.error(fn -> "convert event to l2_event, log.data: #{inspect(data)}" end)
-    data_bytes = decode_data(data, [:bytes])
+
+    data_bytes =
+    case data do
+      %Explorer.Chain.Data{} ->
+        %Explorer.Chain.Data{bytes: data_byte} = data
+        data_byte
+      _ ->
+        decode_data(data, [:bytes])
+    end
+
+    Logger.debug(fn -> "decode data result: #{inspect(data_bytes)}" end, logger: :platon_appchain)
 
     eventID = quantity_to_integer(second_topic)
-    Logger.info(fn -> "convert second_topic: #{second_topic} to eventID: #{eventID}" end ,
-      logger: :platon_appchain
-    )
+    Logger.debug(fn -> "parse second_topic to eventId: #{inspect(eventID)}" end, logger: :platon_appchain)
 
     sig = binary_part(data_bytes, 0, 32)
+    Logger.debug(fn -> "method sig: #{inspect(sig)}" end, logger: :platon_appchain)
 
     {:ok, l2_block_timestamp} = PlatonAppchain.get_block_timestamp_by_number(l2_block_number, json_rpc_named_arguments, 100_000_000)
 
@@ -169,7 +180,13 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
           # {UNDELEGATE_SIG, validatorAddr, delegatorAddr, amount}
           [_sig, validatorAddr, delegatorAddr, amount] =
             TypeDecoder.decode_raw(data_bytes, [{:bytes, 32}, :address, :address, {:uint, 256}])
-          {PlatonAppchain.l1_events_tx_type()[:degationWithdraw], delegatorAddr, validatorAddr, amount}
+          {PlatonAppchain.l2_events_tx_type()[:degationWithdraw], delegatorAddr, validatorAddr, amount}
+        @slash_signature ->
+          # SLASH_SIG, validators, c.stakeModule.GetSlashingPercentage(c.evm.StateDB), c.stakeModule.GetSlashIncentivePercentage(c.evm.StateDB)
+          [_sig, validatorAddrList, slashingPercent, slashIncentivePercent] =
+            TypeDecoder.decode_raw(data_bytes, [{:bytes, 32}, {:array, :address}, {:uint, 256}, {:uint, 256}])
+           first = Enum.at(validatorAddrList, 0)
+          {PlatonAppchain.l2_events_tx_type()[:slash], first, slashingPercent, slashIncentivePercent}
         _ ->
         {nil, nil, nil,  nil}
       end

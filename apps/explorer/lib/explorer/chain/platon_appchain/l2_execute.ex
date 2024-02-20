@@ -3,9 +3,9 @@ defmodule Explorer.Chain.PlatonAppchain.L2Execute do
 
   alias Explorer.Chain.{Address, Block, Hash, Wei}
 
-  @optional_attrs ~w(amount replay_status)a
+  @optional_attrs ~w(replay_status)a
 
-  @required_attrs ~w(event_id hash block_number tx_type commitment_hash status)a
+  @required_attrs ~w(event_id hash block_number commitment_hash status)a
 
   @allowed_attrs @optional_attrs ++ @required_attrs
 

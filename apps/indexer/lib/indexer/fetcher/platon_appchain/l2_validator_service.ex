@@ -67,7 +67,6 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorService do
 
   # [{validator_hash, rank},{...}]
   def update_rank(rank_tuple_list) do
-
      Logger.info(fn -> "update l2 validators rank: (#{inspect(rank_tuple_list)})" end,
        logger: :platon_appchain
      )

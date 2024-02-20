@@ -10,7 +10,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
 
   import Ecto.Query
 
-  import EthereumJSONRPC, only: [quantity_to_integer: 1]
+  import EthereumJSONRPC, only: [quantity_to_integer: 1, integer_to_quantity: 1]
   import Explorer.Helper, only: [decode_data: 2]
   import Indexer.Fetcher.PlatonAppchain, only: [fill_block_range: 5, get_block_number_by_tag: 3]
 
@@ -134,11 +134,17 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
   # 返回一个map的list
   @spec event_to_l2_validator_event(binary(), binary(), binary(), binary(), binary(), non_neg_integer(), list()) :: list()
   def event_to_l2_validator_event(first_topic, second_topic, third_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
-    Logger.info(fn -> "convert event to l2_validator_event, log.data: #{inspect(data)}" end ,
-      logger: :platon_appchain
-    )
-    Logger.error(fn -> "convert event to l2_validator_event, log.data: #{inspect(data)}" end)
-    data_bytes = decode_data(data, [:bytes])
+    Logger.debug(fn -> "convert event to l2_validator_event, log.data: #{inspect(data)}" end, logger: :platon_appchain)
+
+    data_bytes =
+      case data do
+        %Explorer.Chain.Data{} ->
+          %Explorer.Chain.Data{bytes: data_byte} = data
+          data_byte
+        _ ->
+          decode_data(data, [:bytes])
+      end
+
 
     timestamp = PlatonAppchain.get_block_timestamp_by_number(l2_block_number, json_rpc_named_arguments, 100_000_000)
     block_number = quantity_to_integer(l2_block_number)
@@ -148,9 +154,12 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
         @l2_biz_event_ValidatorRegistered ->
           [owner, commission_rate, _pubKey, _blsKey] = TypeDecoder.decode_raw(data_bytes, [:address, {:uint, 256}, {:bytes, 64},  {:bytes, 48}])
           # 增加L2_validator记录
-          L2ValidatorService.add_new_validator(second_topic)
+          validator_hash = "0x" <> String.slice(second_topic, -40..-1)
+          # 溢出异常
+          # validator_hash = integer_to_quantity(quantity_to_integer(second_topic))
+          L2ValidatorService.add_new_validator(validator_hash)
           [%{
-            validator_hash: second_topic,
+            validator_hash: validator_hash,
             block_number: block_number,
             transaction_hash: l2_transaction_hash,
             action_type: PlatonAppchain.l2_validator_event_action_type()[:ValidatorRegistered],
@@ -162,9 +171,12 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
         @l2_biz_event_StakeAdded ->
           [amount] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
           # 更新L2_validator记录，增加质押金额
-          L2ValidatorService.increase_stake(second_topic, amount)
+          validator_hash = "0x" <> String.slice(second_topic, -40..-1)
+          # 溢出异常
+          # validator_hash = integer_to_quantity(quantity_to_integer(second_topic))
+          L2ValidatorService.increase_stake(validator_hash, amount)
           [%{
-            validator_hash: second_topic,
+            validator_hash: validator_hash,
             block_number: block_number,
             transaction_hash: l2_transaction_hash,
             action_type: PlatonAppchain.l2_validator_event_action_type()[:StakeAdded],
@@ -176,13 +188,17 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
         @l2_biz_event_DelegationAdded ->
           [amount] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
           # 更新L2_validator记录，增加委托金额
-          L2ValidatorService.increase_delegation(third_topic, amount)
+
+          delegator_hash = "0x" <> String.slice(second_topic, -40..-1)
+          validator_hash = "0x" <> String.slice(third_topic, -40..-1)
+
+          L2ValidatorService.increase_delegation(validator_hash, amount)
           [%{
-            validator_hash: third_topic,
+            validator_hash: validator_hash,
             block_number: block_number,
             transaction_hash: l2_transaction_hash,
             action_type: PlatonAppchain.l2_validator_event_action_type()[:DelegationAdded],
-            action_desc: "delegator: #{second_topic}",
+            action_desc: "delegator: #{delegator_hash}",
             amount: 0,
             block_timestamp: timestamp
           }]
@@ -190,12 +206,13 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
         @l2_biz_event_UnStaked ->
 
           [amount] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
+          validator_hash = "0x" <> String.slice(second_topic, -40..-1)
 
           # 更新L2_validator记录，减少质押
-          L2ValidatorService.decrease_stake(second_topic, amount)
+          L2ValidatorService.decrease_stake(validator_hash, amount)
 
           [%{
-            validator_hash: second_topic,
+            validator_hash: validator_hash,
             block_number: block_number,
             transaction_hash: l2_transaction_hash,
             action_type: PlatonAppchain.l2_validator_event_action_type()[:UnStaked],
@@ -207,15 +224,18 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
         @l2_biz_event_UnDelegated ->
 
           [amount] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
+          delegator_hash = "0x" <> String.slice(second_topic, -40..-1)
+          validator_hash = "0x" <> String.slice(third_topic, -40..-1)
+
           # 更新L2_validator记录，减少委托
-          L2ValidatorService.decrease_delegation(third_topic, amount)
+          L2ValidatorService.decrease_delegation(validator_hash, amount)
 
           [%{
-            validator_hash: third_topic,
+            validator_hash: validator_hash,
             block_number: block_number,
             transaction_hash: l2_transaction_hash,
             action_type: PlatonAppchain.l2_validator_event_action_type()[:UnDelegated],
-            action_desc: "delegator: #{second_topic}",
+            action_desc: "delegator: #{delegator_hash}",
             amount: amount,
             block_timestamp: timestamp
           }]
@@ -277,18 +297,13 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
               and log.address_hash == ^l2_stake_handler and
               log.block_number >= ^block_start and log.block_number <= ^block_end
           )
-        Logger.error(fn -> "find event from db" end )
         query
         |> Repo.all(timeout: :infinity)
         |> Enum.map(fn {first_topic, second_topic, third_topic, data, l2_transaction_hash, l2_block_number} ->
 
           event_to_l2_validator_event(first_topic, second_topic, third_topic, data, l2_transaction_hash, l2_block_number,json_rpc_named_arguments)
         end)
-#        Logger.info("success to get l2 validator events from db",
-#          logger: :platon_appchain
-#        )
       else
-        Logger.error(fn -> "find event from chain" end )
         case PlatonAppchain.get_logs_by_topics(
             block_start,
             block_end,
@@ -328,19 +343,24 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
 #        logger: :platon_appchain
 #      )
     if Enum.count(l2_validator_events)> 0 do
-      case Chain.import(%{
+      {:ok, _} =
+        Chain.import(%{
           l2_validator_events: %{params: l2_validator_events},
           timeout: :infinity
-        }) do
-          {:ok, _} ->
-            Logger.info("success to import l2 validator events",
-              logger: :platon_appchain
-            )
-          {:error, reason} ->
-            Logger.info(fn -> "failed to import l2 validator events with reason (#{inspect(reason)}). Restarting" end ,
-              logger: :platon_appchain
-            )
-        end
+        })
+#      case Chain.import(%{
+#          l2_validator_events: %{params: l2_validator_events},
+#          timeout: :infinity
+#        }) do
+#          {:ok, _} ->
+#            Logger.debug("success to import l2 validator events",
+#              logger: :platon_appchain
+#            )
+#          {:error, reason} ->
+#            Logger.error(fn -> "failed to import l2 validator events with reason (#{inspect(reason)}). Restarting" end ,
+#              logger: :platon_appchain
+#            )
+#        end
       end
 
     Enum.count(l2_validator_events)
