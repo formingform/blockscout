@@ -33,6 +33,7 @@ defmodule Indexer.Transform.PlatonAppchain.L2ValidatorEvents do
           Logger.info("L2 (Stake Event) message found, validator: #{log.second_topic}.")
 
           L2ValidatorEvent.event_to_l2_validator_event(
+            log.index,
             log.first_topic,
             log.second_topic,
             log.third_topic,
