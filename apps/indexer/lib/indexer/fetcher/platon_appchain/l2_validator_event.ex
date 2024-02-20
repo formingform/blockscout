@@ -147,7 +147,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
       end
 
 
-    timestamp = PlatonAppchain.get_block_timestamp_by_number(l2_block_number, json_rpc_named_arguments, 100_000_000)
+    {:ok, timestamp} = PlatonAppchain.get_block_timestamp_by_number(l2_block_number, json_rpc_named_arguments, 100_000_000)
     block_number = quantity_to_integer(l2_block_number)
 
     #{logIndex, validator_hash, block_number, transaction_hash, action_type, action_desc, amount, block_timestamp} =
@@ -356,7 +356,11 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
     # 过滤掉返回为空的events
     filtered_events = Enum.reject(l2_validator_events, &Enum.empty?/1)
 
+
+
     if Enum.count(filtered_events)> 0 do
+      Logger.debug(fn -> "to import l2 validator events:(#{inspect(filtered_events)})" end , logger: :platon_appchain)
+
       {:ok, _} =
         Chain.import(%{
           l2_validator_events: %{params: filtered_events},
