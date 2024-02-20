@@ -67,7 +67,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.Commitments do
     Import.insert_changes_list(
       repo,
       ordered_changes_list,
-      conflict_target: :state_root,
+      conflict_target: :hash,
       on_conflict: on_conflict,
       for: Commitment,
       returning: true,
@@ -82,8 +82,8 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.Commitments do
       l in Commitment,
       update: [
         set: [
-          # Don't update `state_batch_hash` as it is a primary key and used for the conflict target
-          hash: fragment("EXCLUDED.hash"),
+          # Don't update `hash` as it is a primary key and used for the conflict target
+          state_root: fragment("EXCLUDED.state_root"),
           block_number: fragment("EXCLUDED.block_number"),
           start_id: fragment("EXCLUDED.start_id"),
           end_id: fragment("EXCLUDED.end_id"),
@@ -96,9 +96,9 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.Commitments do
       ],
       where:
         fragment(
-          "(EXCLUDED.hash,EXCLUDED.block_number,EXCLUDED.start_id,EXCLUDED.end_id,EXCLUDED.tx_number,EXCLUDED.from,
+          "(EXCLUDED.state_root,EXCLUDED.block_number,EXCLUDED.start_id,EXCLUDED.end_id,EXCLUDED.tx_number,EXCLUDED.from,
           EXCLUDED.block_timestamp) IS DISTINCT FROM (?,?,?,?,?,?,?)", # 有冲突时只更新这些字段
-          l.hash,
+          l.state_root,
           l.block_number,
           l.start_id,
           l.end_id,

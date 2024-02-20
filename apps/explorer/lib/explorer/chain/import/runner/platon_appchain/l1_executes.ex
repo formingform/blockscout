@@ -88,7 +88,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L1Executes do
           amount:  fragment("EXCLUDED.amount"),
           hash: fragment("EXCLUDED.hash"),
           block_number: fragment("EXCLUDED.block_number"),
-          state_batch_hash:  fragment("EXCLUDED.state_batch_hash"),
+          checkpoint_hash:  fragment("EXCLUDED.checkpoint_hash"),
           replay_status:  fragment("EXCLUDED.replay_status"),
           status:  fragment("EXCLUDED.status"),
           inserted_at: fragment("LEAST(?, EXCLUDED.inserted_at)", l.inserted_at), # LEAST返回给定的最小值 EXCLUDED.inserted_at 表示已存在的值
@@ -97,13 +97,13 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L1Executes do
       ],
       where:
         fragment(
-          "(EXCLUDED.tx_type,EXCLUDED.amount,EXCLUDED.hash,EXCLUDED.block_number,EXCLUDED.state_batch_hash,EXCLUDED.replay_status,
+          "(EXCLUDED.tx_type,EXCLUDED.amount,EXCLUDED.hash,EXCLUDED.block_number,EXCLUDED.checkpoint_hash,EXCLUDED.replay_status,
           EXCLUDED.status) IS DISTINCT FROM (?,?,?,?,?,?,?)", # 有冲突时只更新这些字段
           l.tx_type,
           l.amount,
           l.hash,
           l.block_number,
-          l.state_batch_hash,
+          l.checkpoint_hash,
           l.replay_status,
           l.status
         )
