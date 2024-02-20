@@ -149,7 +149,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
     timestamp = PlatonAppchain.get_block_timestamp_by_number(l2_block_number, json_rpc_named_arguments, 100_000_000)
     block_number = quantity_to_integer(l2_block_number)
 
-    {validator_hash, block_number, transaction_hash, action_type, amount, block_timestamp} =
+    {log_index, validator_hash, block_number, transaction_hash, action_type, amount, block_timestamp} =
       case first_topic do
         @l2_biz_event_ValidatorRegistered ->
           [owner, commission_rate, _pubKey, _blsKey] = TypeDecoder.decode_raw(data_bytes, [:address, {:uint, 256}, {:bytes, 64},  {:bytes, 48}])
