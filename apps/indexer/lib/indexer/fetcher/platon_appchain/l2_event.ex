@@ -158,52 +158,67 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
     Logger.debug(fn -> "parse second_topic to eventId: #{inspect(eventID)}" end, logger: :platon_appchain)
 
     sig = binary_part(data_bytes, 0, 32)
-    Logger.debug(fn -> "method sig: #{inspect(sig)}" end, logger: :platon_appchain)
 
     {:ok, l2_block_timestamp} = PlatonAppchain.get_block_timestamp_by_number(l2_block_number, json_rpc_named_arguments, 100_000_000)
+    case Base.encode16(sig, case: :lower) do
+      @withdraw_signature ->
+        # {WITHDRAW_SIG, withdrawer, recipient, amount}
+        [_sig, withdrawer, recipient, amount] = TypeDecoder.decode_raw(data_bytes, [{:bytes, 32}, :address, :address, {:uint, 256}])
+        %{
+          event_id: eventID,
+          tx_type: PlatonAppchain.l2_events_tx_type()[:withdraw],
+          from: withdrawer,
+          to: recipient,
+          amount: amount,
+          hash: l2_transaction_hash,
+          block_number: quantity_to_integer(l2_block_number),
+          block_timestamp: l2_block_timestamp,
+        }
 
-    {tx_type, from, to, amount} =
-      case Base.encode16(sig, case: :lower) do
-        @withdraw_signature ->
-          # {WITHDRAW_SIG, withdrawer, recipient, amount}
-          [_sig, withdrawer, recipient, amount] =
-            TypeDecoder.decode_raw(data_bytes, [{:bytes, 32}, :address, :address, {:uint, 256}])
+      @stake_withdraw_signature ->
+        # {UNSTAKE_SIG, validatorAddr, amount}
+        [_sig, validatorAddr, amount] = TypeDecoder.decode_raw(data_bytes, [{:bytes, 32}, :address, {:uint, 256}])
+        %{
+          event_id: eventID,
+          tx_type: PlatonAppchain.l2_events_tx_type()[:stakeWithdraw],
+          from: validatorAddr,
+          to: "",
+          amount: amount,
+          hash: l2_transaction_hash,
+          block_number: quantity_to_integer(l2_block_number),
+          block_timestamp: l2_block_timestamp,
+        }
 
-        {PlatonAppchain.l2_events_tx_type()[:withdraw], withdrawer, recipient, amount}
-
-        @stake_withdraw_signature ->
-          # {UNSTAKE_SIG, validatorAddr, amount}
-          [_sig, validatorAddr, amount] =
-            TypeDecoder.decode_raw(data_bytes, [{:bytes, 32}, :address, {:uint, 256}])
-
-          {PlatonAppchain.l2_events_tx_type()[:stakeWithdraw], validatorAddr, "", amount}
-        @delegation_withdraw_signature ->
-          # {UNDELEGATE_SIG, validatorAddr, delegatorAddr, amount}
-          [_sig, validatorAddr, delegatorAddr, amount] =
-            TypeDecoder.decode_raw(data_bytes, [{:bytes, 32}, :address, :address, {:uint, 256}])
-          {PlatonAppchain.l2_events_tx_type()[:degationWithdraw], delegatorAddr, validatorAddr, amount}
-        @slash_signature ->
-          # SLASH_SIG, validators, c.stakeModule.GetSlashingPercentage(c.evm.StateDB), c.stakeModule.GetSlashIncentivePercentage(c.evm.StateDB)
-          [_sig, validatorAddrList, slashingPercent, slashIncentivePercent] =
-            TypeDecoder.decode_raw(data_bytes, [{:bytes, 32}, {:array, :address}, {:uint, 256}, {:uint, 256}])
-           first = Enum.at(validatorAddrList, 0)
-          {PlatonAppchain.l2_events_tx_type()[:slash], first, first, slashingPercent}
-        _ ->
-        {nil, nil, nil,  nil}
-      end
-    if is_nil(tx_type) do
-      %{}
-    else
-      %{
-        event_id: eventID,
-        tx_type: tx_type,
-        from: from,
-        to: to,
-        amount: amount,
-        l2_transaction_hash: l2_transaction_hash,
-        l2_block_number: quantity_to_integer(l2_block_number),
-        block_timestamp: l2_block_timestamp,
-      }
+      @delegation_withdraw_signature ->
+        # {UNDELEGATE_SIG, validatorAddr, delegatorAddr, amount}
+        [_sig, validatorAddr, delegatorAddr, amount] = TypeDecoder.decode_raw(data_bytes, [{:bytes, 32}, :address, :address, {:uint, 256}])
+        %{
+          event_id: eventID,
+          tx_type: PlatonAppchain.l2_events_tx_type()[:degationWithdraw],
+          from: delegatorAddr,
+          to: validatorAddr,
+          amount: amount,
+          hash: l2_transaction_hash,
+          block_number: quantity_to_integer(l2_block_number),
+          block_timestamp: l2_block_timestamp,
+        }
+      @slash_signature ->
+        # SLASH_SIG, validators, c.stakeModule.GetSlashingPercentage(c.evm.StateDB), c.stakeModule.GetSlashIncentivePercentage(c.evm.StateDB)
+        [_sig, validatorAddrList, slashingPercent, slashIncentivePercent] = TypeDecoder.decode_raw(data_bytes, [{:bytes, 32}, {:array, :address}, {:uint, 256}, {:uint, 256}])
+        first = "0x" <> Base.encode16(Enum.at(validatorAddrList, 0), case: :lower)
+        # todo 需要根据slashingPercent参数去计算amount
+        %{
+          event_id: eventID,
+          tx_type: PlatonAppchain.l2_events_tx_type()[:slash],
+          from: first,
+          to: first,
+          amount: slashingPercent,
+          hash: l2_transaction_hash,
+          block_number: quantity_to_integer(l2_block_number),
+          block_timestamp: l2_block_timestamp,
+        }
+      _ ->
+        %{}
     end
   end
 
@@ -251,18 +266,16 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
         end)
       end
     # 过滤掉返回为空的events
-    filtered_events = Enum.reject(l2_events, fn %{} -> true; _ -> false end)
+    filtered_events = Enum.reject(l2_events, &Enum.empty?/1)
+    Logger.debug(fn -> "l2 filtered events: #{inspect(filtered_events)}" end, logger: :platon_appchain)
     if Enum.count(filtered_events) > 0 do
       {:ok, _} =
         Chain.import(%{
           l2_events: %{params: filtered_events},
           timeout: :infinity
         })
-
-      Enum.count(filtered_events)
-    else
-      0
     end
+    Enum.count(filtered_events)
   end
 
   @spec l2_state_synced_event_signature() :: binary()
