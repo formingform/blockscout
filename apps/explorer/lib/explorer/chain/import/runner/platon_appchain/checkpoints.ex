@@ -85,7 +85,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.Checkpoints do
           # Don't update `epoch` as it is a primary key and used for the conflict target
           start_block_number: fragment("EXCLUDED.start_block_number"),
           end_block_number: fragment("EXCLUDED.end_block_number"),
-          event_root: fragment("EXCLUDED.event_root"),
+          state_root: fragment("EXCLUDED.state_root"),
           event_counts: fragment("EXCLUDED.event_counts"),
           block_number: fragment("EXCLUDED.block_number"),
           hash: fragment("EXCLUDED.hash"),
@@ -96,11 +96,11 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.Checkpoints do
       ],
       where:
         fragment(
-          "(EXCLUDED.start_block_number,EXCLUDED.end_block_number,EXCLUDED.event_root,EXCLUDED.event_counts,EXCLUDED.block_number,
+          "(EXCLUDED.start_block_number,EXCLUDED.end_block_number,EXCLUDED.state_root,EXCLUDED.event_counts,EXCLUDED.block_number,
           EXCLUDED.hash,EXCLUDED.block_timestamp) IS DISTINCT FROM (?,?,?,?,?,?,?)", # 有冲突时只更新这些字段
           l.start_block_number,
           l.end_block_number,
-          l.event_root,
+          l.state_root,
           l.event_counts,
           l.block_number,
           l.hash,

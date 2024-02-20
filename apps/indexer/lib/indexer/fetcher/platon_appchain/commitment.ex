@@ -144,13 +144,6 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
 
     startId = quantity_to_integer(second_topic)
     endId = quantity_to_integer(third_topic)
-    Logger.info(fn -> "event_to_commitment, stateRoot: #{stateRoot}" end ,
-      logger: :platon_appchain
-    )
-
-    Logger.info(fn -> "event_to_commitment, convert second_topic: #{second_topic} to startId: #{startId}, third_topic: #{third_topic} to endId: #{endId}" end ,
-      logger: :platon_appchain
-    )
 
     {:ok, miner, blockTimestamp} = PlatonAppchain.get_block_miner_by_number(l2_block_number, json_rpc_named_arguments, 100_000_000)
     %{

@@ -139,7 +139,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
       hash: l2_transaction_hash,
       commitment_hash: commitment_hash,
       block_number: quantity_to_integer(l2_block_number),
-      status: Kernel.boolean(third_topic)
+      status: !!quantity_to_integer(third_topic)
     }
   end
 

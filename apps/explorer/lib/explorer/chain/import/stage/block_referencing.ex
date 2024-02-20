@@ -21,9 +21,6 @@ defmodule Explorer.Chain.Import.Stage.BlockReferencing do
 
   @impl Stage
   def runners do
-    IO.puts("========================================")
-    IO.puts(System.get_env("CHAIN_TYPE"))
-    IO.puts("========================================")
     case System.get_env("CHAIN_TYPE") do
       "polygon_edge" ->
         @default_runners ++
