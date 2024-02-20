@@ -83,8 +83,6 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2Executes do
       update: [
         set: [
           # Don't update `event_id` as it is a primary key and used for the conflict target
-          tx_type: fragment("EXCLUDED.tx_type"),
-          amount: fragment("EXCLUDED.amount"),
           hash: fragment("EXCLUDED.hash"),
           block_number: fragment("EXCLUDED.block_number"),
           commitment_hash:  fragment("EXCLUDED.commitment_hash"),
@@ -96,10 +94,8 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2Executes do
       ],
       where:
         fragment(
-          "(EXCLUDED.tx_type,EXCLUDED.amount,EXCLUDED.hash,EXCLUDED.block_number,EXCLUDED.commitment_hash,EXCLUDED.replay_status,
-          EXCLUDED.status) IS DISTINCT FROM (?,?,?,?,?,?,?)", # 有冲突时只更新这些字段
-          l.tx_type,
-          l.amount,
+          "(EXCLUDED.hash,EXCLUDED.block_number,EXCLUDED.commitment_hash,EXCLUDED.replay_status,
+          EXCLUDED.status) IS DISTINCT FROM (?,?,?,?,?)", # 有冲突时只更新这些字段
           l.hash,
           l.block_number,
           l.commitment_hash,
