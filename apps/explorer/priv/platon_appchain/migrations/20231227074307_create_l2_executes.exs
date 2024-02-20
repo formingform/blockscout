@@ -1,14 +1,11 @@
 defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2TxExecutes do
   use Ecto.Migration
 
+  # 是指L2通过监控L1上的某些事件，并在L2上执行相应业务处理
   def change do
     create table(:l2_executes, primary_key: false) do
       # 交易计数器 msgId
       add(:event_id, :bigint, null: false, primary_key: true)
-      # 与tx表中一致（待定具体类型值）
-      add(:tx_type, :integer, null: false)
-      # 金额（不同的tx_type可能有不同的值
-      add(:amount, :numeric, precision: 100, null: true)
       # l2上交易hash
       add(:hash, :bytea, null: false)
       # 交易所在区块
