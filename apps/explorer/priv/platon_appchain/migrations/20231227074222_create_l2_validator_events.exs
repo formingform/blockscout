@@ -19,7 +19,7 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2ValidatorEvents do
       # 金额(增加/减少用负数表示)
       add(:amount, :numeric, precision: 100, null: false)
       # 交易时间
-      add(:block_timestamp, :utc_datetime_usec, default: fragment("NULL"), null: true)
+      add(:block_timestamp, :"timestamp without time zone", null: true)
       timestamps(null: false, type: :utc_datetime_usec)
     end
   end

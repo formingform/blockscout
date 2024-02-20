@@ -31,9 +31,10 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
                action_type: non_neg_integer(),
                action_desc: String.t() | nil,
                amount: Wei.t() | nil,
-               block_timestamp: non_neg_integer(),
+               block_timestamp: DateTime.t() | nil,
              }
 
+  @primary_key false
   schema "l2_validator_events" do
     field(:hash, Hash.Full, primary_key: true)
     field(:log_index, :integer, primary_key: true)
@@ -42,7 +43,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
     field(:action_type, :integer)
     field(:action_desc, :string)
     field(:amount, Wei)
-    field(:block_timestamp, :integer)
+    field(:block_timestamp, :utc_datetime_usec)
     timestamps()
   end
 
@@ -51,7 +52,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
     module
     |> cast(attrs, @allowed_attrs)
     |> validate_required(@required_attrs)
-    |> unique_constraint(:hash, :log_index)
+    #|> unique_constraint(:hash, :log_index)
   end
 
 end

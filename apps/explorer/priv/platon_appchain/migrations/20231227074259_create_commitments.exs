@@ -18,7 +18,7 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateCommitments do
       # 批次交易发起者
       add(:from, :bytea, null: false)
       # 交易时间
-      add(:block_timestamp, :bigint, null: false)
+      add(:block_timestamp, :"timestamp without time zone", null: true)
 
       timestamps(null: false, type: :utc_datetime_usec)
     end

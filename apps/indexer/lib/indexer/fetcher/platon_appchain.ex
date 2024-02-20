@@ -330,10 +330,10 @@ defmodule Indexer.Fetcher.PlatonAppchain do
            get_block_timestamp_by_number(first_block, json_rpc_named_arguments, 100_000_000),
          {:ok, last_safe_block_timestamp} <-
            get_block_timestamp_by_number(last_safe_block, json_rpc_named_arguments, 100_000_000) do
-      block_check_interval =
-        ceil((last_safe_block_timestamp - first_block_timestamp) / (last_safe_block - first_block) * 1000 / 2)
 
-      Logger.info("Block check interval is calculated as #{block_check_interval} ms.")
+      block_check_interval = ceil(DateTime.diff(last_safe_block_timestamp, first_block_timestamp, :second) / 2)
+
+      Logger.info("Block check interval is calculated as #{block_check_interval} seconds.")
       {:ok, block_check_interval, last_safe_block}
     else
       {:error, error} ->
@@ -365,6 +365,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   end
 
 
+  @spec get_block_timestamp_by_number_inner(non_neg_integer(), list()) :: {:ok, Date.t()} | {:error, atom()}
   defp get_block_timestamp_by_number_inner(number, json_rpc_named_arguments) do
     result =
       %{id: 0, number: number}
@@ -375,7 +376,9 @@ defmodule Indexer.Fetcher.PlatonAppchain do
          false <- is_nil(block),
          timestamp <- Map.get(block, "timestamp"),
          false <- is_nil(timestamp) do
-      {:ok, quantity_to_integer(timestamp)}
+      # {:ok, quantity_to_integer(timestamp)}
+      # {:ok, timestamp} = DateTime.from_unix(quantity_to_integer(timestamp))
+      DateTime.from_unix(quantity_to_integer(timestamp))
     else
       {:error, message} ->
         {:error, message}
@@ -384,7 +387,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
         {:error, "RPC returned nil."}
     end
   end
-
+  @spec get_block_miner_by_number_inner(non_neg_integer(), list()) :: {:ok, Address.t(), Date.t()} | {:error, atom()}
   defp get_block_miner_by_number_inner(number, json_rpc_named_arguments) do
     result =
       %{id: 0, number: number}
@@ -397,7 +400,8 @@ defmodule Indexer.Fetcher.PlatonAppchain do
          false <- is_nil(miner),
          timestamp <- Map.get(block, "timestamp"),
          false <- is_nil(timestamp) do
-      {:ok, miner, quantity_to_integer(timestamp)}
+      {:ok, datetime} = DateTime.from_unix(quantity_to_integer(timestamp))
+      {:ok, miner, datetime}
     else
       {:error, message} ->
         {:error, message}
@@ -472,7 +476,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     |> get_blocks_by_events(json_rpc_named_arguments, 100_000_000)
     |> Enum.reduce(%{}, fn block, acc ->
       block_number = quantity_to_integer(Map.get(block, "number"))
-      timestamp = quantity_to_integer(Map.get(block, "timestamp"))
+      {:ok, timestamp} = DateTime.from_unix(quantity_to_integer(Map.get(block, "timestamp")))
       miner = Map.get(block, "miner")
       #from = Map.get(block, "from")
       Map.put(acc, "#{block_number}_miner", miner) |> Map.put(block_number, timestamp)

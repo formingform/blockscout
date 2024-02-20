@@ -28,7 +28,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Event do
                from:  Hash.Address.t(),
                to:  Hash.Address.t(),
                block_number:  Block.block_number(),
-               block_timestamp:  non_neg_integer() | nil,
+               block_timestamp: DateTime.t() | nil,
              }
 
   @primary_key false
@@ -40,7 +40,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Event do
     field(:from, Hash.Address)
     field(:to, Hash.Address)
     field(:block_number, :integer)
-    field(:block_timestamp, :integer)
+    field(:block_timestamp, :utc_datetime_usec)
 
     timestamps()
   end

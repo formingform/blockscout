@@ -150,7 +150,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
     {:ok, timestamp} = PlatonAppchain.get_block_timestamp_by_number(l2_block_number, json_rpc_named_arguments, 100_000_000)
     block_number = quantity_to_integer(l2_block_number)
 
-    #{logIndex, validator_hash, block_number, transaction_hash, action_type, action_desc, amount, block_timestamp} =
+    #{logIndex, validator_hash, block_number, hash, action_type, action_desc, amount, block_timestamp} =
       case first_topic do
         @l2_biz_event_ValidatorRegistered ->
           [owner, commission_rate, _pubKey, _blsKey] = TypeDecoder.decode_raw(data_bytes, [:address, {:uint, 256}, {:bytes, 64},  {:bytes, 48}])
@@ -165,7 +165,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
             log_index: log_index,
             validator_hash: validator_hash,
             block_number: block_number,
-            transaction_hash: l2_transaction_hash,
+            hash: l2_transaction_hash,
             action_type: PlatonAppchain.l2_validator_event_action_type()[:ValidatorRegistered],
             action_desc: "owner: #{owner}, commission_rate: #{commission_rate}",
             amount: 0,
@@ -184,7 +184,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
             log_index: log_index,
             validator_hash: validator_hash,
             block_number: block_number,
-            transaction_hash: l2_transaction_hash,
+            hash: l2_transaction_hash,
             action_type: PlatonAppchain.l2_validator_event_action_type()[:StakeAdded],
             action_desc: nil,
             amount: amount,
@@ -203,7 +203,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
             log_index: log_index,
             validator_hash: validator_hash,
             block_number: block_number,
-            transaction_hash: l2_transaction_hash,
+            hash: l2_transaction_hash,
             action_type: PlatonAppchain.l2_validator_event_action_type()[:DelegationAdded],
             action_desc: "delegator: #{delegator_hash}",
             amount: 0,
@@ -222,7 +222,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
             log_index: log_index,
             validator_hash: validator_hash,
             block_number: block_number,
-            transaction_hash: l2_transaction_hash,
+            hash: l2_transaction_hash,
             action_type: PlatonAppchain.l2_validator_event_action_type()[:UnStaked],
             action_desc: nil,
             amount: amount,
@@ -243,7 +243,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
             log_index: log_index,
             validator_hash: validator_hash,
             block_number: block_number,
-            transaction_hash: l2_transaction_hash,
+            hash: l2_transaction_hash,
             action_type: PlatonAppchain.l2_validator_event_action_type()[:UnDelegated],
             action_desc: "delegator: #{delegator_hash}",
             amount: amount,
@@ -261,7 +261,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
             log_index: log_index,
             validator_hash: firstValidator,
             block_number: block_number,
-            transaction_hash: l2_transaction_hash,
+            hash: l2_transaction_hash,
             action_type: action_type,
             action_desc: nil,
             amount: firstAmount,
@@ -278,7 +278,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
 #              log_index: log_index,
 #              validator_hash: validator,
 #              block_number: block_number,
-#              transaction_hash: l2_transaction_hash,
+#              hash: l2_transaction_hash,
 #              action_type: action_type,
 #              action_desc: nil,
 #              amount: amount,

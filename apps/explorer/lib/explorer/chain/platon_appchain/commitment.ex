@@ -31,7 +31,7 @@ defmodule Explorer.Chain.PlatonAppchain.Commitment do
                end_id: non_neg_integer(),
                tx_number: non_neg_integer(),
                from:  Hash.Address.t(),
-               block_timestamp:  non_neg_integer() | nil,
+               block_timestamp: DateTime.t() | nil,
              }
 
   @primary_key false
@@ -43,7 +43,7 @@ defmodule Explorer.Chain.PlatonAppchain.Commitment do
     field(:end_id, :integer)
     field(:tx_number, :integer)
     field(:from, Hash.Address)
-    field(:block_timestamp, :integer)
+    field(:block_timestamp, :utc_datetime_usec)
     timestamps()
   end
 

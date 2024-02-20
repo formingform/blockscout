@@ -18,7 +18,7 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL1Txs do
       # 交易所在区块
       add(:block_number, :bigint, null: false)
       # 交易时间 客户端算根据此值计算（age）
-      add(:block_timestamp, :bigint, default: fragment("NULL"), null: true)
+      add(:block_timestamp, :"timestamp without time zone", null: true)
       #  质押 委托对应L2上面验证人地址（如果是其它交易有可能没有值）
       add(:validator, :bytea, null: true)
 

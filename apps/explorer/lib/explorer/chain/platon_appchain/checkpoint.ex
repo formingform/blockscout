@@ -29,8 +29,8 @@ defmodule Explorer.Chain.PlatonAppchain.Checkpoint do
                state_root:  Data.t(),
                event_counts: non_neg_integer(),
                block_number: Block.block_number(),
-               hash:  Hash.t(),
-               block_timestamp:  non_neg_integer(),
+               hash: Hash.t(),
+               block_timestamp: DateTime.t() | nil,
              }
 
   @primary_key false
@@ -42,7 +42,7 @@ defmodule Explorer.Chain.PlatonAppchain.Checkpoint do
     field(:event_counts, :integer)
     field(:block_number, :integer)
     field(:hash, Hash.Full)
-    field(:block_timestamp, :integer)
+    field(:block_timestamp, :utc_datetime_usec)
 
     timestamps()
   end
