@@ -190,7 +190,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
             action_type: PlatonAppchain.l2_validator_event_action_type()[:StakeAdded],
             action_desc: nil,
             amount: amount,
-            block_timestamp: Timex.from_unix(timestamp)
+            block_timestamp: timestamp
           }
 
         @l2_biz_event_DelegationAdded ->
