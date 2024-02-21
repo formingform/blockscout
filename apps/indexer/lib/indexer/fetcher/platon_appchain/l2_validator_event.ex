@@ -161,7 +161,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
           %Explorer.Chain.Data{bytes: data_byte} = data
           data_byte
         _ ->
-          decode_data(data, [:bytes])
+          [data_byte] = decode_data(data, [:bytes])
+          data_byte
       end
 
     Logger.debug(fn -> "convert L2 log to l2 validator event: #{get_l2_biz_event_name(first_topic)}" end,logger: :platon_appchain)
