@@ -94,9 +94,10 @@ defmodule Indexer.Fetcher.PlatonAppchain.Checkpoint do
           block_timestamp: Map.get(timestamps, l1_block_number)
         }
       else
-        %{}
+        %{} # 或者返回nil
       end
     end)
+    |> Enum.filter(fn event -> event != nil and map_size(event) > 0 end)
   end
 
   # 统计在区块间, l2发生的包括在checkpoint的事件数量（需要同步到L1的事件）
