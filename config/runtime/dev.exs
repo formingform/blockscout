@@ -36,6 +36,7 @@ config :block_scout_web, BlockScoutWeb.Endpoint,
 
 database = if System.get_env("DATABASE_URL"), do: nil, else: "explorer_dev"
 hostname = if System.get_env("DATABASE_URL"), do: nil, else: "localhost"
+db_username = System.get_env("DATABASE_USERNAME", "dev_user")
 
 pool_size =
   if System.get_env("DATABASE_READ_ONLY_API_URL"),
@@ -46,7 +47,7 @@ pool_size =
 config :explorer, Explorer.Repo,
   database: database,
   hostname: hostname,
-  username: "dev_user",
+  username: db_username,
   password: "123456",
   url: System.get_env("DATABASE_URL"),
   pool_size: pool_size
@@ -58,7 +59,7 @@ hostname_api = if System.get_env("DATABASE_READ_ONLY_API_URL"), do: nil, else: h
 config :explorer, Explorer.Repo.Replica1,
   database: database_api,
   hostname: hostname_api,
-  username: "dev_user",
+  username: db_username,
   password: "123456",
   url: ExplorerConfigHelper.get_api_db_url(),
   pool_size: ConfigHelper.parse_integer_env_var("POOL_SIZE_API", 10)
@@ -70,7 +71,7 @@ hostname_account = if System.get_env("ACCOUNT_DATABASE_URL"), do: nil, else: hos
 config :explorer, Explorer.Repo.Account,
   database: database_account,
   hostname: hostname_account,
-  username: "dev_user",
+  username: db_username,
   password: "123456",
   url: ExplorerConfigHelper.get_account_db_url(),
   pool_size: ConfigHelper.parse_integer_env_var("ACCOUNT_POOL_SIZE", 10)
@@ -79,7 +80,7 @@ config :explorer, Explorer.Repo.Account,
 config :explorer, Explorer.Repo.PolygonEdge,
   database: database,
   hostname: hostname,
-  username: "dev_user",
+  username: db_username,
   password: "123456",
   url: System.get_env("DATABASE_URL"),
   # actually this repo is not started, and its pool size remains unused.
@@ -90,7 +91,7 @@ config :explorer, Explorer.Repo.PolygonEdge,
 config :explorer, Explorer.Repo.PlatonAppchain,
        database: database,
        hostname: hostname,
-       username: "dev_user",
+       username: db_username,
        password: "123456",
        url: System.get_env("DATABASE_URL"),
          # actually this repo is not started, and its pool size remains unused.
@@ -101,7 +102,7 @@ config :explorer, Explorer.Repo.PlatonAppchain,
 config :explorer, Explorer.Repo.PolygonZkevm,
   database: database,
   hostname: hostname,
-  username: "dev_user",
+  username: db_username,
   password: "123456",
   url: System.get_env("DATABASE_URL"),
   # actually this repo is not started, and its pool size remains unused.
@@ -112,7 +113,7 @@ config :explorer, Explorer.Repo.PolygonZkevm,
 config :explorer, Explorer.Repo.RSK,
   database: database,
   hostname: hostname,
-  username: "dev_user",
+  username: db_username,
   password: "123456",
   url: System.get_env("DATABASE_URL"),
   # actually this repo is not started, and its pool size remains unused.
@@ -123,7 +124,7 @@ config :explorer, Explorer.Repo.RSK,
 config :explorer, Explorer.Repo.Suave,
   database: database,
   hostname: hostname,
-  username: "dev_user",
+  username: db_username,
   password: "123456",
   url: ExplorerConfigHelper.get_suave_db_url(),
   pool_size: 1
