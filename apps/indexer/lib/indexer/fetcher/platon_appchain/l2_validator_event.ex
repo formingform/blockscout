@@ -135,8 +135,6 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
   # 返回一个map
   @spec event_to_l2_validator_event(non_neg_integer(), binary(), binary(), binary(), binary(), binary(), non_neg_integer(), list()) :: map()
   def event_to_l2_validator_event(log_index, first_topic, second_topic, third_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
-    Logger.debug(fn -> "convert event to l2_validator_event, log.data: #{inspect(data)}" end, logger: :platon_appchain)
-    Logger.debug(fn -> "convert event to l2_validator_event, log.index: #{inspect(log_index)}" end, logger: :platon_appchain)
     data_bytes =
       case data do
         %Explorer.Chain.Data{} ->
