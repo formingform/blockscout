@@ -139,7 +139,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
       hash: l2_transaction_hash,
       commitment_hash: commitment_hash,
       block_number: quantity_to_integer(l2_block_number),
-      status: Kernel.boolean(third_topic)
+      status: !!quantity_to_integer(third_topic)
     }
   end
 
@@ -204,13 +204,9 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
         where: commitment.start_id <= ^event_id and commitment.end_id >= ^event_id,
         limit: 1
       )
-    case Repo.one(query) do
-      nil -> nil
-      {hash} -> hash
-    end
-#    query
-#    |> Repo.one()
-#    |> Kernel.||({0, nil})
+    query
+    |> Repo.one()
+    |> Kernel.||({nil})
   end
 
   @spec state_sync_result_event_signature() :: binary()

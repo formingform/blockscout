@@ -432,6 +432,9 @@ defmodule Indexer.Fetcher.PlatonAppchain do
       {:ok, _} = res ->
         res
 
+      {:ok, _, _} = res ->
+        res
+
       {:error, message} = err ->
         retries_left = retries_left - 1
 
@@ -765,7 +768,9 @@ defmodule Indexer.Fetcher.PlatonAppchain do
         calling_module == Checkpoint ->
           {%{checkpoints: %{params: events}, timeout: :infinity}, "CheckpointSubmitted"}
       end
-
+    IO.inspect("***************import events******************")
+    IO.inspect(import_data)
+    IO.inspect(event_name)
     {:ok, _} = Chain.import(import_data)
 
     {events, event_name}

@@ -146,6 +146,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
     endId = quantity_to_integer(third_topic)
 
     {:ok, miner, blockTimestamp} = PlatonAppchain.get_block_miner_by_number(l2_block_number, json_rpc_named_arguments, 100_000_000)
+    IO.inspect("****************commitment*****************")
+    IO.inspect(miner)
 
     %{
       hash: l2_transaction_hash,
