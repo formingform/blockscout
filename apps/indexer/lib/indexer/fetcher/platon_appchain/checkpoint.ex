@@ -82,15 +82,20 @@ defmodule Indexer.Fetcher.PlatonAppchain.Checkpoint do
       l1_block_number = quantity_to_integer(event["blockNumber"])
       timestamps = PlatonAppchain.get_timestamps_by_events(events, json_rpc_named_arguments)
       #l2上的epoch，一个epoch长度的块高生成一个checkpoint
-      %{epoch: quantity_to_integer(Enum.at(event["topics"], 1)),
-        start_block_number: start_block_number,
-        end_block_number: end_block_number,
-        state_root: event["data"],
-        event_counts: get_event_counts(start_block_number, end_block_number),
-        block_number: l1_block_number,
-        hash: event["transactionHash"],
-        block_timestamp: Map.get(timestamps, l1_block_number)
-      }
+      event_counts = get_event_counts(start_block_number, end_block_number)
+      if event_counts > 0 do
+        %{epoch: quantity_to_integer(Enum.at(event["topics"], 1)),
+          start_block_number: start_block_number,
+          end_block_number: end_block_number,
+          state_root: event["data"],
+          event_counts: event_counts,
+          block_number: l1_block_number,
+          hash: event["transactionHash"],
+          block_timestamp: Map.get(timestamps, l1_block_number)
+        }
+      else
+        %{}
+      end
     end)
   end
 
