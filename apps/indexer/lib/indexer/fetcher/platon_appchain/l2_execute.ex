@@ -204,9 +204,13 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Execute do
         where: commitment.start_id <= ^event_id and commitment.end_id >= ^event_id,
         limit: 1
       )
-    query
-    |> Repo.one()
-    |> Kernel.||({0, nil})
+    case Repo.one(query) do
+      nil -> nil
+      {hash} -> hash
+    end
+#    query
+#    |> Repo.one()
+#    |> Kernel.||({0, nil})
   end
 
   @spec state_sync_result_event_signature() :: binary()
