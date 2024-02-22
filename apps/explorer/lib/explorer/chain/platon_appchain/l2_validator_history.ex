@@ -4,6 +4,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorHistory do
   # alias Ecto.Changeset
   alias Explorer.{
     Chain,
+    Repo,
     PagingOptions
     }
 
