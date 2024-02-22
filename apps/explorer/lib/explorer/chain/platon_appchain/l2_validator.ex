@@ -123,7 +123,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
 
   # 修改委托金额, 如果increment就是负数，就是减少委托
   def update_delegate_amount(validator_hash, increment) do
-    from(v in __MODULE__, where: v.address == ^validator_hash)
+    from(v in __MODULE__, where: v.validator_hash == ^validator_hash)
     |> Repo.update_all(inc: [delegate_amount: increment])
   end
 
@@ -141,7 +141,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
   end
 
   def update_status(validator_hash, newStatus) do
-    from(v in __MODULE__, where: v.address == ^validator_hash, update: [set: [status: ^newStatus]])
+    from(v in __MODULE__, where: v.validator_hash == ^validator_hash, update: [set: [status: ^newStatus]])
     |> Repo.update_all([])
   end
 
