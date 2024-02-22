@@ -141,16 +141,19 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler do
   end
 
   @doc """
-        validator_hash: elem(validator, 0),
-        owner_hash: elem(validator, 1),
-        stake_amount: elem(validator, 2),
-        delegate_amount: elem(validator, 3),
-        commission_rate: elem(validator, 4),
-        status: elem(validator, 5),
-        stake_epoch: elem(validator, 6)
+        iex> getValidator("0x97ab3d4f7f5051f127b0e9f8d10772125d94d65b")
+        %{commission_rate: 80,
+          delegate_amount: 0,
+          owner_hash: "0x97ab3d4f7f5051f127b0e9f8d10772125d94d65b",
+          stake_amount: 1000000000,
+          stake_epoch: 4,
+          status: 0,
+          validator_hash: "0x97ab3d4f7f5051f127b0e9f8d10772125d94d65b"
+        }
   """
-  def getValidator(validator_hash) do
-    result = get_validators_with_addr([validator_hash]) |> Ethers.call(rpc_opts: @rpc_opts)
+  @spec getValidator(binary()) :: map()
+  def getValidator(validator_hex) do
+    result = get_validators_with_addr([validator_hex]) |> Ethers.call(rpc_opts: @rpc_opts)
     {:ok, validators} = result
     convertValidatorToJSON(List.first(validators))
   end

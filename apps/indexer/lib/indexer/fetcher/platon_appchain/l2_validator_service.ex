@@ -10,16 +10,14 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorService do
   alias Indexer.Fetcher.PlatonAppchain
 
   """
-        validator_hash: elem(validator, 0),
-        owner_hash: elem(validator, 1),
-        stake_amount: elem(validator, 2),
-        delegate_amount: elem(validator, 3),
-        commission_rate: elem(validator, 4),
-        status: elem(validator, 5),
-        stake_epoch: elem(validator, 6)
+      iex > add_new_validator("0x97ab3d4f7f5051f127b0e9f8d10772125d94d65b")
+      {:ok, %Explorer.Chain.PlatonAppchain.L2Validator{...}}
+       or
+
   """
-  def add_new_validator(validator_hash) do
-    newValidatorMap = L2StakeHandler.getValidator(validator_hash)
+  @spec add_new_validator(binary()) :: {:ok, L2Validator.t()} | {:error, reason :: String.t()}
+  def add_new_validator(validator_hex) do
+    newValidatorMap = L2StakeHandler.getValidator(validator_hex)
     L2Validator.add_new_validator(newValidatorMap)
   end
 
