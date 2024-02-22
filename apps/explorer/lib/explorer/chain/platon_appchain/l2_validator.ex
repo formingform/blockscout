@@ -117,7 +117,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
 
   # 修改质押金额, 如果increment就是负数，就是减少质押
   def update_stake_amount(validator_hash, increment) do
-    query = from v in __MODULE__, where: v.address == ^validator_hash
+    query = from v in __MODULE__, where: v.validator_hash == ^validator_hash
     Repo.update_all(query, inc: [stake_amount: increment])
   end
 

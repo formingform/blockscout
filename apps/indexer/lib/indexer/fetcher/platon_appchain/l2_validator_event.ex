@@ -138,7 +138,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
       logger: :platon_appchain
     )
     Logger.error(fn -> "convert event to l2_validator_event, log.data: #{inspect(data)}" end)
-    data_bytes = decode_data(data, [:bytes])
+#    data_bytes = decode_data(data, [:bytes])
 
     timestamp = PlatonAppchain.get_block_timestamp_by_number(l2_block_number, json_rpc_named_arguments, 100_000_000)
     block_number = quantity_to_integer(l2_block_number)
@@ -146,6 +146,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
     {validator_hash, block_number, transaction_hash, action_type, amount, block_timestamp} =
       case first_topic do
         @l2_biz_event_ValidatorRegistered ->
+          %Explorer.Chain.Data{bytes: data_bytes} = data
           [owner, commission_rate, _pubKey, _blsKey] = TypeDecoder.decode_raw(data_bytes, [:address, {:uint, 256}, {:bytes, 64},  {:bytes, 48}])
           # 增加L2_validator记录
           L2ValidatorService.add_new_validator(second_topic)
@@ -160,7 +161,10 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
           }]
 
         @l2_biz_event_StakeAdded ->
-          [amount] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
+          Logger.info(fn -> "process stake added event parse data begin" end )
+          %Explorer.Chain.Data{bytes: data_value} = data
+          [amount] = TypeDecoder.decode_raw(data_value, [{:uint, 256}])
+          Logger.info(fn -> "process stake added event parse data end,amount is>>>#{amount}" end )
           # 更新L2_validator记录，增加质押金额
           L2ValidatorService.increase_stake(second_topic, amount)
           [%{
@@ -174,6 +178,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
           }]
 
         @l2_biz_event_DelegationAdded ->
+          %Explorer.Chain.Data{bytes: data_bytes} = data
           [amount] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
           # 更新L2_validator记录，增加委托金额
           L2ValidatorService.increase_delegation(third_topic, amount)
@@ -188,7 +193,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
           }]
 
         @l2_biz_event_UnStaked ->
-
+          %Explorer.Chain.Data{bytes: data_bytes} = data
           [amount] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
 
           # 更新L2_validator记录，减少质押
@@ -205,7 +210,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
           }]
 
         @l2_biz_event_UnDelegated ->
-
+          %Explorer.Chain.Data{bytes: data_bytes} = data
           [amount] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
           # 更新L2_validator记录，减少委托
           L2ValidatorService.decrease_delegation(third_topic, amount)
@@ -221,8 +226,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
           }]
 
         @l2_biz_event_Slashed ->
-
          action_type = PlatonAppchain.l2_validator_event_action_type()[:Slashed]
+         %Explorer.Chain.Data{bytes: data_bytes} = data
 
          [validators, amounts] = TypeDecoder.decode_raw(data_bytes, [{:array, :address}, {:array, {:uint, 256}}])
          #把两个列表，变成一个元组的列表
@@ -244,6 +249,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
          end)
 
        @l2_biz_event_UpdateValidatorStatus->
+         %Explorer.Chain.Data{bytes: data_bytes} = data
          [current_status] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
          # 更新L2_validator记录，惩罚节点
          L2ValidatorService.update_validator_status(second_topic, current_status, block_number)
