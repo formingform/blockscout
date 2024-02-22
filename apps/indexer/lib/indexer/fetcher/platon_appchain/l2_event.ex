@@ -190,17 +190,20 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
         _ ->
         {nil, nil, nil,  nil}
       end
-
-    %{
-      event_id: eventID,
-      tx_type: tx_type,
-      from: from,
-      to: to,
-      amount: amount,
-      l2_transaction_hash: l2_transaction_hash,
-      l2_block_number: quantity_to_integer(l2_block_number),
-      block_timestamp: l2_block_timestamp,
-    }
+    if is_nil(tx_type) do
+      %{}
+    else
+      %{
+        event_id: eventID,
+        tx_type: tx_type,
+        from: from,
+        to: to,
+        amount: amount,
+        l2_transaction_hash: l2_transaction_hash,
+        l2_block_number: quantity_to_integer(l2_block_number),
+        block_timestamp: l2_block_timestamp,
+      }
+    end
   end
 
   @spec find_and_save_entities(boolean(), binary(), non_neg_integer(), non_neg_integer(), list()) :: non_neg_integer()
@@ -236,7 +239,6 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
             json_rpc_named_arguments,
             100_000_000
           )
-
         Enum.map(result, fn event ->
           event_to_l2_event(
             Enum.at(event["topics"], 1), #topics[0]是合约方法签名，[1]是第一个带indexed的合约参数，这里是event_id
@@ -247,14 +249,19 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
           )
         end)
       end
+    # 过滤掉返回为空的events
+    filtered_events = Enum.reject(l2_events, fn %{} -> true; _ -> false end)
+    if Enum.count(filtered_events) > 0 do
+      {:ok, _} =
+        Chain.import(%{
+          l2_events: %{params: filtered_events},
+          timeout: :infinity
+        })
 
-    {:ok, _} =
-      Chain.import(%{
-        l2_events: %{params: l2_events},
-        timeout: :infinity
-      })
-
-    Enum.count(l2_events)
+      Enum.count(filtered_events)
+    else
+      0
+    end
   end
 
   @spec l2_state_synced_event_signature() :: binary()
