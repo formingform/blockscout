@@ -187,7 +187,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
           [_sig, validatorAddrList, slashingPercent, slashIncentivePercent] =
             TypeDecoder.decode_raw(data_bytes, [{:bytes, 32}, {:array, :address}, {:uint, 256}, {:uint, 256}])
            first = Enum.at(validatorAddrList, 0)
-          {PlatonAppchain.l2_events_tx_type()[:slash], first, slashingPercent, slashIncentivePercent}
+          {PlatonAppchain.l2_events_tx_type()[:slash], first, first, slashingPercent}
         _ ->
         {nil, nil, nil,  nil}
       end

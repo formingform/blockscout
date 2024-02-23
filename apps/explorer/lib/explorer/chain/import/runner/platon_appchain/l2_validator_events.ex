@@ -62,13 +62,13 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
     on_conflict = Map.get_lazy(options, :on_conflict, &default_on_conflict/0)
 
     # 按block_number排序
-    ordered_changes_list = Enum.sort_by(changes_list, & &1.block_number)
+    ordered_changes_list = Enum.sort_by(changes_list, &{&1.block_number, &1.hash, &1.log_index})
 
     Import.insert_changes_list(
       repo,
       ordered_changes_list,
-#      conflict_target: [:block_number, :log_index],
-#      on_conflict: on_conflict,
+      conflict_target: [:hash, :log_index],
+      on_conflict: on_conflict,
       for: L2ValidatorEvent,
       returning: true,
       timeout: timeout,
@@ -82,9 +82,9 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
       l in L2ValidatorEvent,
       update: [
         set: [
-          # Don't update `event_id` as it is a primary key and used for the conflict target
+          # Don't update `hash` `log_index` as it is a primary key and used for the conflict target
           validator_hash: fragment("EXCLUDED.validator_hash"),
-          hash: fragment("EXCLUDED.hash"),
+          block_number: fragment("EXCLUDED.block_number"),
           action_type: fragment("EXCLUDED.action_type"),
           action_desc: fragment("EXCLUDED.action_desc"),
           amount: fragment("EXCLUDED.amount"),
@@ -95,10 +95,10 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
       ],
       where:
         fragment(
-          "(EXCLUDED.validator_hash,EXCLUDED.hash,EXCLUDED.action_type,EXCLUDED.action_desc,EXCLUDED.amount,
+          "(EXCLUDED.validator_hash,EXCLUDED.block_number,EXCLUDED.action_type,EXCLUDED.action_desc,EXCLUDED.amount,
           EXCLUDED.block_timestamp) IS DISTINCT FROM (?,?,?,?,?,?)", # 有冲突时只更新这些字段
           l.validator_hash,
-          l.hash,
+          l.block_number,
           l.action_type,
           l.action_desc,
           l.amount,
