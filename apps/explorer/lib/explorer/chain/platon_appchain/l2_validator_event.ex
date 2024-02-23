@@ -34,6 +34,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
                block_timestamp: DateTime.t(),
              }
 
+  @primary_key false
   schema "l2_validator_events" do
     field(:hash, Hash.Full, primary_key: true)
     field(:log_index, :integer, primary_key: true)
