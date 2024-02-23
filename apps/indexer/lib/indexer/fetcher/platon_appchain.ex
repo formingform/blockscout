@@ -388,7 +388,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   defp get_block_miner_by_number_inner(number, json_rpc_named_arguments) do
     result =
       %{id: 0, number: number}
-      |> ByNumber.request(false)
+      |> ByNumber.request(false, false)
       |> json_rpc(json_rpc_named_arguments)
 
     with {:ok, block} <- result,

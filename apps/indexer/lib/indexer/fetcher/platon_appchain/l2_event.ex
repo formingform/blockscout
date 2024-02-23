@@ -148,7 +148,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
         %Explorer.Chain.Data{bytes: data_byte} = data
         data_byte
       _ ->
-        decode_data(data, [:bytes])
+        [data_byte] = decode_data(data, [:bytes])
+        data_byte
     end
 
     Logger.debug(fn -> "decode data result: #{inspect(data_bytes)}" end, logger: :platon_appchain)
