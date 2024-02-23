@@ -56,19 +56,19 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
   def timeout, do: @timeout
 
   @spec insert(Repo.t(), [map()], %{required(:timeout) => timeout(), required(:timestamps) => Import.timestamps()}) ::
-          {:ok, [L2Event.t()]}
+          {:ok, [L2ValidatorEvent.t()]}
           | {:error, [Changeset.t()]}
   def insert(repo, changes_list, %{timeout: timeout, timestamps: timestamps} = options) when is_list(changes_list) do
     on_conflict = Map.get_lazy(options, :on_conflict, &default_on_conflict/0)
 
-    # 按event_id排序
-    ordered_changes_list = Enum.sort_by(changes_list, & &1.event_id)
+    # 按block_number排序
+    ordered_changes_list = Enum.sort_by(changes_list, & &1.block_number)
 
     Import.insert_changes_list(
       repo,
       ordered_changes_list,
-      conflict_target: [:block_number, :log_index],
-      on_conflict: on_conflict,
+#      conflict_target: [:block_number, :log_index],
+#      on_conflict: on_conflict,
       for: L2ValidatorEvent,
       returning: true,
       timeout: timeout,
