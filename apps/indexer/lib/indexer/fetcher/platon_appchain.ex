@@ -52,7 +52,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   @period_type [round: 1, epoch: 2]
   @l1_events_tx_type [deposit: 1, stake: 2, addStake: 3, delegate: 4]
 
-  @l2_events_tx_type [withdraw: 1, stakeWithdraw: 2, degationWithdraw: 3, slssh: 4]
+  @l2_events_tx_type [withdraw: 1, stakeWithdraw: 2, degationWithdraw: 3, slash: 4]
 
   @l2_validator_event_action_type [ValidatorRegistered: 1, StakeAdded: 2, DegationAdded: 3, UnStaked: 4, UnDelegated: 5, Slashed: 6]
 
