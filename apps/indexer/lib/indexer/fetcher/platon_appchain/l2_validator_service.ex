@@ -20,7 +20,6 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorService do
   """
   def add_new_validator(validator_hash) do
     newValidatorMap = L2StakeHandler.getValidator(validator_hash)
-    L2Validator.back
     L2Validator.add_new_validator(newValidatorMap)
   end
 
