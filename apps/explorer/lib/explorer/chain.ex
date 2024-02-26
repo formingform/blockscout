@@ -94,6 +94,10 @@ defmodule Explorer.Chain do
 
   alias Dataloader.Ecto, as: DataloaderEcto
 
+  alias Explorer.Chain.PlatonAppchain.{
+    L2Validator
+  }
+
   @default_paging_options %PagingOptions{page_size: 50}
 
   @token_transfers_per_transaction_preview 10
