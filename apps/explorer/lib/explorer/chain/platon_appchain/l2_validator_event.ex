@@ -52,7 +52,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
     module
     |> cast(attrs, @allowed_attrs)
     |> validate_required(@required_attrs)
-    |> unique_constraint(:hash, :log_index)
+    |> unique_constraint([:hash, :log_index])
   end
 
 end
