@@ -359,10 +359,6 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
 
     # 过滤掉返回为空的events
     filtered_events = Enum.reject(l2_validator_events, &Enum.empty?/1)
-
-    Logger.error(fn -> "l2_validator_events  ==============begin import to l2_validator_events==========================)" end)
-    Logger.error(fn -> "begin import to l2_validator_events, log.data: #{inspect(filtered_events)}" end, logger: :platon_appchain)
-
     if Enum.count(filtered_events)> 0 do
       Logger.debug(fn -> "to import l2 validator events:(#{inspect(filtered_events)})" end , logger: :platon_appchain)
 

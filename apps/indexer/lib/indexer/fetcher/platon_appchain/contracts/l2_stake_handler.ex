@@ -3,7 +3,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler do
   Stake handler contract interface encapsulation
   """
   alias Ethers
-
+  require Logger
   #use Ethers.Contract, abi_file: "config/abi/L2_StakeHandler.json", default_address: Application.get_all_env(:indexer)[Indexer.Fetcher.PlatonAppchain.Contracts][:l2_stake_handler]
   use Ethers.Contract, abi_file: "config/abi/L2_StakeHandler.json", default_address: "0x1000000000000000000000000000000000000005"
 
@@ -81,6 +81,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler do
   def getValidators(start \\ <<>>, size \\ @default_size) do
     result = get_validators(start, size) |> Ethers.call(rpc_opts: @rpc_opts)
     {:ok, data} = result
+    Logger.debug(fn -> "getValidators: #{inspect(data)}" end , logger: :platon_appchain)
     [nextStart | validators] = data
     validatorsJson = List.first(validators) |> Enum.map(fn validator -> convertValidatorToJSON(validator) end)
     {Base.encode16(nextStart), validatorsJson}
