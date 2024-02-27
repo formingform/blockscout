@@ -296,6 +296,16 @@ defmodule BlockScoutWeb.ApiRouter do
       end
     end
 
+#    optimism后续改成platon_appchain
+    scope "/optimism" do
+      if System.get_env("CHAIN_TYPE") == "platon_appchain" do
+        get("/deposits", V2.PlatonAppchainController, :deposits)
+        get("/deposits/count", V2.PlatonAppchainController, :deposits_count)
+        get("/withdrawals", V2.PlatonAppchainController, :withdrawals)
+        get("/withdrawals/count", V2.PlatonAppchainController, :withdrawals_count)
+      end
+    end
+
     scope "/withdrawals" do
       get("/", V2.WithdrawalController, :withdrawals_list)
       get("/counters", V2.WithdrawalController, :withdrawals_counters)

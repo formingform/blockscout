@@ -55,9 +55,10 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorController do
       |> Keyword.merge(@api_true)
       |> Chain.list_l2Validators()
 
+    Logger.error(fn -> "=l2_validators_plus_one>>> #{inspect(l2_validators_plus_one)}" end, logger: :platon_appchain)
     {validators, next_page} = split_list_by_page(l2_validators_plus_one)
 
-    # 组装下个分布信息
+    # 组装下个分页信息
     next_page_params = next_page |> next_page_params(validators, delete_parameters_from_next_page_params(params))
 
 
