@@ -175,19 +175,27 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
         @l2_biz_event_ValidatorRegistered ->
           [owner, commission_rate, _pubKey, _blsKey] = TypeDecoder.decode_raw(data_bytes, [:address, {:uint, 256}, :bytes, :bytes])
 
+#          iex> Explorer.Chain.Hash.Address.cast("0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed")
+#          {
+#            :ok,
+#            %Explorer.Chain.Hash{
+#              byte_count: 20,
+#              bytes: <<0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed :: big-integer-size(20)-unit(8)>>
+#            }
+#          }
+
           # 增加L2_validator记录
           # second_topic，需要记录到topic的数据，如果长度>32字节，则取数据的hash，并把hash放入topic，如果数据长度<=32字节，则左补零后放入topic
-          validator_hex = "0x" <> String.slice(second_topic, -40..-1)
-          validator_hash = %Explorer.Chain.Hash{bytes: Base.decode16!(String.slice(second_topic, -40..-1), case: :mixed), byte_count: 20}
+          validator_hash = Base.decode16!(String.slice(second_topic, -40..-1), case: :mixed)
 
-          L2ValidatorService.add_new_validator(validator_hex)
+          L2ValidatorService.add_new_validator(validator_hash)
           %{
             log_index: log_index,
             validator_hash: validator_hash,
             block_number: block_number,
             hash: l2_transaction_hash,
             action_type: PlatonAppchain.l2_validator_event_action_type()[:ValidatorRegistered],
-            action_desc: "owner: #{owner}, commission_rate: #{commission_rate}",
+            action_desc: "owner: 0x#{Base.encode16(owner)}, commission_rate: #{commission_rate}",
             amount: 0,
             block_timestamp: timestamp
           }
@@ -195,10 +203,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
         @l2_biz_event_StakeAdded ->
           [amount] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
           # 更新L2_validator记录，增加质押金额
-          validator_hash = %Explorer.Chain.Hash{bytes: Base.decode16!(String.slice(second_topic, -40..-1), case: :mixed), byte_count: 20}
+          validator_hash =  Base.decode16!(String.slice(second_topic, -40..-1), case: :mixed)
 
-          # 溢出异常
-          # validator_hash = integer_to_quantity(quantity_to_integer(second_topic))
           L2ValidatorService.increase_stake(validator_hash, amount)
           %{
             log_index: log_index,
@@ -214,9 +220,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
         @l2_biz_event_DelegationAdded ->
           [amount] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
           # 更新L2_validator记录，增加委托金额
-
-          delegator_hash = %Explorer.Chain.Hash{bytes: Base.decode16!(String.slice(second_topic, -40..-1), case: :mixed), byte_count: 20}
-          validator_hash = %Explorer.Chain.Hash{bytes: Base.decode16!(String.slice(third_topic, -40..-1), case: :mixed), byte_count: 20}
+          delegator_hash =  Base.decode16!(String.slice(second_topic, -40..-1), case: :mixed)
+          validator_hash =  Base.decode16!(String.slice(third_topic, -40..-1), case: :mixed)
 
           L2ValidatorService.increase_delegation(validator_hash, amount)
           %{
@@ -225,15 +230,14 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
             block_number: block_number,
             hash: l2_transaction_hash,
             action_type: PlatonAppchain.l2_validator_event_action_type()[:DelegationAdded],
-            action_desc: "delegator: #{delegator_hash}",
+            action_desc: "delegator: 0x#{Base.encode16(delegator_hash)}",
             amount: 0,
             block_timestamp: timestamp
           }
 
         @l2_biz_event_UnStaked ->
-
           [amount] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
-          validator_hash = %Explorer.Chain.Hash{bytes: Base.decode16!(String.slice(second_topic, -40..-1), case: :mixed), byte_count: 20}
+          validator_hash =  Base.decode16!(String.slice(second_topic, -40..-1), case: :mixed)
 
           # 更新L2_validator记录，减少质押
           L2ValidatorService.decrease_stake(validator_hash, amount)
@@ -250,11 +254,10 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
           }
 
         @l2_biz_event_UnDelegated ->
-
           [amount] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
-          delegator_hash = %Explorer.Chain.Hash{bytes: Base.decode16!(String.slice(second_topic, -40..-1), case: :mixed), byte_count: 20}
-          validator_hash = %Explorer.Chain.Hash{bytes: Base.decode16!(String.slice(third_topic, -40..-1), case: :mixed), byte_count: 20}
 
+          delegator_hash =  Base.decode16!(String.slice(second_topic, -40..-1), case: :mixed)
+          validator_hash =  Base.decode16!(String.slice(third_topic, -40..-1), case: :mixed)
 
           # 更新L2_validator记录，减少委托
           L2ValidatorService.decrease_delegation(validator_hash, amount)
@@ -265,7 +268,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
             block_number: block_number,
             hash: l2_transaction_hash,
             action_type: PlatonAppchain.l2_validator_event_action_type()[:UnDelegated],
-            action_desc: "delegator: #{delegator_hash}",
+            action_desc: "delegator: 0x#{Base.encode16(delegator_hash)}",
             amount: amount,
             block_timestamp: timestamp
           }
