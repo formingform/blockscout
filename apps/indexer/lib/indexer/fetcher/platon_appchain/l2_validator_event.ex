@@ -177,9 +177,10 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
 
           # 增加L2_validator记录
           # second_topic，需要记录到topic的数据，如果长度>32字节，则取数据的hash，并把hash放入topic，如果数据长度<=32字节，则左补零后放入topic
+          validator_hex = "0x" <> String.slice(second_topic, -40..-1)
           validator_hash = %Explorer.Chain.Hash{bytes: Base.decode16!(String.slice(second_topic, -40..-1), case: :mixed), byte_count: 20}
 
-          L2ValidatorService.add_new_validator(validator_hash)
+          L2ValidatorService.add_new_validator(validator_hex)
           %{
             log_index: log_index,
             validator_hash: validator_hash,
