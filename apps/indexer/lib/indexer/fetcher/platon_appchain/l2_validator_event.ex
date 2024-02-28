@@ -161,7 +161,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
           %Explorer.Chain.Data{bytes: data_byte} = data
           data_byte
         _ ->
-          decode_data(data, [:bytes])
+          [data_byte] = decode_data(data, [:bytes])
+          data_byte
       end
 
     Logger.debug(fn -> "convert L2 log to l2 validator event: #{get_l2_biz_event_name(first_topic)}" end,logger: :platon_appchain)
@@ -172,7 +173,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
     #{logIndex, validator_hash, block_number, hash, action_type, action_desc, amount, block_timestamp} =
       case first_topic do
         @l2_biz_event_ValidatorRegistered ->
-          [owner, commission_rate, _pubKey, _blsKey] = TypeDecoder.decode_raw(data_bytes, [:address, {:uint, 256}, {:bytes, 64},  {:bytes, 48}])
+          [owner, commission_rate, _pubKey, _blsKey] = TypeDecoder.decode_raw(data_bytes, [:address, {:uint, 256}, :bytes, :bytes])
+
           # 增加L2_validator记录
           # second_topic，需要记录到topic的数据，如果长度>32字节，则取数据的hash，并把hash放入topic，如果数据长度<=32字节，则左补零后放入topic
           validator_hash = %Explorer.Chain.Hash{bytes: Base.decode16!(String.slice(second_topic, -40..-1), case: :mixed), byte_count: 20}
