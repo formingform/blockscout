@@ -12,8 +12,10 @@ defmodule Explorer.Chain.Import.Runner.Addresses do
 
   import Ecto.Query, only: [from: 2]
 
+  #该模块必须提供 Import.Runner 协议中定义的函数的实现。
   @behaviour Import.Runner
 
+  # 定义了一个 map 结构，包含两个属性初始值为false
   @row_defaults %{
     decompiled: false,
     verified: false
@@ -22,14 +24,19 @@ defmodule Explorer.Chain.Import.Runner.Addresses do
   # milliseconds
   @timeout 60_000
 
+  # 定义类型别名,为地址列表
   @type imported :: [Address.t()]
 
+  # ecto_schema_module 是要实现的函数名称，并返回Address（Ecto Schema）模块
   @impl Import.Runner
   def ecto_schema_module, do: Address
 
+  # 实现 Import.Runner 协议中的函数。可能是返回一个键，用于从导入选项中获取特定的导入设置
   @impl Import.Runner
   def option_key, do: :addresses
 
+  # 返回一个描述导入数据表行的 map 结构
+  # value_type，对应的值是一个字符串，描述了导入数据表行的值的类型。 通过 ecto_schema_module() 函数获取。该模块的 .t/0 函数表示这些模块的零参数版本。（是一条记录类型）
   @impl Import.Runner
   def imported_table_row do
     %{
@@ -38,19 +45,27 @@ defmodule Explorer.Chain.Import.Runner.Addresses do
     }
   end
 
+  # 数据导入操作
+  # multi: 表示用于执行并发操作的 Ecto.Multi 实例。
+  # changes_list: 表示要处理的更改列表，其中每个更改都是一个 Map，包含了要插入数据库的数据。
+  # options 中提取timestamps 跟踪数据库操作的时间？
   @impl Import.Runner
   def run(multi, changes_list, %{timestamps: timestamps} = options) do
+    # 构建用于插入操作的选项 Map
     insert_options =
       options
-      |> Map.get(option_key(), %{})
-      |> Map.take(~w(on_conflict timeout)a)
-      |> Map.put_new(:timeout, @timeout)
+      |> Map.get(option_key(), %{}) # 取option_key() 函数返回的键对应的值，就是（：addresses）,取不到就是空map
+      |> Map.take(~w(on_conflict timeout)a) # 只保留 on_conflict 和 timeout 这两个键对应的值，其他键值对被移除
+      |> Map.put_new(:timeout, @timeout) # 超时时间设置为默认值 @timeout(put_new在不存在时插入)
       |> Map.put(:timestamps, timestamps)
 
+    # 获取事务操作的超时时间，如果没有指定，则使用默认的超时时间
     transactions_timeout = options[Runner.Transactions.option_key()][:timeout] || Runner.Transactions.timeout()
 
+    # 创建超时时间和时间戳信息的map
     update_transactions_options = %{timeout: transactions_timeout, timestamps: timestamps}
 
+    # 对于 change 中不存在但是在 @row_defaults 中存在的键，将其添加到 change 中，并设置其默认值。这个操作确保了每个 change 都包含了 @row_defaults 中定义的键值对，以及默认值
     changes_list_with_defaults =
       Enum.map(changes_list, fn change ->
         Enum.reduce(@row_defaults, change, fn {default_key, default_value}, acc ->
@@ -58,9 +73,10 @@ defmodule Explorer.Chain.Import.Runner.Addresses do
         end)
       end)
 
+    # 对数据分组排序
     ordered_changes_list =
       changes_list_with_defaults
-      |> Enum.group_by(& &1.hash)
+      |> Enum.group_by(& &1.hash) # 集合中每个元素执行hash函数，并进行分组
       |> Enum.map(fn {_, grouped_addresses} ->
         Enum.max_by(grouped_addresses, fn address ->
           address_max_by(address)
@@ -70,8 +86,8 @@ defmodule Explorer.Chain.Import.Runner.Addresses do
 
     multi
     |> Multi.run(:filter_addresses, fn repo, _ ->
-      Instrumenter.block_import_stage_runner(
-        fn -> filter_addresses(repo, ordered_changes_list) end,
+      Instrumenter.block_import_stage_runner( #计算和记录运行时间
+        fn -> filter_addresses(repo, ordered_changes_list) end,# 这个是真正执行的函数
         :addresses,
         :addresses,
         :filter_addresses
@@ -107,19 +123,23 @@ defmodule Explorer.Chain.Import.Runner.Addresses do
 
   @spec filter_addresses(Repo.t(), [map()]) :: {:ok, {[map()], map()}}
   defp filter_addresses(repo, changes_list) do
+    # changes_list中取出hash字段对应的值
     hashes = Enum.map(changes_list, & &1.hash)
 
+    # 构建一个 Ecto 查询，从数据库中取出匹配的hashs对应的信息
     existing_addresses_query =
       from(a in Address,
         where: a.hash in ^hashes,
         select: [:hash, :contract_code, :fetched_coin_balance_block_number, :nonce]
       )
 
+    # key 是hash，值是对应查询结果的map
     existing_addresses_map =
       existing_addresses_query
       |> repo.all()
       |> Map.new(&{&1.hash, &1})
 
+    # 把需求更新的保留，没有变化的过滤掉
     filtered_addresses =
       changes_list
       |> Enum.reduce([], fn address, acc ->
@@ -136,6 +156,7 @@ defmodule Explorer.Chain.Import.Runner.Addresses do
     {:ok, {filtered_addresses, existing_addresses_map}}
   end
 
+  # 比较新旧数据，判断是否需要更新
   defp should_update?(new_address, existing_address) do
     is_nil(existing_address) or
       (not is_nil(new_address[:contract_code]) and new_address[:contract_code] != existing_address.contract_code) or
@@ -157,13 +178,13 @@ defmodule Explorer.Chain.Import.Runner.Addresses do
 
     Import.insert_changes_list(
       repo,
-      ordered_changes_list,
-      conflict_target: :hash,
-      on_conflict: on_conflict,
-      for: Address,
-      returning: true,
-      timeout: timeout,
-      timestamps: timestamps
+      ordered_changes_list, #插入的地址列表
+      conflict_target: :hash, #冲突处理字段
+      on_conflict: on_conflict, # 冲突处理策略
+      for: Address,  # 要插入的表
+      returning: true, # 插入完成返回插入地址列表
+      timeout: timeout, # 操作超时时间
+      timestamps: timestamps # 记录操作时间
     )
   end
 
@@ -202,7 +223,7 @@ defmodule Explorer.Chain.Import.Runner.Addresses do
               address.fetched_coin_balance_block_number,
               address.fetched_coin_balance
             ),
-          # MAX on two columns
+          # MAX on two columns（有冲突时把最新的插入db）
           fetched_coin_balance_block_number:
             fragment(
               "GREATEST(EXCLUDED.fetched_coin_balance_block_number, ?)",
