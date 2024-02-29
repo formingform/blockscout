@@ -5,7 +5,7 @@ defmodule Explorer.Chain.Import.Runner.Addresses do
 
   require Ecto.Query
 
-  alias Ecto.{Multi, Repo}
+    alias Ecto.{Multi, Repo}
   alias Explorer.Chain.{Address, Hash, Import, Transaction}
   alias Explorer.Chain.Import.Runner
   alias Explorer.Prometheus.Instrumenter
@@ -62,16 +62,16 @@ defmodule Explorer.Chain.Import.Runner.Addresses do
       changes_list_with_defaults
       |> Enum.group_by(& &1.hash)
       |> Enum.map(fn {_, grouped_addresses} ->
-        Enum.max_by(grouped_addresses, fn address ->
+        Enum.max_by(grouped_addresses, fn address -> #找出每个group的最大的address？有什么目的？
           address_max_by(address)
         end)
       end)
-      |> Enum.sort_by(& &1.hash)
+      |> Enum.sort_by(& &1.hash) # 通过上面找出的最大地址，给group排序？
 
     multi
     |> Multi.run(:filter_addresses, fn repo, _ ->
       Instrumenter.block_import_stage_runner(
-        fn -> filter_addresses(repo, ordered_changes_list) end,
+        fn -> filter_addresses(repo, ordered_changes_list) end, # 这个函数是对db查询操作，返回值如何使用？{:ok, {filtered_addresses, existing_addresses_map}}
         :addresses,
         :addresses,
         :filter_addresses
@@ -92,6 +92,7 @@ defmodule Explorer.Chain.Import.Runner.Addresses do
                                                                    }
                                                                    when is_list(addresses) ->
       Instrumenter.block_import_stage_runner(
+        #更新transactions表
         fn -> update_transactions(repo, addresses, existing_addresses_map, update_transactions_options) end,
         :addresses,
         :addresses,
@@ -115,12 +116,18 @@ defmodule Explorer.Chain.Import.Runner.Addresses do
         select: [:hash, :contract_code, :fetched_coin_balance_block_number, :nonce]
       )
 
-    existing_addresses_map =
+    existing_addresses_map = # 查询已经存在的地址
       existing_addresses_query
       |> repo.all()
-      |> Map.new(&{&1.hash, &1})
+      #Map.new([:a, :b], fn x -> {x, x} end)
+      #%{a: :a, b: :b}
+      #
+      #Map.new(%{a: 2, b: 3, c: 4}, fn {key, val} -> {key, val * 2} end)
+      #%{a: 4, b: 6, c: 8}
+      |> Map.new(&{&1.hash, &1}) #把返回的schema.struct list，转成map
 
-    filtered_addresses =
+
+    filtered_addresses = # 过滤出需要update的地址
       changes_list
       |> Enum.reduce([], fn address, acc ->
         existing_address = existing_addresses_map[address.hash]
@@ -167,6 +174,8 @@ defmodule Explorer.Chain.Import.Runner.Addresses do
     )
   end
 
+
+  #处理address struct，返回满足条件的第一个分支
   defp address_max_by(address) do
     cond do
       Map.has_key?(address, :address) ->
@@ -243,9 +252,9 @@ defmodule Explorer.Chain.Import.Runner.Addresses do
           where: t.created_contract_address_hash in ^ordered_created_contract_hashes,
           # Enforce Transaction ShareLocks order (see docs: sharelocks.md)
           order_by: t.hash,
-          lock: "FOR NO KEY UPDATE"
+          lock: "FOR NO KEY UPDATE" #标识Transaction作为主表，不会更新primary key, 有FK关联到Transaction.主键的表可以正常insert/update。
         )
-
+      #为什么要有个subquery?不能结合query一个updateQuery就更新吗？
       try do
         {_, result} =
           repo.update_all(
