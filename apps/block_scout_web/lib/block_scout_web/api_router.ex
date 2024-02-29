@@ -254,7 +254,7 @@ defmodule BlockScoutWeb.ApiRouter do
       get("/:address_hash_param/instances/:token_id/transfers-count", V2.TokenController, :transfers_count_by_instance)
     end
 
-    # 验证人相关接口
+    # 验证人相关接口（待调整）
     scope "/validators" do
       get("/", V2.L2ValidatorController, :validators) # 分页获取验证人列表
       get("/", V2.L2ValidatorController, :validators_his) # 分页获取历史验证人列表
@@ -296,7 +296,7 @@ defmodule BlockScoutWeb.ApiRouter do
       end
     end
 
-#    optimism后续改成platon_appchain
+#    optimism后续改成platon_appchain（待调整）
     scope "/optimism" do
       if System.get_env("CHAIN_TYPE") == "platon_appchain" do
         get("/deposits", V2.PlatonAppchainController, :deposits)
