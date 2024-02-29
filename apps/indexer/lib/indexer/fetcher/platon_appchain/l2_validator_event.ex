@@ -204,8 +204,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
           [amount] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
           # 更新L2_validator记录，增加质押金额
           validator_hash =  Base.decode16!(String.slice(second_topic, -40..-1), case: :mixed)
-
-          L2ValidatorService.increase_stake(validator_hash, amount)
+           #与l2_validator_events导入放在同一个事务中
+#          L2ValidatorService.increase_stake(validator_hash, amount)
           %{
             log_index: log_index,
             validator_hash: validator_hash,
@@ -222,8 +222,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
           # 更新L2_validator记录，增加委托金额
           delegator_hash =  Base.decode16!(String.slice(second_topic, -40..-1), case: :mixed)
           validator_hash =  Base.decode16!(String.slice(third_topic, -40..-1), case: :mixed)
-
-          L2ValidatorService.increase_delegation(validator_hash, amount)
+          #与l2_validator_events导入放在同一个事务中
+#          L2ValidatorService.increase_delegation(validator_hash, amount)
           %{
             log_index: log_index,
             validator_hash: validator_hash,
@@ -238,9 +238,9 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
         @l2_biz_event_UnStaked ->
           [amount] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
           validator_hash =  Base.decode16!(String.slice(second_topic, -40..-1), case: :mixed)
-
+          #与l2_validator_events导入放在同一个事务中
           # 更新L2_validator记录，减少质押
-          L2ValidatorService.decrease_stake(validator_hash, amount)
+#          L2ValidatorService.decrease_stake(validator_hash, amount)
 
           %{
             log_index: log_index,
@@ -258,9 +258,9 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
 
           delegator_hash =  Base.decode16!(String.slice(second_topic, -40..-1), case: :mixed)
           validator_hash =  Base.decode16!(String.slice(third_topic, -40..-1), case: :mixed)
-
+          #与l2_validator_events导入放在同一个事务中
           # 更新L2_validator记录，减少委托
-          L2ValidatorService.decrease_delegation(validator_hash, amount)
+#          L2ValidatorService.decrease_delegation(validator_hash, amount)
 
           %{
             log_index: log_index,

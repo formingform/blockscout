@@ -293,7 +293,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   end
 
 
-  @spec get_last_l2_item(module()) :: {non_neg_integer(), binary() | nil}
+  @spec get_last_l2_item(module()) :: {non_neg_integer() | nil, binary() | nil}
   def get_last_l2_item(table) when table in [Explorer.Chain.PlatonAppchain.L2Event, Explorer.Chain.PlatonAppchain.L2Execute] do
     query =
       from(item in table,
@@ -307,6 +307,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     |> Kernel.||({0, nil})
   end
 
+  @spec get_last_l2_item(module()) :: {non_neg_integer() | nil, binary() | nil}
   def get_last_l2_item(table) when table in [Explorer.Chain.PlatonAppchain.L2ValidatorEvent, Explorer.Chain.PlatonAppchain.Commitment] do
     query =
       from(item in table,
