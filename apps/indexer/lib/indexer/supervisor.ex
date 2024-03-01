@@ -105,80 +105,80 @@ defmodule Indexer.Supervisor do
 
     basic_fetchers =
       [
-#        # Root fetchers
-#        {PendingTransaction.Supervisor, [[json_rpc_named_arguments: json_rpc_named_arguments]]},
-#
-#        # Async catchup fetchers
-#        {UncleBlock.Supervisor, [[block_fetcher: block_fetcher, memory_monitor: memory_monitor]]},
-#        {BlockReward.Supervisor,
-#         [[json_rpc_named_arguments: json_rpc_named_arguments, memory_monitor: memory_monitor]]},
-#        {InternalTransaction.Supervisor,
-#         [[json_rpc_named_arguments: json_rpc_named_arguments, memory_monitor: memory_monitor]]},
-#        {CoinBalance.Supervisor,
-#         [[json_rpc_named_arguments: json_rpc_named_arguments, memory_monitor: memory_monitor]]},
-#        {Token.Supervisor, [[json_rpc_named_arguments: json_rpc_named_arguments, memory_monitor: memory_monitor]]},
-#        {TokenInstanceRealtime.Supervisor, [[memory_monitor: memory_monitor]]},
-#        {TokenInstanceRetry.Supervisor, [[memory_monitor: memory_monitor]]},
-#        {TokenInstanceSanitize.Supervisor, [[memory_monitor: memory_monitor]]},
-#        {TokenInstanceLegacySanitize.Supervisor, [[memory_monitor: memory_monitor]]},
-#        configure(TransactionAction.Supervisor, [[memory_monitor: memory_monitor]]),
-#        {ContractCode.Supervisor,
-#         [[json_rpc_named_arguments: json_rpc_named_arguments, memory_monitor: memory_monitor]]},
-#        {TokenBalance.Supervisor,
-#         [[json_rpc_named_arguments: json_rpc_named_arguments, memory_monitor: memory_monitor]]},
-#        {TokenUpdater.Supervisor,
-#         [[json_rpc_named_arguments: json_rpc_named_arguments, memory_monitor: memory_monitor]]},
-#        {ReplacedTransaction.Supervisor, [[memory_monitor: memory_monitor]]},
-#
-#        # for PoygonEdge, json_rpc_named_arguments only for L2
-#        {PolygonEdge.Supervisor, [[memory_monitor: memory_monitor]]},
-#        {Indexer.Fetcher.PolygonEdge.Deposit.Supervisor, [[memory_monitor: memory_monitor]]},
-#        {Indexer.Fetcher.PolygonEdge.DepositExecute.Supervisor,
-#         [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
-#        {Indexer.Fetcher.PolygonEdge.Withdrawal.Supervisor,
-#         [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
-#        {Indexer.Fetcher.PolygonEdge.WithdrawalExit.Supervisor, [[memory_monitor: memory_monitor]]},
-#
-#        # for PlatonAppchain, json_rpc_named_arguments only for L2
-#        {PlatonAppchain.Supervisor, [[memory_monitor: memory_monitor]]},
-#        {Indexer.Fetcher.PlatonAppchain.L1Event.Supervisor, [[memory_monitor: memory_monitor]]},
-#        {Indexer.Fetcher.PlatonAppchain.L1Execute.Supervisor, [[memory_monitor: memory_monitor]]},
-#        {Indexer.Fetcher.PlatonAppchain.Checkpoint.Supervisor, [[memory_monitor: memory_monitor]]},
-#        {Indexer.Fetcher.PlatonAppchain.L2Event.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
-#        {Indexer.Fetcher.PlatonAppchain.Commitment.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
-#        {Indexer.Fetcher.PlatonAppchain.L2Execute.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
-#        {Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
-#        {Indexer.Fetcher.PlatonAppchain.L2ValidatorRank.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
-#
-#        configure(TransactionBatch.Supervisor, [
-#          [json_rpc_named_arguments: json_rpc_named_arguments, memory_monitor: memory_monitor]
-#        ]),
-#
-#        # Out-of-band fetchers
-#        {EmptyBlocksSanitizer.Supervisor, [[json_rpc_named_arguments: json_rpc_named_arguments]]},
-#        {PendingTransactionsSanitizer, [[json_rpc_named_arguments: json_rpc_named_arguments]]},
-#        {TokenTotalSupplyUpdater, [[]]},
-#
-#        # Temporary workers
-#        {UncatalogedTokenTransfers.Supervisor, [[]]},
-#        {UnclesWithoutIndex.Supervisor,
-#         [[json_rpc_named_arguments: json_rpc_named_arguments, memory_monitor: memory_monitor]]},
-#        {BlocksTransactionsMismatch.Supervisor,
-#         [[json_rpc_named_arguments: json_rpc_named_arguments, memory_monitor: memory_monitor]]},
-#        {PendingOpsCleaner, [[], []]},
-#        {PendingBlockOperationsSanitizer, [[]]},
-#
-#        # Block fetchers
-#        configure(BlockRealtime.Supervisor, [
-#          %{block_fetcher: realtime_block_fetcher, subscribe_named_arguments: realtime_subscribe_named_arguments},
-#          [name: BlockRealtime.Supervisor]
-#        ]),
-#        {BlockCatchup.Supervisor,
-#         [
-#           %{block_fetcher: block_fetcher, block_interval: block_interval, memory_monitor: memory_monitor},
-#           [name: BlockCatchup.Supervisor]
-#         ]},
-#        {Withdrawal.Supervisor, [[json_rpc_named_arguments: json_rpc_named_arguments]]}
+        # Root fetchers
+        {PendingTransaction.Supervisor, [[json_rpc_named_arguments: json_rpc_named_arguments]]},
+
+        # Async catchup fetchers
+        {UncleBlock.Supervisor, [[block_fetcher: block_fetcher, memory_monitor: memory_monitor]]},
+        {BlockReward.Supervisor,
+         [[json_rpc_named_arguments: json_rpc_named_arguments, memory_monitor: memory_monitor]]},
+        {InternalTransaction.Supervisor,
+         [[json_rpc_named_arguments: json_rpc_named_arguments, memory_monitor: memory_monitor]]},
+        {CoinBalance.Supervisor,
+         [[json_rpc_named_arguments: json_rpc_named_arguments, memory_monitor: memory_monitor]]},
+        {Token.Supervisor, [[json_rpc_named_arguments: json_rpc_named_arguments, memory_monitor: memory_monitor]]},
+        {TokenInstanceRealtime.Supervisor, [[memory_monitor: memory_monitor]]},
+        {TokenInstanceRetry.Supervisor, [[memory_monitor: memory_monitor]]},
+        {TokenInstanceSanitize.Supervisor, [[memory_monitor: memory_monitor]]},
+        {TokenInstanceLegacySanitize.Supervisor, [[memory_monitor: memory_monitor]]},
+        configure(TransactionAction.Supervisor, [[memory_monitor: memory_monitor]]),
+        {ContractCode.Supervisor,
+         [[json_rpc_named_arguments: json_rpc_named_arguments, memory_monitor: memory_monitor]]},
+        {TokenBalance.Supervisor,
+         [[json_rpc_named_arguments: json_rpc_named_arguments, memory_monitor: memory_monitor]]},
+        {TokenUpdater.Supervisor,
+         [[json_rpc_named_arguments: json_rpc_named_arguments, memory_monitor: memory_monitor]]},
+        {ReplacedTransaction.Supervisor, [[memory_monitor: memory_monitor]]},
+
+        # for PoygonEdge, json_rpc_named_arguments only for L2
+        {PolygonEdge.Supervisor, [[memory_monitor: memory_monitor]]},
+        {Indexer.Fetcher.PolygonEdge.Deposit.Supervisor, [[memory_monitor: memory_monitor]]},
+        {Indexer.Fetcher.PolygonEdge.DepositExecute.Supervisor,
+         [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
+        {Indexer.Fetcher.PolygonEdge.Withdrawal.Supervisor,
+         [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
+        {Indexer.Fetcher.PolygonEdge.WithdrawalExit.Supervisor, [[memory_monitor: memory_monitor]]},
+
+        # for PlatonAppchain, json_rpc_named_arguments only for L2
+        {PlatonAppchain.Supervisor, [[memory_monitor: memory_monitor]]},
+        {Indexer.Fetcher.PlatonAppchain.L1Event.Supervisor, [[memory_monitor: memory_monitor]]},
+        {Indexer.Fetcher.PlatonAppchain.L1Execute.Supervisor, [[memory_monitor: memory_monitor]]},
+        {Indexer.Fetcher.PlatonAppchain.Checkpoint.Supervisor, [[memory_monitor: memory_monitor]]},
+        {Indexer.Fetcher.PlatonAppchain.L2Event.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
+        {Indexer.Fetcher.PlatonAppchain.Commitment.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
+        {Indexer.Fetcher.PlatonAppchain.L2Execute.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
+        {Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
+        {Indexer.Fetcher.PlatonAppchain.L2ValidatorRank.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
+
+        configure(TransactionBatch.Supervisor, [
+          [json_rpc_named_arguments: json_rpc_named_arguments, memory_monitor: memory_monitor]
+        ]),
+
+        # Out-of-band fetchers
+        {EmptyBlocksSanitizer.Supervisor, [[json_rpc_named_arguments: json_rpc_named_arguments]]},
+        {PendingTransactionsSanitizer, [[json_rpc_named_arguments: json_rpc_named_arguments]]},
+        {TokenTotalSupplyUpdater, [[]]},
+
+        # Temporary workers
+        {UncatalogedTokenTransfers.Supervisor, [[]]},
+        {UnclesWithoutIndex.Supervisor,
+         [[json_rpc_named_arguments: json_rpc_named_arguments, memory_monitor: memory_monitor]]},
+        {BlocksTransactionsMismatch.Supervisor,
+         [[json_rpc_named_arguments: json_rpc_named_arguments, memory_monitor: memory_monitor]]},
+        {PendingOpsCleaner, [[], []]},
+        {PendingBlockOperationsSanitizer, [[]]},
+
+        # Block fetchers
+        configure(BlockRealtime.Supervisor, [
+          %{block_fetcher: realtime_block_fetcher, subscribe_named_arguments: realtime_subscribe_named_arguments},
+          [name: BlockRealtime.Supervisor]
+        ]),
+        {BlockCatchup.Supervisor,
+         [
+           %{block_fetcher: block_fetcher, block_interval: block_interval, memory_monitor: memory_monitor},
+           [name: BlockCatchup.Supervisor]
+         ]},
+        {Withdrawal.Supervisor, [[json_rpc_named_arguments: json_rpc_named_arguments]]}
       ]
       |> List.flatten()
 
