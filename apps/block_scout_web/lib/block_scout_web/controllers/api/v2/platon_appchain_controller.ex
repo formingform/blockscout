@@ -8,25 +8,26 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainController do
       split_list_by_page: 1
     ]
 
-  alias Explorer.Chain.PolygonEdge.Reader
+  alias Explorer.Chain.PlatonAppchain.Query
 
   action_fallback(BlockScoutWeb.API.V2.FallbackController)
 
   @spec deposits(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def deposits(conn, params) do
-    {deposits, next_page} =
+    IO.puts("=================================deposits==========================================")
+    {commitments, next_page} =
       params
       |> paging_options()
       |> Keyword.put(:api?, true)
-      |> Reader.deposits()
+      |> Query.deposits()
       |> split_list_by_page()
 
-    next_page_params = next_page_params(next_page, deposits, params)
+    next_page_params = next_page_params(next_page, commitments, params)
 
     conn
     |> put_status(200)
-    |> render(:polygon_edge_deposits, %{
-      deposits: deposits,
+    |> render(:platon_appchain_deposits, %{
+      commitments: commitments,
       next_page_params: next_page_params
     })
   end
