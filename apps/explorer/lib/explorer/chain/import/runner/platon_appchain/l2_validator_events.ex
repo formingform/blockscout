@@ -6,6 +6,8 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
   alias Explorer.Chain.Import
   alias Explorer.Chain.PlatonAppchain.L2ValidatorEvent
   alias Explorer.Prometheus.Instrumenter
+  alias Explorer.Chain.PlatonAppchain.L2Validator
+  alias Explorer.Chain.Import.Runner
 
   import Ecto.Query, only: [from: 2]
 
@@ -13,6 +15,11 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
 
   # milliseconds
   @timeout 60_000
+
+  @validator_action_type_stake_added 2
+  @validator_action_type_delegation_added 3
+  @validator_action_type_un_Staked 4
+  @validator_action_type_un_delegated 5
 
   @type imported :: [L2ValidatorEvent.t()]
 
@@ -42,7 +49,14 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
       |> Map.put_new(:timeout, @timeout)
       |> Map.put(:timestamps, timestamps)
 
-    Multi.run(multi, :insert_l2_validator_events, fn repo, _ ->
+    # 获取事务操作的超时时间，如果没有指定，则使用默认的超时时间
+    transactions_timeout = options[Runner.PlatonAppchain.L2ValidatorEvents.option_key()][:timeout] || Runner.PlatonAppchain.L2ValidatorEvents.timeout()
+
+    # 创建超时时间和时间戳信息的map
+    update_transactions_options = %{timeout: transactions_timeout, timestamps: timestamps}
+
+    multi
+    |> Multi.run(:insert_l2_validator_events, fn repo, _ ->
       Instrumenter.block_import_stage_runner(
         fn -> insert(repo, changes_list, insert_options) end,
         :block_referencing,
@@ -50,6 +64,62 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
         :l2_validator_events
       )
     end)
+    |> Multi.run(:update_l2_validator_at_validator_events, fn repo,
+                                                              %{
+                                                                insert_l2_validator_events: l2_validator_events
+                                                              }
+                                                              when is_list(l2_validator_events)  ->
+      Instrumenter.block_import_stage_runner(
+        fn -> update_l2_validator(repo, l2_validator_events, update_transactions_options) end,
+        :l2_validator_events,
+        :l2_validator_events,
+        :update_l2_validator_at_validator_events
+      )
+    end)
+  end
+
+  defp update_l2_validator(repo,l2_validator_events, %{timeout: timeout, timestamps: timestamps}) when length(l2_validator_events) > 0 do
+    Enum.map(l2_validator_events, fn validator ->
+      %Explorer.Chain.PlatonAppchain.L2ValidatorEvent{validator_hash: validator_hash, action_type: action_type, amount: amount} = validator
+      query =
+        from(v in L2Validator,
+          where: v.validator_hash == ^validator_hash,
+          lock: "FOR NO KEY UPDATE"
+        )
+
+      try do
+        case action_type do
+          @validator_action_type_stake_added ->
+          {result, _} = repo.update_all(
+              from(v in L2Validator, where: v.validator_hash == ^validator_hash),
+              [inc: [stake_amount: amount]],
+              timeout: timeout
+            )
+          @validator_action_type_delegation_added ->
+            {result, _} = repo.update_all(
+              from(v in L2Validator, where: v.validator_hash == ^validator_hash),
+              [inc: [delegate_amount: amount]],
+              timeout: timeout
+            )
+          @validator_action_type_un_Staked ->
+            {result, _} = repo.update_all(
+              from(v in L2Validator, where: v.validator_hash == ^validator_hash),
+              [inc: [stake_amount: 0-amount]],
+              timeout: timeout
+            )
+          @validator_action_type_un_delegated ->
+            {result, _} = repo.update_all(
+              from(v in L2Validator, where: v.validator_hash == ^validator_hash),
+              [inc: [delegate_amount: 0-amount]],
+              timeout: timeout
+            )
+        end
+      rescue
+        postgrex_error in Postgrex.Error ->
+          {:error, %{exception: postgrex_error, validator_hash: validator_hash}}
+      end
+    end)
+    {:ok, "update_l2_validator process success"}
   end
 
   @impl Import.Runner
