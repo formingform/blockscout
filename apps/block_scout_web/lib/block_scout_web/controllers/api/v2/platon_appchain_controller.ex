@@ -14,7 +14,6 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainController do
 
   @spec deposits(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def deposits(conn, params) do
-    IO.puts("=================================deposits==========================================")
     {commitments, next_page} =
       params
       |> paging_options()
@@ -34,11 +33,11 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainController do
 
   @spec deposits_count(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def deposits_count(conn, _params) do
-    count = Reader.deposits_count(api?: true)
+    count = Query.deposits_count(api?: true)
 
     conn
     |> put_status(200)
-    |> render(:polygon_edge_items_count, %{count: count})
+    |> render(:platon_appchain_items_count, %{count: count})
   end
 
   @spec withdrawals(Plug.Conn.t(), map()) :: Plug.Conn.t()

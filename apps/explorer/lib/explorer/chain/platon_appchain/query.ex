@@ -41,9 +41,8 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
   def deposits_count(options \\ []) do
     query =
       from(
-        de in DepositExecute,
-        inner_join: d in Deposit,
-        on: d.msg_id == de.msg_id and not is_nil(d.l1_timestamp)
+        c in Commitment,
+        where: not is_nil(c.block_number)
       )
 
     select_repo(options).aggregate(query, :count, timeout: :infinity)

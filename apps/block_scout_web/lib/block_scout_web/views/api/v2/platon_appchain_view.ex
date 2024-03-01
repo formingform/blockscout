@@ -44,7 +44,7 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainView do
     }
   end
 
-  def render("polygon_edge_items_count.json", %{count: count}) do
+  def render("platon_appchain_items_count.json", %{count: count}) do
     count
   end
 end
