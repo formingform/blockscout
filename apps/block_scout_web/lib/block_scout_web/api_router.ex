@@ -301,8 +301,12 @@ defmodule BlockScoutWeb.ApiRouter do
       if System.get_env("CHAIN_TYPE") == "platon_appchain" do
         get("/deposits", V2.PlatonAppchainController, :deposits)
         get("/deposits/count", V2.PlatonAppchainController, :deposits_count)
+        get("/deposits-batches", V2.PlatonAppchainController, :deposits_batches)
+        get("/deposits-batches/count", V2.PlatonAppchainController, :deposits_batches_count)
         get("/withdrawals", V2.PlatonAppchainController, :withdrawals)
         get("/withdrawals/count", V2.PlatonAppchainController, :withdrawals_count)
+        get("/withdrawals-batches", V2.PlatonAppchainController, :withdrawals_batches)
+        get("/withdrawals-batches/count", V2.PlatonAppchainController, :withdrawals_batches_count)
       end
     end
 

@@ -17,6 +17,54 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
   def deposits(options \\ []) do
     paging_options = Keyword.get(options, :paging_options, default_paging_options())
 
+    base_query =
+      from(
+        l1e in L1Event,
+        left_join: l2e in L2Execute,
+        on: l1e.event_id == l2e.event_id,
+        left_join: c in Commitment,
+        on: l2e.commitment_hash == c.hash,
+        select: %{
+          tx_number: c.tx_number,
+          l1_txn_hash: l1e.hash,
+          tx_type: l1e.tx_type,
+          block_timestamp: l1e.block_timestamp,
+          start_id: c.start_id,
+          end_id: c.end_id,
+          commitment_hash: l2e.commitment_hash,
+          state_root: c.state_root,
+          l2_event_hash: l2e.hash,
+          replay_status: l2e.replay_status
+        },
+        where: not is_nil(l1e.from),
+        order_by: [desc: l1e.event_id]
+      )
+
+    base_query
+    |> page_deposits_or_withdrawals(paging_options)
+    |> limit(^paging_options.page_size)
+    |> select_repo(options).all()
+  end
+
+  @spec deposits_count(list()) :: term() | nil
+  def deposits_count(options \\ []) do
+    query =
+      from(
+        l1e in L1Event,
+        left_join: l2e in L2Execute,
+        on: l1e.event_id == l2e.event_id,
+        left_join: c in Commitment,
+        on: l2e.commitment_hash == c.hash,
+        where: not is_nil(l1e.from)
+      )
+
+    select_repo(options).aggregate(query, :count, timeout: :infinity)
+  end
+
+  @spec deposits_batches(list()) :: list()
+  def deposits_batches(options \\ []) do
+    paging_options = Keyword.get(options, :paging_options, default_paging_options())
+
     count_subquery =
       from(
         c in Commitment,
@@ -33,7 +81,7 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
         select: %{
           start_id: c.start_id,
           end_id: c.end_id,
-          hash: c.hash,
+          state_batches_txn_hash: c.hash,
           block_number: c.block_number,
           block_timestamp: c.block_timestamp,
           state_root: c.state_root,
@@ -49,8 +97,8 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
     |> select_repo(options).all()
   end
 
-  @spec deposits_count(list()) :: term() | nil
-  def deposits_count(options \\ []) do
+  @spec deposits_batches_count(list()) :: term() | nil
+  def deposits_batches_count(options \\ []) do
     query =
       from(
         c in Commitment,
@@ -59,6 +107,7 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
 
     select_repo(options).aggregate(query, :count, timeout: :infinity)
   end
+
 
   @spec withdrawals(list()) :: list()
   def withdrawals(options \\ []) do
@@ -73,16 +122,14 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
         on: l1e.checkpoint_hash == c.hash,
         select: %{
           epoch: c.epoch,
-          start_block_number: c.start_block_number,
-          end_block_number: c.end_block_number,
-          state_root: c.state_root,
-          event_id: l2e.event_id,
           from: l2e.from,
-          to: l2e.to,
           l2_event_hash: l2e.hash,
           tx_type: l2e.tx_type,
           block_timestamp: l2e.block_timestamp,
+          start_block_number: coalesce(c.start_block_number, 0),
+          end_block_number: coalesce(c.end_block_number, 0),
           checkpoint_hash: l1e.checkpoint_hash,
+          state_root: c.state_root,
           l1_exec_hash: l1e.hash,
           replay_status: l1e.replay_status
         },
@@ -102,6 +149,52 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
       from(
         l in L2Event,
         where: not is_nil(l.from)
+      )
+
+    select_repo(options).aggregate(query, :count, timeout: :infinity)
+  end
+
+  @spec withdrawals_batches(list()) :: list()
+  def withdrawals_batches(options \\ []) do
+    paging_options = Keyword.get(options, :paging_options, default_paging_options())
+
+    count_subquery =
+      from(
+        c in Checkpoint,
+        left_join: l1e in L1Execute,
+        on: c.hash == l1e.checkpoint_hash,
+        group_by: c.hash,
+        select: %{hash: c.hash, tx_number: count(l1e.event_id)}
+      )
+
+    base_query =
+      from(
+        c in Checkpoint,
+        join: d in subquery(count_subquery), on: c.hash == d.hash,
+        select: %{
+          epoch: c.epoch,
+          l1_state_batches_hash: c.hash,
+          block_number: c.block_number,
+          block_timestamp: c.block_timestamp,
+          state_root: c.state_root,
+          l2_txns: d.tx_number
+        },
+        order_by: [desc: c.block_timestamp]
+      )
+
+
+    base_query
+    |> page_deposits_or_withdrawals(paging_options)
+    |> limit(^paging_options.page_size)
+    |> select_repo(options).all()
+  end
+
+  @spec withdrawals_batches_count(list()) :: term() | nil
+  def withdrawals_batches_count(options \\ []) do
+    query =
+      from(
+        c in Checkpoint,
+        where: not is_nil(c.block_timestamp)
       )
 
     select_repo(options).aggregate(query, :count, timeout: :infinity)
