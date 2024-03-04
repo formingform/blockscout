@@ -39,7 +39,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
     field(:hash, Hash.Full, primary_key: true)
     field(:log_index, :integer, primary_key: true)
     field(:block_number, :integer)
-    field(:validator_hash, Hash.Address)
+    field(:validator_hash, Hash.Address, primary_key: true)
     field(:action_type, :integer)
     field(:action_desc, :string)
     field(:amount, Wei)
@@ -52,7 +52,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
     module
     |> cast(attrs, @allowed_attrs)
     |> validate_required(@required_attrs)
-    |> unique_constraint([:hash, :log_index])
+    |> unique_constraint([:hash, :log_index, :validator_hash])
   end
 
 end

@@ -52,6 +52,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
       @l2_biz_event_UpdateValidatorStatus ->
         "UpdateValidatorStatus"
     end
+    event_name
   end
 
 
@@ -98,6 +99,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
           json_rpc_named_arguments: json_rpc_named_arguments
         } = state
       ) do
+
     Process.send(self(), :find_new_events, [])
     {:noreply, state}
   end
@@ -115,6 +117,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
       ) do
     # find and fill all events between start_block and "safe" block
     # the "safe" block can be "latest" (when safe_block_is_latest == true)
+
     PlatonAppchain.fill_block_range_no_event_id(
       start_block,
       safe_block,
@@ -222,7 +225,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
             hash: l2_transaction_hash,
             action_type: PlatonAppchain.l2_validator_event_action_type()[:DelegationAdded],
             action_desc: "delegator: 0x#{Base.encode16(delegator_hash)}",
-            amount: 0,
+            amount: amount,
             block_timestamp: timestamp
           }]
 
@@ -287,7 +290,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
                  amount: Enum.at(amounts, idx),
                  block_timestamp: timestamp
                }
-               acc = [event | acc] #后来的插入头部，效率高
+               [event | acc] #后来的插入头部，效率高
              end)
            |> Enum.reverse  #反转list
         end
@@ -323,11 +326,6 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
         block_end,
         json_rpc_named_arguments
       ) do
-
-#      Logger.info("to get l2 validator events, scan_db: #{scan_db}",
-#        logger: :platon_appchain
-#      )
-
     l2_validator_events =
       if scan_db do
         query =
@@ -341,8 +339,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
         query
         |> Repo.all(timeout: :infinity)
         |> Enum.reduce([], fn {index, first_topic, second_topic, third_topic, data, l2_transaction_hash, l2_block_number}, acc ->
-          acc = acc ++
-          event_to_l2_validator_events(index, first_topic, second_topic, third_topic, data, l2_transaction_hash, l2_block_number,json_rpc_named_arguments)
+          acc ++ event_to_l2_validator_events(index, first_topic, second_topic, third_topic, data, l2_transaction_hash, l2_block_number,json_rpc_named_arguments)
         end)
       else
         {:ok, result} = PlatonAppchain.get_logs_by_topics(
@@ -355,8 +352,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
           )
 
          Enum.reduce(result, [], fn event, acc ->
-            acc = acc ++
-            event_to_l2_validator_events(
+             acc ++ event_to_l2_validator_events(
               event["logIndex"],
               Enum.at(event["topics"], 0),
               Enum.at(event["topics"], 1),
@@ -376,8 +372,6 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
     # 过滤掉返回为空的events
     filtered_events = Enum.reject(l2_validator_events, &Enum.empty?/1)
     if Enum.count(filtered_events)> 0 do
-      Logger.debug(fn -> "to import l2 validator events:(#{inspect(filtered_events)})" end , logger: :platon_appchain)
-
       {:ok, _} =
         Chain.import(%{
           l2_validator_events: %{params: filtered_events},

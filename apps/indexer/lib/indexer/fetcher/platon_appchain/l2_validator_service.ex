@@ -9,15 +9,13 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorService do
   alias Explorer.Chain.PlatonAppchain.L2Validator
   alias Indexer.Fetcher.PlatonAppchain
 
-  """
-      iex > add_new_validator("0x97ab3d4f7f5051f127b0e9f8d10772125d94d65b")
-      {:ok, %Explorer.Chain.PlatonAppchain.L2Validator{...}}
-
-
-  """
+  #
+  #    iex > add_new_validator("0x97ab3d4f7f5051f127b0e9f8d10772125d94d65b")
+  #    {:ok, %Explorer.Chain.PlatonAppchain.L2Validator{...}}
+  #
   @spec add_new_validator(Repo.t(), binary()) :: {:ok, L2Validator.t()} | {:error, reason :: String.t()}
-  def add_new_validator(repo, validator_hash) do
-    newValidatorMap = L2StakeHandler.getValidator(validator_hash)
+  def add_new_validator(repo, validator_hex) do
+    newValidatorMap = L2StakeHandler.getValidator(validator_hex)
     L2Validator.add_new_validator(repo, newValidatorMap)
   end
 

@@ -4,8 +4,10 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
 
   alias Ecto.{Changeset, Multi, Repo}
   alias Explorer.Chain.Import
+  alias Explorer.Chain.Hash
   alias Explorer.Chain.PlatonAppchain.L2ValidatorEvent
   alias Indexer.Fetcher.PlatonAppchain.L2ValidatorService
+  alias Explorer.Chain.PlatonAppchain.L2Validator
   alias Explorer.Prometheus.Instrumenter
   alias Indexer.Fetcher.PlatonAppchain
   alias Explorer.Chain.Import.Runner
@@ -90,53 +92,53 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
     #Enum.map(l2_validator_events, fn validator ->
     Enum.each(l2_validator_events, fn validator_event ->
       %Explorer.Chain.PlatonAppchain.L2ValidatorEvent{validator_hash: validator_hash, action_type: action_type, amount: amount} = validator_event
-      query =
-        from(v in L2Validator,
-          where: v.validator_hash == ^validator_hash,
-          lock: "FOR NO KEY UPDATE"
-        )
+#      query =
+#        from(v in L2Validator,
+#          where: v.validator_hash == ^validator_hash,
+#          lock: "FOR NO KEY UPDATE"
+#        )
 
       try do
         case action_type do
           @l2_validator_event_action_type_ValidatorRegistered ->
-            {result, _} = L2ValidatorService.add_new_validator(repo, validator_hash)
+            {result, _} = L2ValidatorService.add_new_validator(repo, Hash.to_string(validator_hash))
 
           @l2_validator_event_action_type_StakeAdded ->
             {result, _} = repo.update_all(
-              #from(v in L2Validator, where: v.validator_hash == ^validator_hash),
-              query,
+              from(v in L2Validator, where: v.validator_hash == ^validator_hash),
+              #query,
               [inc: [stake_amount: amount]],
               timeout: timeout
             )
 
           @l2_validator_event_action_type_DelegationAdded ->
             {result, _} = repo.update_all(
-              #from(v in L2Validator, where: v.validator_hash == ^validator_hash),
-              query,
+              from(v in L2Validator, where: v.validator_hash == ^validator_hash),
+              #query,
               [inc: [delegate_amount: amount]],
               timeout: timeout
             )
 
           @l2_validator_event_action_type_UnStaked ->
             {result, _} = repo.update_all(
-              #from(v in L2Validator, where: v.validator_hash == ^validator_hash),
-              query,
+              from(v in L2Validator, where: v.validator_hash == ^validator_hash),
+              #query,
               [inc: [stake_amount: 0-amount]],
               timeout: timeout
             )
 
           @l2_validator_event_action_type_UnDelegated ->
             {result, _} = repo.update_all(
-              #from(v in L2Validator, where: v.validator_hash == ^validator_hash),
-              query,
+              from(v in L2Validator, where: v.validator_hash == ^validator_hash),
+              #query,
               [inc: [delegate_amount: 0-amount]],
               timeout: timeout
             )
 
           @l2_validator_event_action_type_Slashed ->
             {result, _} = repo.update_all(
-              #from(v in L2Validator, where: v.validator_hash == ^validator_hash),
-              query,
+              from(v in L2Validator, where: v.validator_hash == ^validator_hash),
+              #query,
               [inc: [stake_amount: 0-amount]], # 惩罚金：
               timeout: timeout
             )
@@ -171,7 +173,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
     Import.insert_changes_list(
       repo,
       ordered_changes_list,
-      conflict_target: [:hash, :log_index],
+      conflict_target: [:hash, :log_index, :validator_hash],
       on_conflict: on_conflict,
       for: L2ValidatorEvent,
       returning: true,

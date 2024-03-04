@@ -342,6 +342,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     end
   end
 
+  # 对platon来说，safe block 就是 latest block
   defp get_safe_block(json_rpc_named_arguments) do
     {:ok, latest_block} = get_block_number_by_tag("latest", json_rpc_named_arguments, 100_000_000)
     {latest_block, true}
@@ -592,6 +593,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
         ) :: {:ok, map()} | :ignore
   def init_l2(table, env, pid, contract_address, contract_name, table_name, entity_name, json_rpc_named_arguments)
       when table in [Explorer.Chain.PlatonAppchain.L2Event, Explorer.Chain.PlatonAppchain.L2Execute, Explorer.Chain.PlatonAppchain.L2ValidatorEvent, Explorer.Chain.PlatonAppchain.Commitment] do
+
     with {:start_block_l2_undefined, false} <- {:start_block_l2_undefined, is_nil(env[:start_block_l2])},
          {:contract_address_valid, true} <- {:contract_address_valid, Helper.is_address_correct?(contract_address)},
          start_block_l2 = parse_integer(env[:start_block_l2]),
@@ -604,6 +606,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
              (start_block_l2 <= last_l2_block_number || last_l2_block_number == 0) && start_block_l2 <= safe_block},
          {:ok, last_l2_tx} <- get_transaction_by_hash(last_l2_transaction_hash, json_rpc_named_arguments, 100_000_000),
          {:l2_tx_not_found, false} <- {:l2_tx_not_found, !is_nil(last_l2_transaction_hash) && is_nil(last_l2_tx)} do
+
       Process.send(pid, :continue, [])
 
       {:ok,
