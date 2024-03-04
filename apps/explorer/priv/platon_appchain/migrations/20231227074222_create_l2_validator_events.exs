@@ -7,11 +7,11 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2ValidatorEvents do
       # 事件所在交易hash
       add(:hash, :bytea, null: false, primary_key: true )
       # 日志索引,
-      add(:log_index, :integer, null: true, primary_key: true)
+      add(:log_index, :integer, null: false, primary_key: true)
       # 事件所在区块
       add(:block_number, :bigint, null: false)
       # 验证人地址
-      add(:validator_hash, :bytea, null: false)
+      add(:validator_hash, :bytea, null: false, primary_key: true)
       # 事件类型：1.质押 2增加质押 3.修改节点拥金比例 4.解质押  5.解委托 6.提取质押 7. 提取委托 8.零出块处罚  9.治理事件
       add(:action_type, :integer, null: true)
       # 事件描述
