@@ -54,7 +54,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
 
   @l2_events_tx_type [withdraw: 1, stakeWithdraw: 2, degationWithdraw: 3, slash: 4]
 
-  @l2_validator_event_action_type [ValidatorRegistered: 1, StakeAdded: 2, DelegationAdded: 3, UnStaked: 4, UnDelegated: 5, Slashed: 6, UpdateValidatorStatus: 7]
+  @l2_validator_event_action_type [ValidatorRegistered: 1, StakeAdded: 2, DelegationAdded: 3, UnStaked: 4, UnDelegated: 5, Slashed: 6, StakeWithdrawalRegistered: 7, StakeWithdrawal: 8, DelegateWithdrawalRegistered: 9, DelegateWithdrawal: 10, UpdateValidatorStatus: 11]
 
   @l2_validator_status [Valid: 0b0000, Invalid: 0b0001, LowBlocks: 0b0010, LowThreshold: 0b0100, Duplicated: 0b1000, Unstaked: 0b00100000, Slashing: 0b01000000]
 
