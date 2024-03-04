@@ -106,6 +106,15 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
     |> unique_constraint(:validator_hash)
   end
 
+  def add_new_validator(repo, dataMap) do
+    %__MODULE__{}
+    |> changeset(dataMap)
+    |> repo.insert(
+         on_conflict: [set: [locking_stake_amount: 0, withdrawal_stake_amount: 0, stake_reward: 0, delegate_reward: 0, rank: 0, name: nil, detail: nil, logo: nil, website: nil, expect_apr: 0, block_rate: 0, auth_status: 0, role: 0]],
+         conflict_target: [:validator_hash],
+         returning: true)
+  end
+
   # 增加新的质押节点，如果节点hash已经存在，则更新（实际上，不会有重复主键的，因为解质押的节点信息，已经被移入历史表中）
   def add_new_validator(dataMap) do
     %__MODULE__{}
