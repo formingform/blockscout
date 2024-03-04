@@ -179,7 +179,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
           # second_topic，需要记录到topic的数据，如果长度>32字节，则取数据的hash，并把hash放入topic，如果数据长度<=32字节，则左补零后放入topic
           validator_hash = Base.decode16!(String.slice(second_topic, -40..-1), case: :mixed)
 
-          L2ValidatorService.add_new_validator(validator_hash)
+          #L2ValidatorService.add_new_validator(validator_hash)
           [%{
             log_index: log_index,
             validator_hash: validator_hash,
