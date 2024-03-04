@@ -5,9 +5,8 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
   alias Ecto.{Changeset, Multi, Repo}
   alias Explorer.Chain.Import
   alias Explorer.Chain.PlatonAppchain.L2ValidatorEvent
-  alias Explorer.Chain.PlatonAppchain.L2Validator
   alias Explorer.Prometheus.Instrumenter
-  alias Indexer.Fetcher.PlatonAppchain
+  alias Explorer.Chain.PlatonAppchain.L2Validator
   alias Explorer.Chain.Import.Runner
 
   import Ecto.Query, only: [from: 2]
@@ -80,8 +79,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
   end
 
   defp update_l2_validator(repo,l2_validator_events, %{timeout: timeout, timestamps: timestamps}) when length(l2_validator_events) > 0 do
-    #Enum.map(l2_validator_events, fn validator ->
-    Enum.each(l2_validator_events, fn validator ->
+    Enum.map(l2_validator_events, fn validator ->
       %Explorer.Chain.PlatonAppchain.L2ValidatorEvent{validator_hash: validator_hash, action_type: action_type, amount: amount} = validator
       query =
         from(v in L2Validator,
@@ -91,55 +89,30 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
 
       try do
         case action_type do
-          PlatonAppchain.l2_validator_event_action_type()[:ValidatorRegistered] ->
-            {result, _} = L2Validator.add_new_validator(repo, validator)
-
-          PlatonAppchain.l2_validator_event_action_type()[:StakeAdded] ->
-            {result, _} = repo.update_all(
-              #from(v in L2Validator, where: v.validator_hash == ^validator_hash),
-              query,
+          @validator_action_type_stake_added ->
+          {result, _} = repo.update_all(
+              from(v in L2Validator, where: v.validator_hash == ^validator_hash),
               [inc: [stake_amount: amount]],
               timeout: timeout
             )
-
-          PlatonAppchain.l2_validator_event_action_type()[:DelegationAdded]  ->
+          @validator_action_type_delegation_added ->
             {result, _} = repo.update_all(
-              #from(v in L2Validator, where: v.validator_hash == ^validator_hash),
-              query,
+              from(v in L2Validator, where: v.validator_hash == ^validator_hash),
               [inc: [delegate_amount: amount]],
               timeout: timeout
             )
-
-          PlatonAppchain.l2_validator_event_action_type()[:UnStaked]  ->
+          @validator_action_type_un_Staked ->
             {result, _} = repo.update_all(
-              #from(v in L2Validator, where: v.validator_hash == ^validator_hash),
-              query,
+              from(v in L2Validator, where: v.validator_hash == ^validator_hash),
               [inc: [stake_amount: 0-amount]],
               timeout: timeout
             )
-
-          PlatonAppchain.l2_validator_event_action_type()[:UnDelegated]  ->
+          @validator_action_type_un_delegated ->
             {result, _} = repo.update_all(
-              #from(v in L2Validator, where: v.validator_hash == ^validator_hash),
-              query,
+              from(v in L2Validator, where: v.validator_hash == ^validator_hash),
               [inc: [delegate_amount: 0-amount]],
               timeout: timeout
             )
-
-          PlatonAppchain.l2_validator_event_action_type()[:Slashed]  ->
-            {result, _} = repo.update_all(
-              #from(v in L2Validator, where: v.validator_hash == ^validator_hash),
-              query,
-              [inc: [stake_amount: 0-amount]], # 惩罚金：
-              timeout: timeout
-            )
-
-          PlatonAppchain.l2_validator_event_action_type()[:UpdateValidatorStatus] ->
-            {result, _} = repo.update_all(
-              from(v in L2Validator, where: v.validator_hash == ^validator_hash, update: [set: [status: ^amount]]), # 在状态变更事件中，amount表示：状态
-              timeout: timeout
-            )
-
         end
       rescue
         postgrex_error in Postgrex.Error ->
@@ -179,7 +152,8 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
       l in L2ValidatorEvent,
       update: [
         set: [
-          # Don't update `hash` `log_index` `validator_hash` as it is a primary key and used for the conflict target
+          # Don't update `hash` `log_index` as it is a primary key and used for the conflict target
+          validator_hash: fragment("EXCLUDED.validator_hash"),
           block_number: fragment("EXCLUDED.block_number"),
           action_type: fragment("EXCLUDED.action_type"),
           action_desc: fragment("EXCLUDED.action_desc"),
@@ -191,8 +165,9 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
       ],
       where:
         fragment(
-          "(EXCLUDED.block_number,EXCLUDED.action_type,EXCLUDED.action_desc,EXCLUDED.amount,
-          EXCLUDED.block_timestamp) IS DISTINCT FROM (?,?,?,?,?)", # 有冲突时只更新这些字段
+          "(EXCLUDED.validator_hash,EXCLUDED.block_number,EXCLUDED.action_type,EXCLUDED.action_desc,EXCLUDED.amount,
+          EXCLUDED.block_timestamp) IS DISTINCT FROM (?,?,?,?,?,?)", # 有冲突时只更新这些字段
+          l.validator_hash,
           l.block_number,
           l.action_type,
           l.action_desc,

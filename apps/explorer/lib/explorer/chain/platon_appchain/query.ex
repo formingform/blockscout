@@ -17,15 +17,28 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
   def deposits(options \\ []) do
     paging_options = Keyword.get(options, :paging_options, default_paging_options())
 
+    count_subquery =
+      from(
+        c in Commitment,
+        left_join: l2e in L2Execute,
+        on: c.hash == l2e.commitment_hash,
+        group_by: c.hash,
+        select: %{hash: c.hash, tx_number: count(l2e.event_id)}
+      )
+
     base_query =
       from(
         c in Commitment,
+        join: d in subquery(count_subquery), on: c.hash == d.hash,
         select: %{
+          start_id: c.start_id,
+          end_id: c.end_id,
           hash: c.hash,
           block_number: c.block_number,
           block_timestamp: c.block_timestamp,
           state_root: c.state_root,
-          from: c.from
+          from: c.from,
+          tx_number: d.tx_number
         },
         order_by: [desc: c.block_timestamp]
       )

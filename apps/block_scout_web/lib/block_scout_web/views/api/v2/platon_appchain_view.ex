@@ -10,12 +10,13 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainView do
       items:
         Enum.map(commitments, fn commitments ->
           %{
-            "index" => "index需要到l1_evnet中取",
+            "start_id" => commitments.start_id,
+            "end_id" => commitments.end_id,
             "l2_state_batches_hash" => commitments.hash,
             "l2_block" => commitments.block_number,
             "block_timestamp" => commitments.block_timestamp,
             "state_root" => commitments.state_root,
-            "l1_txns" => "对应l1上交易数量（到其它表表）",
+            "l1_txns" => commitments.tx_number,
             "submitter" => commitments.from
           }
         end),
