@@ -17,10 +17,17 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
   # milliseconds
   @timeout 60_000
 
-  @validator_action_type_stake_added 2
-  @validator_action_type_delegation_added 3
-  @validator_action_type_un_Staked 4
-  @validator_action_type_un_delegated 5
+  @l2_validator_event_action_type_ValidatorRegistered 1
+  @l2_validator_event_action_type_StakeAdded 2
+  @l2_validator_event_action_type_DelegationAdded 3
+  @l2_validator_event_action_type_UnStaked 4
+  @l2_validator_event_action_type_UnDelegated 5
+  @l2_validator_event_action_type_Slashed 6
+  @l2_validator_event_action_type_StakeWithdrawalRegistered 7
+  @l2_validator_event_action_type_StakeWithdrawal 8
+  @l2_validator_event_action_type_DelegateWithdrawalRegistered 9
+  @l2_validator_event_action_type_DelegateWithdrawal 10
+  @l2_validator_event_action_type_UpdateValidatorStatus 11
 
   @type imported :: [L2ValidatorEvent.t()]
 
@@ -91,10 +98,10 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
 
       try do
         case action_type do
-          PlatonAppchain.l2_validator_event_action_type()[:ValidatorRegistered] ->
+          @l2_validator_event_action_type_ValidatorRegistered ->
             {result, _} = L2Validator.add_new_validator(repo, validator)
 
-          PlatonAppchain.l2_validator_event_action_type()[:StakeAdded] ->
+          @l2_validator_event_action_type_StakeAdded ->
             {result, _} = repo.update_all(
               #from(v in L2Validator, where: v.validator_hash == ^validator_hash),
               query,
@@ -102,7 +109,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
               timeout: timeout
             )
 
-          PlatonAppchain.l2_validator_event_action_type()[:DelegationAdded]  ->
+          @l2_validator_event_action_type_DelegationAdded ->
             {result, _} = repo.update_all(
               #from(v in L2Validator, where: v.validator_hash == ^validator_hash),
               query,
@@ -110,7 +117,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
               timeout: timeout
             )
 
-          PlatonAppchain.l2_validator_event_action_type()[:UnStaked]  ->
+          @l2_validator_event_action_type_UnStaked ->
             {result, _} = repo.update_all(
               #from(v in L2Validator, where: v.validator_hash == ^validator_hash),
               query,
@@ -118,7 +125,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
               timeout: timeout
             )
 
-          PlatonAppchain.l2_validator_event_action_type()[:UnDelegated]  ->
+          @l2_validator_event_action_type_UnDelegated ->
             {result, _} = repo.update_all(
               #from(v in L2Validator, where: v.validator_hash == ^validator_hash),
               query,
@@ -126,7 +133,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
               timeout: timeout
             )
 
-          PlatonAppchain.l2_validator_event_action_type()[:Slashed]  ->
+          @l2_validator_event_action_type_Slashed ->
             {result, _} = repo.update_all(
               #from(v in L2Validator, where: v.validator_hash == ^validator_hash),
               query,
@@ -134,7 +141,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
               timeout: timeout
             )
 
-          PlatonAppchain.l2_validator_event_action_type()[:UpdateValidatorStatus] ->
+          @l2_validator_event_action_type_UpdateValidatorStatus ->
             {result, _} = repo.update_all(
               from(v in L2Validator, where: v.validator_hash == ^validator_hash, update: [set: [status: ^amount]]), # 在状态变更事件中，amount表示：状态
               timeout: timeout
