@@ -46,14 +46,14 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainController do
       params
       |> paging_options()
       |> Keyword.put(:api?, true)
-      |> Reader.withdrawals()
+      |> Query.withdrawals()
       |> split_list_by_page()
 
     next_page_params = next_page_params(next_page, withdrawals, params)
 
     conn
     |> put_status(200)
-    |> render(:polygon_edge_withdrawals, %{
+    |> render(:platon_appchain_withdrawals, %{
       withdrawals: withdrawals,
       next_page_params: next_page_params
     })
@@ -61,10 +61,10 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainController do
 
   @spec withdrawals_count(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def withdrawals_count(conn, _params) do
-    count = Reader.withdrawals_count(api?: true)
+    count = Query.withdrawals_count(api?: true)
 
     conn
     |> put_status(200)
-    |> render(:polygon_edge_items_count, %{count: count})
+    |> render(:platon_appchain_items_count, %{count: count})
   end
 end

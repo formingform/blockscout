@@ -10,8 +10,7 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
   import Explorer.Chain, only: [default_paging_options: 0, select_repo: 1]
 
   alias Explorer.{PagingOptions, Repo}
-  alias Explorer.Chain.PlatonAppchain.{Commitment}
-  alias Explorer.Chain.PlatonAppchain.{Deposit, DepositExecute, Withdrawal, WithdrawalExit}
+  alias Explorer.Chain.PlatonAppchain.{L1Event, L1Execute,L2Event,L2Execute, Commitment,Checkpoint}
   alias Explorer.Chain.{Block, Hash}
 
   @spec deposits(list()) :: list()
@@ -54,22 +53,28 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
 
     base_query =
       from(
-        w in Withdrawal,
-        left_join: we in WithdrawalExit,
-        on: we.msg_id == w.msg_id,
-        left_join: b in Block,
-        on: b.number == w.l2_block_number and b.consensus == true,
+        l2e in L2Event,
+        left_join: l1e in L1Execute,
+        on: l1e.event_id == l2e.event_id,
+        left_join: c in Checkpoint,
+        on: l1e.checkpoint_hash == c.hash,
         select: %{
-          msg_id: w.msg_id,
-          from: w.from,
-          to: w.to,
-          l2_transaction_hash: w.l2_transaction_hash,
-          l2_timestamp: b.timestamp,
-          success: we.success,
-          l1_transaction_hash: we.l1_transaction_hash
+          epoch: c.epoch,
+          start_block_number: c.start_block_number,
+          end_block_number: c.end_block_number,
+          state_root: c.state_root,
+          event_id: l2e.event_id,
+          from: l2e.from,
+          to: l2e.to,
+          l2_event_hash: l2e.hash,
+          tx_type: l2e.tx_type,
+          block_timestamp: l2e.block_timestamp,
+          checkpoint_hash: l1e.checkpoint_hash,
+          l1_exec_hash: l1e.hash,
+          replay_status: l1e.replay_status
         },
-        where: not is_nil(w.from),
-        order_by: [desc: w.msg_id]
+        where: not is_nil(l2e.from),
+        order_by: [desc: l2e.event_id]
       )
 
     base_query
@@ -78,16 +83,16 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
     |> select_repo(options).all()
   end
 
-#  @spec withdrawals_count(list()) :: term() | nil
-#  def withdrawals_count(options \\ []) do
-#    query =
-#      from(
-#        w in Withdrawal,
-#        where: not is_nil(w.from)
-#      )
-#
-#    select_repo(options).aggregate(query, :count, timeout: :infinity)
-#  end
+  @spec withdrawals_count(list()) :: term() | nil
+  def withdrawals_count(options \\ []) do
+    query =
+      from(
+        l in L2Event,
+        where: not is_nil(l.from)
+      )
+
+    select_repo(options).aggregate(query, :count, timeout: :infinity)
+  end
 
 #  @spec deposit_by_transaction_hash(Hash.t()) :: Ecto.Schema.t() | term() | nil
 #  def deposit_by_transaction_hash(hash) do

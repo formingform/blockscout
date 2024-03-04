@@ -23,7 +23,7 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainView do
     }
   end
 
-  def render("polygon_edge_withdrawals.json", %{
+  def render("platon_appchain_withdrawals.json", %{
         withdrawals: withdrawals,
         next_page_params: next_page_params
       }) do
@@ -31,13 +31,16 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainView do
       items:
         Enum.map(withdrawals, fn withdrawal ->
           %{
-            "msg_id" => withdrawal.msg_id,
+            "no" => withdrawal.epoch,
             "from" => withdrawal.from,
-            "to" => withdrawal.to,
-            "l2_transaction_hash" => withdrawal.l2_transaction_hash,
-            "l2_timestamp" => withdrawal.l2_timestamp,
-            "success" => withdrawal.success,
-            "l1_transaction_hash" => withdrawal.l1_transaction_hash
+            "l2_event_hash" => withdrawal.l2_event_hash,
+            "type" => withdrawal.tx_type,
+            "start_block_number" => withdrawal.start_block_number,
+            "end_block_number" => withdrawal.end_block_number,
+            "checkpoint_hash" => withdrawal.checkpoint_hash,
+            "state_root" => withdrawal.state_root,
+            "l1_exec_hash" => withdrawal.l1_exec_hash,
+            "replay_status" => withdrawal.replay_status
           }
         end),
       next_page_params: next_page_params
