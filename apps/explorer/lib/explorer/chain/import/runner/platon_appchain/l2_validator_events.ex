@@ -5,7 +5,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
   alias Ecto.{Changeset, Multi, Repo}
   alias Explorer.Chain.Import
   alias Explorer.Chain.PlatonAppchain.L2ValidatorEvent
-  alias Explorer.Chain.PlatonAppchain.L2Validator
+  alias Indexer.Fetcher.PlatonAppchain.L2ValidatorService
   alias Explorer.Prometheus.Instrumenter
   alias Indexer.Fetcher.PlatonAppchain
   alias Explorer.Chain.Import.Runner
@@ -88,8 +88,8 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
 
   defp update_l2_validator(repo,l2_validator_events, %{timeout: timeout, timestamps: timestamps}) when length(l2_validator_events) > 0 do
     #Enum.map(l2_validator_events, fn validator ->
-    Enum.each(l2_validator_events, fn validator ->
-      %Explorer.Chain.PlatonAppchain.L2ValidatorEvent{validator_hash: validator_hash, action_type: action_type, amount: amount} = validator
+    Enum.each(l2_validator_events, fn validator_event ->
+      %Explorer.Chain.PlatonAppchain.L2ValidatorEvent{validator_hash: validator_hash, action_type: action_type, amount: amount} = validator_event
       query =
         from(v in L2Validator,
           where: v.validator_hash == ^validator_hash,
@@ -99,7 +99,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
       try do
         case action_type do
           @l2_validator_event_action_type_ValidatorRegistered ->
-            {result, _} = L2Validator.add_new_validator(repo, validator)
+            {result, _} = L2ValidatorService.add_new_validator(repo, validator_hash)
 
           @l2_validator_event_action_type_StakeAdded ->
             {result, _} = repo.update_all(

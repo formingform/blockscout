@@ -15,10 +15,10 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorService do
 
 
   """
-  @spec add_new_validator(binary()) :: {:ok, L2Validator.t()} | {:error, reason :: String.t()}
-  def add_new_validator(validator_hash) do
+  @spec add_new_validator(Repo.t(), binary()) :: {:ok, L2Validator.t()} | {:error, reason :: String.t()}
+  def add_new_validator(repo, validator_hash) do
     newValidatorMap = L2StakeHandler.getValidator(validator_hash)
-    L2Validator.add_new_validator(newValidatorMap)
+    L2Validator.add_new_validator(repo, newValidatorMap)
   end
 
   @spec increase_stake(binary(), integer()) :: {:ok, L2Validator.t()} | {:error, reason :: String.t()}
