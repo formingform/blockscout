@@ -340,8 +340,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
           )
         query
         |> Repo.all(timeout: :infinity)
-        |> Enum.map(fn {index, first_topic, second_topic, third_topic, data, l2_transaction_hash, l2_block_number} ->
-
+        |> Enum.reduce([], fn {index, first_topic, second_topic, third_topic, data, l2_transaction_hash, l2_block_number}, acc ->
+          acc = acc ++
           event_to_l2_validator_events(index, first_topic, second_topic, third_topic, data, l2_transaction_hash, l2_block_number,json_rpc_named_arguments)
         end)
       else
@@ -354,7 +354,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
             100_000_000
           )
 
-         Enum.map(result, fn event ->
+         Enum.reduce(result, [], fn event, acc ->
+            acc = acc ++
             event_to_l2_validator_events(
               event["logIndex"],
               Enum.at(event["topics"], 0),
