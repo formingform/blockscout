@@ -711,6 +711,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
 
       end)
 
+    # 准备下次循环需要处理的L1的区块区间
     new_start_block = last_written_block + 1
     {:ok, new_end_block} = get_block_number_by_tag("latest", json_rpc_named_arguments, 100_000_000)
 
