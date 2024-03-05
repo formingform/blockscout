@@ -42,4 +42,20 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorView do
     }
   end
 
+  def render("his_validators.json", %{
+    his_validators: his_validators,
+    next_page_params: next_page_params
+  }) do
+    %{
+      items:
+        Enum.map(his_validators, fn withdrawal ->
+           %{
+             "validator_hash" => his_validators.validator_hash,
+             "status" => his_validators.status
+           }
+        end),
+      next_page_params: next_page_params
+    }
+  end
+
 end

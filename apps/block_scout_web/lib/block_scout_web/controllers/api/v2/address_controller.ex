@@ -63,6 +63,8 @@ defmodule BlockScoutWeb.API.V2.AddressController do
          {:ok, false} <- AccessHelper.restricted_access?(address_hash_string, params),
          {:not_found, {:ok, address}} <- {:not_found, Chain.hash_to_address(address_hash, @address_options)} do
       CoinBalanceOnDemand.trigger_fetch(address)
+#      TODO
+      IO.puts("================address detail======================")
 
       conn
       |> put_status(200)

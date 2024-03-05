@@ -14,7 +14,7 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorController do
 
   import BlockScoutWeb.PagingHelper, only: [delete_parameters_from_next_page_params: 1, select_validator_status: 1]
 
-  alias Explorer.Chain
+  alias Explorer.Chain.PlatonAppchain.Validator
 
   @transaction_necessity_by_association [
     necessity_by_association: %{
@@ -65,5 +65,23 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorController do
     conn
     |> put_status(200)
     |> render(:l2Validators, %{validator: validators, next_page_params: next_page_params})
+  end
+
+  def his_validators(conn, params) do
+    {his_validators, next_page} =
+      params
+      |> paging_options()
+      |> Keyword.put(:api?, true)
+      |> Validator.his_validators()
+      |> split_list_by_page()
+
+    next_page_params = next_page_params(next_page, his_validators, params)
+
+    conn
+    |> put_status(200)
+    |> render(:his_validators, %{
+      his_validators: his_validators,
+      next_page_params: next_page_params
+    })
   end
 end
