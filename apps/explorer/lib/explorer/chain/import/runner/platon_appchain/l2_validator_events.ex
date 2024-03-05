@@ -4,7 +4,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
 
   alias Ecto.{Changeset, Multi, Repo}
   alias Explorer.Chain.Import
-  alias Explorer.Chain.PlatonAppchain.L2ValidatorEvent
+  alias Explorer.Chain.PlatonAppchain.{L2Validator,L2ValidatorEvent}
   alias Indexer.Fetcher.PlatonAppchain.L2ValidatorService
   alias Explorer.Prometheus.Instrumenter
   alias Indexer.Fetcher.PlatonAppchain
