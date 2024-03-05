@@ -48,7 +48,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L1Event do
 
     env = Application.get_all_env(:indexer)[__MODULE__]
 
-    Subscriber.to(:polygon_edge_reorg_block, :realtime)
+    #Subscriber.to(:platonappchain_reorg_block, :realtime)
 
     PlatonAppchain.init_l1(
       L1Event,
@@ -63,6 +63,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L1Event do
 
   @impl GenServer
   def handle_info(:continue, state) do
+    #handle_continue_l1最终会给本进程发送一个:continue消息，实现循环监听L1
     PlatonAppchain.handle_continue_l1(state, @state_synced_event, __MODULE__, @fetcher_name)
   end
 
