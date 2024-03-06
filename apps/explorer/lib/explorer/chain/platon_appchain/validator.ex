@@ -6,8 +6,25 @@ defmodule Explorer.Chain.PlatonAppchain.Validator do
   import Explorer.Chain, only: [default_paging_options: 0, select_repo: 1]
 
   alias Explorer.{PagingOptions, Repo}
-  alias Explorer.Chain.PlatonAppchain.{L2Validator,L2ValidatorHistory}
+  alias Explorer.Chain.PlatonAppchain.{L2Validator,L2ValidatorHistory,L2ValidatorEvent}
   alias Explorer.Chain.{Block,Address, Hash}
+
+  @typedoc """
+   * `:optional` - the association is optional and only needs to be loaded if available
+   * `:required` - the association is required and MUST be loaded.  If it is not available, then the parent struct
+     SHOULD NOT be returned.
+  """
+  @type necessity :: :optional | :required
+
+  @typedoc """
+  The name of an association on the `t:Ecto.Schema.t/0`
+  """
+  @type association :: atom()
+
+  @type necessity_by_association :: %{association => necessity}
+  @typep necessity_by_association_option :: {:necessity_by_association, necessity_by_association}
+  @type paging_options :: {:paging_options, PagingOptions.t()}
+  @type api? :: {:api?, true | false}
 
   @spec his_validators(list()) :: list()
   def his_validators(options \\ []) do
@@ -43,6 +60,101 @@ defmodule Explorer.Chain.PlatonAppchain.Validator do
       )
 
     Repo.replica().one(query)
+  end
+
+  @spec get_stakings([paging_options | necessity_by_association_option | api?],Hash.Address.t()) :: [L2ValidatorEvent.t()]
+  def get_stakings(options \\ [],%Hash{byte_count: unquote(Hash.Address.byte_count())} = validator_hash_address) when is_list(options) do
+#    necessity_by_association = Keyword.get(options, :necessity_by_association, %{})
+#    paging_options = Keyword.get(options, :paging_options) || @default_paging_options
+#    block_type = Keyword.get(options, :block_type, "Block")
+
+    paging_options = Keyword.get(options, :paging_options, default_paging_options())
+
+    base_query =
+      from(
+        l in L2ValidatorEvent,
+        select: %{
+          hash: l.hash,
+          block_timestamp: l.block_timestamp,
+          block_number: l.block_number,
+          amount: l.amount
+        }
+      )
+
+    base_query
+    |> page_deposits_or_withdrawals(paging_options)
+    |> limit(^paging_options.page_size)
+    |> select_repo(options).all()
+  end
+
+  @spec get_blocks_produced([paging_options | necessity_by_association_option | api?],Hash.Address.t()) :: [Block.t()]
+  def get_blocks_produced(options \\ [],%Hash{byte_count: unquote(Hash.Address.byte_count())} = validator_hash_address) when is_list(options) do
+    #    necessity_by_association = Keyword.get(options, :necessity_by_association, %{})
+    #    paging_options = Keyword.get(options, :paging_options) || @default_paging_options
+    #    block_type = Keyword.get(options, :block_type, "Block")
+
+    paging_options = Keyword.get(options, :paging_options, default_paging_options())
+
+    base_query =
+      from(
+        b in Block,
+        select: %{
+          number: b.number,
+          block_timestamp: b.timestamp,
+          txn: b.size,
+          gas_used: b.gas_used,
+        }
+      )
+
+    base_query
+    |> page_deposits_or_withdrawals(paging_options)
+    |> limit(^paging_options.page_size)
+    |> select_repo(options).all()
+  end
+
+
+  @spec get_validator_action([paging_options | necessity_by_association_option | api?],Hash.Address.t()) :: [L2ValidatorEvent.t()]
+  def get_validator_action(options \\ [],%Hash{byte_count: unquote(Hash.Address.byte_count())} = validator_hash_address) when is_list(options) do
+    #    necessity_by_association = Keyword.get(options, :necessity_by_association, %{})
+    #    paging_options = Keyword.get(options, :paging_options) || @default_paging_options
+    #    block_type = Keyword.get(options, :block_type, "Block")
+
+    paging_options = Keyword.get(options, :paging_options, default_paging_options())
+
+    base_query =
+      from(
+        l in L2ValidatorEvent,
+        select: %{
+          hash: l.hash,
+          block_timestamp: l.block_timestamp,
+          block_number: l.block_number,
+          action_desc: l.action_desc
+        }
+      )
+
+    base_query
+    |> page_deposits_or_withdrawals(paging_options)
+    |> limit(^paging_options.page_size)
+    |> select_repo(options).all()
+  end
+
+  @spec get_delegator([paging_options | necessity_by_association_option | api?],Hash.Address.t()) :: [L2ValidatorEvent.t()]
+  def get_delegator(options \\ [],%Hash{byte_count: unquote(Hash.Address.byte_count())} = validator_hash_address) when is_list(options) do
+    paging_options = Keyword.get(options, :paging_options, default_paging_options())
+
+    base_query =
+      from(
+        l in L2ValidatorEvent,
+        select: %{
+          amount: l.amount,
+          action_desc: l.action_desc
+        }
+      )
+
+    base_query
+    |> page_deposits_or_withdrawals(paging_options)
+    |> limit(^paging_options.page_size)
+    |> select_repo(options).all()
   end
 
 #  @spec deposits_batches_count(list()) :: term() | nil

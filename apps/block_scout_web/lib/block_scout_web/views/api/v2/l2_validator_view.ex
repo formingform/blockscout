@@ -80,4 +80,77 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorView do
     }
   end
 
+  def render("stakings.json", %{
+    stakings: stakings,
+    next_page_params: next_page_params
+  }) do
+    %{
+      items:
+        Enum.map(stakings, fn staking ->
+          %{
+            "tx_hash" => staking.hash,
+            "block_timestamp" => staking.block_timestamp,
+            "block_number" => staking.block_number,
+            "amount" => staking.amount
+          }
+        end),
+      next_page_params: next_page_params
+    }
+  end
+
+  def render("block_produced.json", %{
+    block_produced: block_produced,
+    next_page_params: next_page_params
+  }) do
+    %{
+      items:
+        Enum.map(block_produced, fn block ->
+          %{
+            "number" => block.number,
+            "block_timestamp" => block.block_timestamp,
+            "txn" => block.txn,
+            "gas_used" => block.gas_used,
+            "tx_fee_reward" =>"tx_fee_reward待处理",
+            "block_reward" => "block_reward待处理",
+          }
+        end),
+      next_page_params: next_page_params
+    }
+  end
+
+  def render("validator_actions.json", %{
+    validator_actions: validator_actions,
+    next_page_params: next_page_params
+  }) do
+    %{
+      items:
+        Enum.map(validator_actions, fn action ->
+          %{
+            "tx_hash" => action.hash,
+            "block_timestamp" => action.block_timestamp,
+            "block_number" => action.block_number,
+            "action_desc" => action.action_desc
+          }
+        end),
+      next_page_params: next_page_params
+    }
+  end
+
+  def render("delegators.json", %{
+    delegators: delegators,
+    next_page_params: next_page_params
+  }) do
+    %{
+      items:
+        Enum.map(delegators, fn delegator ->
+         %{
+           "delegator_address" => delegator.action_desc,
+           "amount" => delegator.amount,
+           "percentage" => "待处理"
+         }
+        end),
+      next_page_params: next_page_params
+    }
+  end
+
 end
