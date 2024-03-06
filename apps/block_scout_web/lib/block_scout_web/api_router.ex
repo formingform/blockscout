@@ -258,7 +258,7 @@ defmodule BlockScoutWeb.ApiRouter do
     scope "/validators" do
       get("/", V2.L2ValidatorController, :validators) # 分页获取验证人列表
       get("/his", V2.L2ValidatorController, :his_validators) # 分页获取历史验证人列表
-      get("/", V2.L2ValidatorController, :validator_detail) # 获取验证人详情
+      get("/:validator_hash_param", V2.L2ValidatorController, :validator_details) # 获取验证人详情
       get("/", V2.L2ValidatorController, :staking_events) # Staking Events(质押事件)
       get("/", V2.L2ValidatorController, :blocks_produced) # 出块记录
       get("/", V2.L2ValidatorController, :validator_action) # 验证人操作记录

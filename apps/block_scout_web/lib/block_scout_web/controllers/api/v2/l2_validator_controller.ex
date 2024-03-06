@@ -14,6 +14,7 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorController do
 
   import BlockScoutWeb.PagingHelper, only: [delete_parameters_from_next_page_params: 1, select_validator_status: 1]
 
+  alias Explorer.{Chain}
   alias Explorer.Chain.PlatonAppchain.Validator
 
   @transaction_necessity_by_association [
@@ -83,5 +84,17 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorController do
       his_validators: his_validators,
       next_page_params: next_page_params
     })
+  end
+
+
+  def validator_details(conn, %{"validator_hash_param" => address_hash_string} = params) do
+    IO.puts("=======================validator_details call==========================")
+    with {:format, {:ok, validator_hash_address}} <- {:format, Chain.string_to_address_hash(address_hash_string)} do
+     validator_detail =  Validator.get_validator_details(validator_hash_address)
+
+      conn
+      |> put_status(200)
+      |> render(:validator_details, %{validator_detail: validator_detail})
+    end
   end
 end

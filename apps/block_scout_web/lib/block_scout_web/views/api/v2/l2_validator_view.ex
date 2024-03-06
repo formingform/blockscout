@@ -48,13 +48,35 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorView do
   }) do
     %{
       items:
-        Enum.map(his_validators, fn withdrawal ->
+        Enum.map(his_validators, fn his_validator ->
            %{
-             "validator_hash" => his_validators.validator_hash,
-             "status" => his_validators.status
+             "no" => his_validator.stake_epoch,
+             "validators" => his_validator.validator_hash,
+             "status" => his_validator.status,
+             "exit_block" => his_validator.exit_block,
+             "event" => his_validator.exit_desc
            }
         end),
       next_page_params: next_page_params
+    }
+  end
+
+  # 参考 lib\block_scout_web\views\api\v2\address_view.ex
+  def render("validator_details.json", %{
+    validator_detail: validator_detail
+  }) do
+    %{
+      "owner_address" => validator_detail.owner_hash,
+      "commission" => validator_detail.commission_rate,
+      "website" => validator_detail.website,
+      "detail" => validator_detail.detail,
+      "total_bonded" => "待统计",
+      "self_stakes" => "待统计",
+      "delegations" => validator_detail.delegate_amount,
+      "blocks" => "待统计",
+      "expect_apr" => validator_detail.expect_apr,
+      "total_rewards" => "待统计",    # Decimal.add(validator_detail.stake_reward, validator_detail.delegate_reward),
+      "validator_claimable_rewards" => "待统计"
     }
   end
 

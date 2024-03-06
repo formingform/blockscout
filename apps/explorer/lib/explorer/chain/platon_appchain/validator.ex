@@ -1,17 +1,13 @@
 defmodule Explorer.Chain.PlatonAppchain.Validator do
   @moduledoc "Contains read functions for Platon appchain about validator modules."
 
-  import Ecto.Query,
-    only: [
-      from: 2,
-      limit: 2
-    ]
+  import Ecto.Query, only: [from: 2, where: 3, or_where: 3, union: 2, subquery: 1, order_by: 3, limit: 2]
 
   import Explorer.Chain, only: [default_paging_options: 0, select_repo: 1]
 
   alias Explorer.{PagingOptions, Repo}
-  alias Explorer.Chain.PlatonAppchain.{L2ValidatorHistory}
-  alias Explorer.Chain.{Block, Hash, Transaction}
+  alias Explorer.Chain.PlatonAppchain.{L2Validator,L2ValidatorHistory}
+  alias Explorer.Chain.{Block,Address, Hash}
 
   @spec his_validators(list()) :: list()
   def his_validators(options \\ []) do
@@ -20,13 +16,33 @@ defmodule Explorer.Chain.PlatonAppchain.Validator do
     base_query =
       from(
         h in L2ValidatorHistory,
-        select: %{validator_hash: h.validator_hash, status: h.status}
+        select: %{
+          stake_epoch: h.stake_epoch,
+          validator_hash: h.validator_hash,
+          exit_block: h.exit_block,
+          exit_desc: h.exit_desc,
+          status: h.status
+        }
       )
 
     base_query
     |> page_deposits_or_withdrawals(paging_options)
     |> limit(^paging_options.page_size)
     |> select_repo(options).all()
+  end
+
+  @spec get_validator_details(Hash.Address.t()) :: L2Validator.t() |nil
+  def get_validator_details(%Hash{byte_count: unquote(Hash.Address.byte_count())} = validator_hash_address) do
+
+    query =
+      from(
+        v in L2Validator,
+        where: v.validator_hash == ^validator_hash_address,
+        limit: 1,
+        select: v
+      )
+
+    Repo.replica().one(query)
   end
 
 #  @spec deposits_batches_count(list()) :: term() | nil
