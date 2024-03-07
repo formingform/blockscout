@@ -30,6 +30,7 @@ defmodule Indexer.Block.Fetcher.Receipts do
         {:halt, {:error, reason}}
     end)
     |> case do
+      # receipt_params 包含：%{logs: logs, receipts: receipts}
       {:ok, receipt_params} -> {:ok, set_block_number_to_logs(receipt_params, transaction_params)}
       other -> other
     end
