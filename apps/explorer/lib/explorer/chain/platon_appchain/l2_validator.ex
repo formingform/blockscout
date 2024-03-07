@@ -98,12 +98,27 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
     |> unique_constraint(:validator_hash)
   end
 
-
   def update_changeset(attrs \\ %{}) do
     %__MODULE__{}
     |> cast(attrs, @allowed_attrs)
     |> validate_required(@required_attrs)
     |> unique_constraint(:validator_hash)
+  end
+
+  def update_validator(repo, dataMap) do
+    repo.one(__MODULE__, address: dataMap.validator_hash)
+    |> changeset(dataMap)
+    |> Repo.update!
+  end
+
+  @spec upsert_validator(Ecto.Repo.t(), map()) :: Ecto.Schema.t()
+  def upsert_validator(repo, dataMap) do
+    %__MODULE__{}
+    |> cast(dataMap, @allowed_attrs)  # 确保@allowed_attrs中指定的key才会赋值到结构体中
+    |> repo.insert(
+         on_conflict: :replace_all,
+         conflict_target: [:validator_hash],
+         returning: true)
   end
 
   def add_new_validator(repo, dataMap) do

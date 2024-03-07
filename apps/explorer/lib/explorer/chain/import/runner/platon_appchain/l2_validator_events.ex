@@ -51,7 +51,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
 
   @impl Import.Runner
   @spec run(Multi.t(), list(), map()) :: Multi.t()
-  def run(multi, changes_list, %{timestamps: timestamps} = options) do
+  def run(multi, changes_list, %{timestamps: timestamps} = options) when length(changes_list) > 0 do
     insert_options =
       options
       |> Map.get(option_key(), %{})
@@ -87,75 +87,23 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
       )
     end)
   end
+  def run(multi, changes_list, %{timestamps: timestamps} = options) do
+    #do nothing
+  end
 
-  defp update_l2_validator(repo,l2_validator_events, %{timeout: timeout, timestamps: timestamps}) when length(l2_validator_events) > 0 do
-    #Enum.map(l2_validator_events, fn validator ->
-    Enum.each(l2_validator_events, fn validator_event ->
-      %Explorer.Chain.PlatonAppchain.L2ValidatorEvent{validator_hash: validator_hash, action_type: action_type, amount: amount} = validator_event
-#      query =
-#        from(v in L2Validator,
-#          where: v.validator_hash == ^validator_hash,
-#          lock: "FOR NO KEY UPDATE"
-#        )
-
-      try do
-        case action_type do
-          @l2_validator_event_action_type_ValidatorRegistered ->
-            {result, _} = L2ValidatorService.add_new_validator(repo, Hash.to_string(validator_hash))
-
-          @l2_validator_event_action_type_StakeAdded ->
-            {result, _} = repo.update_all(
-              from(v in L2Validator, where: v.validator_hash == ^validator_hash),
-              #query,
-              [inc: [stake_amount: amount]],
-              timeout: timeout
-            )
-
-          @l2_validator_event_action_type_DelegationAdded ->
-            {result, _} = repo.update_all(
-              from(v in L2Validator, where: v.validator_hash == ^validator_hash),
-              #query,
-              [inc: [delegate_amount: amount]],
-              timeout: timeout
-            )
-
-          @l2_validator_event_action_type_UnStaked ->
-            {result, _} = repo.update_all(
-              from(v in L2Validator, where: v.validator_hash == ^validator_hash),
-              #query,
-              [inc: [stake_amount: 0-amount]],
-              timeout: timeout
-            )
-
-          @l2_validator_event_action_type_UnDelegated ->
-            {result, _} = repo.update_all(
-              from(v in L2Validator, where: v.validator_hash == ^validator_hash),
-              #query,
-              [inc: [delegate_amount: 0-amount]],
-              timeout: timeout
-            )
-
-          @l2_validator_event_action_type_Slashed ->
-            {result, _} = repo.update_all(
-              from(v in L2Validator, where: v.validator_hash == ^validator_hash),
-              #query,
-              [inc: [stake_amount: 0-amount]], # 惩罚金：
-              timeout: timeout
-            )
-
-          @l2_validator_event_action_type_UpdateValidatorStatus ->
-            {result, _} = repo.update_all(
-              from(v in L2Validator, where: v.validator_hash == ^validator_hash, update: [set: [status: ^amount]]), # 在状态变更事件中，amount表示：状态
-              timeout: timeout
-            )
-
-        end
-      rescue
-        postgrex_error in Postgrex.Error ->
-          {:error, %{exception: postgrex_error, validator_hash: validator_hash}}
-      end
+  defp update_l2_validator(repo, l2_validator_events, %{timeout: timeout, timestamps: timestamps}) when length(l2_validator_events) > 0 do
+    validator_hash_list =
+    l2_validator_events
+    |> Enum.reduce([], fn validator_event, acc ->  [validator_event.validator_hash | acc] end)
+    |> Enum.uniq() # 去重
+    # 需要用upsert的模式（insert/update）更新表数据， l2_validators.status是个复合状态
+    Enum.each(validator_hash_list, fn validator_hash ->
+      {result, _} = L2ValidatorService.upsert_validator(repo, Hash.to_string(validator_hash))
     end)
-    {:ok, "update_l2_validator process success"}
+  end
+
+  defp update_l2_validator(repo, l2_validator_events, %{timeout: timeout, timestamps: timestamps}) do
+    #do nothing
   end
 
   @impl Import.Runner

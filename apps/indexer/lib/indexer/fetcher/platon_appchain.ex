@@ -48,12 +48,15 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   end
 
 
-  # 周期类型：roung: 共识周期; epoch：结算周期
+  # 周期类型：round: 共识周期; epoch：结算周期
+  #用户在L1发起，需要同步到L2的交易
   @period_type [round: 1, epoch: 2]
   @l1_events_tx_type [deposit: 1, stake: 2, addStake: 3, delegate: 4]
 
+  #用户在L2发起，需要同步到L1的交易
   @l2_events_tx_type [withdraw: 1, stakeWithdraw: 2, degationWithdraw: 3, slash: 4]
 
+  #L2上发生的业务交易类型，这些业务，可能是因为用户在L1发起的，也可能是在L2发起的，也可能系统发起的
   @l2_validator_event_action_type [ValidatorRegistered: 1, StakeAdded: 2, DelegationAdded: 3, UnStaked: 4, UnDelegated: 5, Slashed: 6, StakeWithdrawalRegistered: 7, StakeWithdrawal: 8, DelegateWithdrawalRegistered: 9, DelegateWithdrawal: 10, UpdateValidatorStatus: 11]
 
   @l2_validator_status [Valid: 0b0000, Invalid: 0b0001, LowBlocks: 0b0010, LowThreshold: 0b0100, Duplicated: 0b1000, Unstaked: 0b00100000, Slashing: 0b01000000]
@@ -294,21 +297,8 @@ defmodule Indexer.Fetcher.PlatonAppchain do
 
 
   @spec get_last_l2_item(module()) :: {non_neg_integer() | nil, binary() | nil}
-  def get_last_l2_item(table) when table in [Explorer.Chain.PlatonAppchain.L2Event, Explorer.Chain.PlatonAppchain.L2Execute] do
-    query =
-      from(item in table,
-        select: {item.block_number, item.hash},
-        order_by: [desc: item.event_id],
-        limit: 1
-      )
-
-    query
-    |> Repo.one()
-    |> Kernel.||({0, nil})
-  end
-
-  @spec get_last_l2_item(module()) :: {non_neg_integer() | nil, binary() | nil}
-  def get_last_l2_item(table) when table in [Explorer.Chain.PlatonAppchain.L2ValidatorEvent, Explorer.Chain.PlatonAppchain.Commitment] do
+  def get_last_l2_item(table) when table in [Explorer.Chain.PlatonAppchain.L2Event, Explorer.Chain.PlatonAppchain.L2Execute, Explorer.Chain.PlatonAppchain.L2ValidatorEvent, Explorer.Chain.PlatonAppchain.Commitment] do
+    #实际上可以取max(number) in blocks
     query =
       from(item in table,
         select: {item.block_number, item.hash},
@@ -316,10 +306,31 @@ defmodule Indexer.Fetcher.PlatonAppchain do
         limit: 1
       )
 
+    {block_number, hash} =
     query
     |> Repo.one()
     |> Kernel.||({0, nil})
+
+    if block_number == 0 do
+      {block_number, hash}
+    else
+      {block_number+1, hash}
+    end
   end
+
+#  @spec get_last_l2_item(module()) :: {non_neg_integer() | nil, binary() | nil}
+#  def get_last_l2_item(table) when table in [Explorer.Chain.PlatonAppchain.L2ValidatorEvent, Explorer.Chain.PlatonAppchain.Commitment] do
+#    query =
+#      from(item in table,
+#        select: {item.block_number, item.hash},
+#        order_by: [desc: item.block_number],
+#        limit: 1
+#      )
+#
+#    query
+#    |> Repo.one()
+#    |> Kernel.||({0, nil})
+#  end
 
 
   defp get_block_check_interval(json_rpc_named_arguments) do
@@ -599,22 +610,24 @@ defmodule Indexer.Fetcher.PlatonAppchain do
          start_block_l2 = parse_integer(env[:start_block_l2]),
          false <- is_nil(start_block_l2),
          true <- start_block_l2 > 0,
-         {last_l2_block_number, last_l2_transaction_hash} <- get_last_l2_item(table),
+         #{last_l2_block_number, last_l2_transaction_hash} <- get_last_l2_item(table),  #取数据库库相应表的最大区块
+         {last_l2_block_number, _last_l2_transaction_hash} <- get_last_l2_item(table),  #取数据库库相应表的最大区块，这里返回的number是+1的，和_last_l2_transaction_hash不匹配。
          {safe_block, safe_block_is_latest} = get_safe_block(json_rpc_named_arguments),
          {:start_block_l2_valid, true} <-
            {:start_block_l2_valid,
-             (start_block_l2 <= last_l2_block_number || last_l2_block_number == 0) && start_block_l2 <= safe_block},
-         {:ok, last_l2_tx} <- get_transaction_by_hash(last_l2_transaction_hash, json_rpc_named_arguments, 100_000_000),
-         {:l2_tx_not_found, false} <- {:l2_tx_not_found, !is_nil(last_l2_transaction_hash) && is_nil(last_l2_tx)} do
+             (start_block_l2 <= last_l2_block_number || last_l2_block_number == 0) && start_block_l2 <= safe_block} do
+#         不需要校验最后的交易
+#         {:ok, last_l2_tx} <- get_transaction_by_hash(last_l2_transaction_hash, json_rpc_named_arguments, 100_000_000),
+#         {:l2_tx_not_found, false} <- {:l2_tx_not_found, !is_nil(last_l2_transaction_hash) && is_nil(last_l2_tx)} do
 
       Process.send(pid, :continue, [])
 
       {:ok,
         %{
-          start_block: max(start_block_l2, last_l2_block_number),
-          start_block_l2: start_block_l2,
-          safe_block: safe_block,
-          safe_block_is_latest: safe_block_is_latest,
+          start_block: max(start_block_l2, last_l2_block_number), #配置的起始区块，和表里最大区块，取其中大者；在实际运行中，如果系统停止后重启
+          start_block_l2: start_block_l2, #配置的起始区块
+          safe_block: safe_block, #当前链上最大区块
+          safe_block_is_latest: safe_block_is_latest, #platon是true
           contract_address: contract_address,
           json_rpc_named_arguments: json_rpc_named_arguments
         }}
@@ -805,7 +818,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
 
     chunk_range = Range.new(0, max(chunks_number - 1, 0), 1)
 
-    Enum.reduce(chunk_range, 0, fn current_chunk, count_acc ->
+    stream = Task.async_stream(chunk_range, fn current_chunk ->
       chunk_start = l2_block_start + eth_get_logs_range_size * current_chunk
 
       chunk_end =
@@ -816,6 +829,8 @@ defmodule Indexer.Fetcher.PlatonAppchain do
         end
 
       log_blocks_chunk_handling(chunk_start, chunk_end, l2_block_start, l2_block_end, nil, "L2")
+
+      Logger.debug(fn -> "fill block range from:#{inspect(chunk_start)} to:#{inspect(chunk_end)} in concurrently" end,logger: :platon_appchain)
 
       count =
         calling_module.find_and_save_entities(
@@ -840,9 +855,50 @@ defmodule Indexer.Fetcher.PlatonAppchain do
         "#{count} #{event_name} event(s)",
         "L2"
       )
-
-      count_acc + count
+      count
     end)
+
+    # 最终返回acc，累计多少count
+    Enum.reduce(stream, 0, fn {:ok, count}, acc -> count + acc end)
+
+#    Enum.reduce(chunk_range, 0, fn current_chunk, count_acc ->
+#      chunk_start = l2_block_start + eth_get_logs_range_size * current_chunk
+#
+#      chunk_end =
+#        if scan_db do
+#          l2_block_end
+#        else
+#          min(chunk_start + eth_get_logs_range_size - 1, l2_block_end)
+#        end
+#
+#      log_blocks_chunk_handling(chunk_start, chunk_end, l2_block_start, l2_block_end, nil, "L2")
+#
+#      count =
+#        calling_module.find_and_save_entities(
+#          scan_db,
+#          contract_address,
+#          chunk_start,
+#          chunk_end,
+#          json_rpc_named_arguments
+#        )
+#      event_name = cond do
+#        calling_module == L2Execute -> "StateSyncResult"
+#        calling_module == Commitment -> "NewCommitment"
+#        calling_module == L2Event -> "L2StateSynced"
+#        calling_module == L2ValidatorEvent -> "L2StakeEvent"
+#      end
+#
+#      log_blocks_chunk_handling(
+#        chunk_start,
+#        chunk_end,
+#        l2_block_start,
+#        l2_block_end,
+#        "#{count} #{event_name} event(s)",
+#        "L2"
+#      )
+#
+#      count_acc + count
+#    end)
   end
 
   @spec fill_block_range_no_event_id(integer(), integer(), {module(), module()}, binary(), list()) :: integer()
