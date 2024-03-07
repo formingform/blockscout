@@ -123,4 +123,32 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainController do
     |> put_status(200)
     |> render(:platon_appchain_items_count, %{count: count})
   end
+
+  @spec withdrawals_batches_tx(Plug.Conn.t(), map()) :: Plug.Conn.t()
+  def withdrawals_batches_tx(conn, params) do
+    {withdrawals, next_page} =
+      params
+      |> paging_options()
+      |> Keyword.put(:api?, true)
+      |> Query.withdrawals_batches_tx()
+      |> split_list_by_page()
+
+    next_page_params = next_page_params(next_page, withdrawals, params)
+
+    conn
+    |> put_status(200)
+    |> render(:platon_appchain_withdrawals_batches_tx, %{
+      withdrawals: withdrawals,
+      next_page_params: next_page_params
+    })
+  end
+
+  @spec withdrawals_batches_count(Plug.Conn.t(), map()) :: Plug.Conn.t()
+  def withdrawals_batches_count(conn, _params) do
+    count = Query.withdrawals_batches_count(api?: true)
+
+    conn
+    |> put_status(200)
+    |> render(:platon_appchain_items_count, %{count: count})
+  end
 end

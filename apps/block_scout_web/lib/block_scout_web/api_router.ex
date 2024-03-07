@@ -257,13 +257,13 @@ defmodule BlockScoutWeb.ApiRouter do
     # 验证人相关接口（待调整）
     scope "/validators" do
       get("/", V2.L2ValidatorController, :validators) # 分页获取验证人列表
-      get("/", V2.L2ValidatorController, :validators_his) # 分页获取历史验证人列表
-      get("/", V2.L2ValidatorController, :validator_detail) # 获取验证人详情
-      get("/", V2.L2ValidatorController, :staking_events) # Staking Events(质押事件)
-      get("/", V2.L2ValidatorController, :blocks_produced) # 出块记录
-      get("/", V2.L2ValidatorController, :validator_action) # 验证人操作记录
-      get("/", V2.L2ValidatorController, :delegator) # 有效委托
+      get("/his", V2.L2ValidatorController, :his_validators) # 分页获取历史验证人列表
+      get("/staking", V2.L2ValidatorController, :staking) # 验证人质押
+      get("/blocks-produced", V2.L2ValidatorController, :blocks_produced) # 出块记录
+      get("/validator-action", V2.L2ValidatorController, :validator_action) # 验证人操作事件
+      get("/delegator", V2.L2ValidatorController, :delegator) # 委托记录
       put("/verification/", V2.L2ValidatorController, :update_verification) #提交验证人信息
+      get("/:validator_hash_param", V2.L2ValidatorController, :validator_details) # 获取验证人详情
     end
 
     scope "/main-page" do
@@ -307,6 +307,7 @@ defmodule BlockScoutWeb.ApiRouter do
         get("/withdrawals/count", V2.PlatonAppchainController, :withdrawals_count)
         get("/withdrawals-batches", V2.PlatonAppchainController, :withdrawals_batches)
         get("/withdrawals-batches/count", V2.PlatonAppchainController, :withdrawals_batches_count)
+        get("/withdrawals/batches-tx", V2.PlatonAppchainController, :withdrawals_batches_tx)
       end
     end
 

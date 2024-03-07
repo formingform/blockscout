@@ -92,6 +92,29 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainView do
     }
   end
 
+
+  def render("platon_appchain_withdrawals_batches_tx.json", %{
+    withdrawals: withdrawals,
+    next_page_params: next_page_params
+  }) do
+    %{
+      items:
+        Enum.map(withdrawals, fn withdrawal ->
+          %{
+            "txn_hash" => withdrawal.hash,
+            "type" => withdrawal.type,
+            "method" =>  withdrawal.input,# 待转换
+            "block" => withdrawal.block_number,
+            "from" => withdrawal.from,
+            "to" => withdrawal.to,
+            "value" => withdrawal.value,
+            "fee" => withdrawal.fee
+          }
+        end),
+      next_page_params: next_page_params
+    }
+  end
+
   def render("platon_appchain_items_count.json", %{count: count}) do
     count
   end

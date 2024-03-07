@@ -355,6 +355,20 @@ defmodule BlockScoutWeb.Chain do
     end
   end
 
+  def paging_options(%{
+    "start_block_number" => start_block_number_string,
+    "end_block_number" => end_block_number_string
+  })
+      when is_binary(start_block_number_string) and is_binary(end_block_number_string) do
+    with {start_block_number, ""} <- Integer.parse(start_block_number_string),
+         {end_block_number, ""} <- Integer.parse(end_block_number_string) do
+      [paging_options: %{@default_paging_options | key: {start_block_number, end_block_number}}]
+    else
+      _ ->
+        [paging_options: @default_paging_options]
+    end
+  end
+
   def paging_options(%{"smart_contract_id" => id}) do
     [paging_options: %{@default_paging_options | key: {id}}]
   end

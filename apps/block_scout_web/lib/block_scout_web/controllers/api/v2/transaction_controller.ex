@@ -74,6 +74,8 @@ defmodule BlockScoutWeb.API.V2.TransactionController do
   """
   @spec transaction(Plug.Conn.t(), map()) :: Plug.Conn.t() | {atom(), any()}
   def transaction(conn, %{"transaction_hash_param" => transaction_hash_string} = params) do
+    #      TODO
+    IO.puts("================transaction detail======================")
     necessity_by_association_with_actions =
       Map.put(@transaction_necessity_by_association, :transaction_actions, :optional)
 

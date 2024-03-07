@@ -11,7 +11,7 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
 
   alias Explorer.{PagingOptions, Repo}
   alias Explorer.Chain.PlatonAppchain.{L1Event, L1Execute,L2Event,L2Execute, Commitment,Checkpoint}
-  alias Explorer.Chain.{Block, Hash}
+  alias Explorer.Chain.{Block, Hash, Transaction}
 
   @spec deposits(list()) :: list()
   def deposits(options \\ []) do
@@ -195,6 +195,51 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
       from(
         c in Checkpoint,
         where: not is_nil(c.block_timestamp)
+      )
+
+    select_repo(options).aggregate(query, :count, timeout: :infinity)
+  end
+
+
+  @spec withdrawals_batches_tx(list()) :: list()
+  def withdrawals_batches_tx(options \\ []) do
+    paging_options = Keyword.get(options, :paging_options, default_paging_options())
+    %PagingOptions{key: {start_block_number, end_block_number}} = paging_options
+
+    base_query =
+      from(
+        l2e in L2Event,
+        inner_join: t in Transaction,
+        on: l2e.hash == t.hash,
+        select: %{
+          hash: l2e.hash,
+          type: t.type,
+          block_number: l2e.block_number,
+          input: t.input,
+          from: l2e.from,
+          to: l2e.to,
+          value: t.value,
+          fee: t.gas_price*t.gas_used
+        },
+        where: l2e.block_number >= ^start_block_number,
+        where: l2e.block_number <= ^end_block_number,
+        order_by: [desc: l2e.block_number]
+      )
+
+    base_query
+#    |> page_deposits_or_withdrawals(paging_options)
+    |> limit(^paging_options.page_size)
+    |> select_repo(options).all()
+  end
+
+  @spec withdrawals_batches_tx_count(list()) :: term() | nil
+  def withdrawals_batches_tx_count(options \\ []) do
+    query =
+      from(
+        l2e in L2Event,
+        join: t in Transaction,
+        on: l2e.hash == t.hash,
+        where: not is_nil(l2e.block_number)
       )
 
     select_repo(options).aggregate(query, :count, timeout: :infinity)
