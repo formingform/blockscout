@@ -100,7 +100,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
     Enum.each(validator_hash_list, fn validator_hash ->
       case L2ValidatorService.upsert_validator(repo, Hash.to_string(validator_hash)) do
         {:ok, _result} -> :ok
-        {:error, _reason} -> {:error, "Failed to update validator"}
+        {:error, _reason} -> throw({:error, "expected update l2 validator fail"})
       end
     end)
     {:ok, "Validators updated successfully"}
