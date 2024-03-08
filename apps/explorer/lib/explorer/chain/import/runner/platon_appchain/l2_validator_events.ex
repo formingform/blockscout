@@ -98,8 +98,12 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
     |> Enum.uniq() # 去重
     # 需要用upsert的模式（insert/update）更新表数据， l2_validators.status是个复合状态
     Enum.each(validator_hash_list, fn validator_hash ->
-      {result, _} = L2ValidatorService.upsert_validator(repo, Hash.to_string(validator_hash))
+      case L2ValidatorService.upsert_validator(repo, Hash.to_string(validator_hash)) do
+        {:ok, _result} -> :ok
+        {:error, _reason} -> {:error, "Failed to update validator"}
+      end
     end)
+    {:ok, "Validators updated successfully"}
   end
 
   defp update_l2_validator(repo, l2_validator_events, %{timeout: timeout, timestamps: timestamps}) do
