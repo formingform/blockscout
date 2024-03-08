@@ -818,50 +818,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
 
     chunk_range = Range.new(0, max(chunks_number - 1, 0), 1)
 
-    stream = Task.async_stream(chunk_range, fn current_chunk ->
-      chunk_start = l2_block_start + eth_get_logs_range_size * current_chunk
-
-      chunk_end =
-        if scan_db do
-          l2_block_end
-        else
-          min(chunk_start + eth_get_logs_range_size - 1, l2_block_end)
-        end
-
-      log_blocks_chunk_handling(chunk_start, chunk_end, l2_block_start, l2_block_end, nil, "L2")
-
-      Logger.debug(fn -> "fill block range from:#{inspect(chunk_start)} to:#{inspect(chunk_end)} in concurrently" end,logger: :platon_appchain)
-
-      count =
-        calling_module.find_and_save_entities(
-          scan_db,
-          contract_address,
-          chunk_start,
-          chunk_end,
-          json_rpc_named_arguments
-        )
-      event_name = cond do
-        calling_module == L2Execute -> "StateSyncResult"
-        calling_module == Commitment -> "NewCommitment"
-        calling_module == L2Event -> "L2StateSynced"
-        calling_module == L2ValidatorEvent -> "L2StakeEvent"
-      end
-
-      log_blocks_chunk_handling(
-        chunk_start,
-        chunk_end,
-        l2_block_start,
-        l2_block_end,
-        "#{count} #{event_name} event(s)",
-        "L2"
-      )
-      count
-    end)
-
-    # 最终返回acc，累计多少count
-    Enum.reduce(stream, 0, fn {:ok, count}, acc -> count + acc end)
-
-#    Enum.reduce(chunk_range, 0, fn current_chunk, count_acc ->
+#    stream = Task.async_stream(chunk_range, fn current_chunk ->
 #      chunk_start = l2_block_start + eth_get_logs_range_size * current_chunk
 #
 #      chunk_end =
@@ -872,6 +829,8 @@ defmodule Indexer.Fetcher.PlatonAppchain do
 #        end
 #
 #      log_blocks_chunk_handling(chunk_start, chunk_end, l2_block_start, l2_block_end, nil, "L2")
+#
+#      Logger.debug(fn -> "fill block range from:#{inspect(chunk_start)} to:#{inspect(chunk_end)} in concurrently" end,logger: :platon_appchain)
 #
 #      count =
 #        calling_module.find_and_save_entities(
@@ -896,13 +855,55 @@ defmodule Indexer.Fetcher.PlatonAppchain do
 #        "#{count} #{event_name} event(s)",
 #        "L2"
 #      )
-#
-#      count_acc + count
+#      count
 #    end)
+#
+#    # 最终返回acc，累计多少count
+#    Enum.reduce(stream, 0, fn {:ok, count}, acc -> count + acc end)
+
+    Enum.reduce(chunk_range, 0, fn current_chunk, count_acc ->
+      chunk_start = l2_block_start + eth_get_logs_range_size * current_chunk
+
+      chunk_end =
+        if scan_db do
+          l2_block_end
+        else
+          min(chunk_start + eth_get_logs_range_size - 1, l2_block_end)
+        end
+
+      log_blocks_chunk_handling(chunk_start, chunk_end, l2_block_start, l2_block_end, nil, "L2")
+
+      count =
+        calling_module.find_and_save_entities(
+          scan_db,
+          contract_address,
+          chunk_start,
+          chunk_end,
+          json_rpc_named_arguments
+        )
+      event_name = cond do
+        calling_module == L2Execute -> "StateSyncResult"
+        calling_module == Commitment -> "NewCommitment"
+        calling_module == L2Event -> "L2StateSynced"
+        calling_module == L2ValidatorEvent -> "L2StakeEvent"
+      end
+
+      log_blocks_chunk_handling(
+        chunk_start,
+        chunk_end,
+        l2_block_start,
+        l2_block_end,
+        "#{count} #{event_name} event(s)",
+        "L2"
+      )
+
+      count_acc + count
+    end)
   end
 
   @spec fill_block_range_no_event_id(integer(), integer(), {module(), module()}, binary(), list()) :: integer()
   def fill_block_range_no_event_id(start_block, end_block, {module, table}, contract_address, json_rpc_named_arguments) do
+    # 首先尝试从logs.种获取数据
     fill_block_range(start_block, end_block, module, contract_address, json_rpc_named_arguments, true)
 
     {last_l2_block_number, _} = get_last_l2_item(table)
