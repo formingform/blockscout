@@ -111,7 +111,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
     |> Repo.update!
   end
 
-  @spec upsert_validator(Ecto.Repo.t(), map()) :: Ecto.Schema.t()
+  @spec upsert_validator(Ecto.Repo.t(), map()) :: {:ok, Ecto.Schema.t()} | {:eroror, reason :: String.t()}
   def upsert_validator(repo, dataMap) do
     %__MODULE__{}
     |> cast(dataMap, @allowed_attrs)  # 确保@allowed_attrs中指定的key才会赋值到结构体中
