@@ -10,7 +10,7 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainView do
       items:
         Enum.map(commitments, fn commitments ->
           %{
-            "no" => commitments.tx_number,
+            "no" => commitments.event_id,
             "l1_txn_hash" => commitments.l1_txn_hash,
             "tx_type" => commitments.tx_type,
             "block_timestamp" => commitments.block_timestamp,

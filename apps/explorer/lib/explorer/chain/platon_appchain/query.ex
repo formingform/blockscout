@@ -1,6 +1,8 @@
 defmodule Explorer.Chain.PlatonAppchain.Query do
   @moduledoc "Contains read functions for Platon appchain modules."
 
+  require Logger
+
   import Ecto.Query,
     only: [
       from: 2,
@@ -25,7 +27,7 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
         left_join: c in Commitment,
         on: l2e.commitment_hash == c.hash,
         select: %{
-          tx_number: c.tx_number,
+          event_id: l1e.event_id,
           l1_txn_hash: l1e.hash,
           tx_type: l1e.tx_type,
           block_timestamp: l1e.block_timestamp,
@@ -287,7 +289,8 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
 
   defp page_deposits_or_withdrawals(query, %PagingOptions{key: nil}), do: query
 
-  defp page_deposits_or_withdrawals(query, %PagingOptions{key: {block_number}}) do
-    from(item in query, where: item.block_number < ^block_number)
+  defp page_deposits_or_withdrawals(query, %PagingOptions{key: {no}}) do
+    Logger.error(fn -> "no  ==============#{inspect(no)}==========================)" end)
+    from(item in query, where: item.event_id < ^no)
   end
 end

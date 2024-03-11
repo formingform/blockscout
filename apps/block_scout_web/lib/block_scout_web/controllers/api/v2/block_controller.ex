@@ -1,6 +1,8 @@
 defmodule BlockScoutWeb.API.V2.BlockController do
   use BlockScoutWeb, :controller
 
+  require Logger
+
   import BlockScoutWeb.Chain,
     only: [
       next_page_params: 3,
@@ -76,6 +78,12 @@ defmodule BlockScoutWeb.API.V2.BlockController do
       |> Chain.list_blocks()
 
     {blocks, next_page} = split_list_by_page(blocks_plus_one)
+    Logger.info(fn -> "================blocks: #{inspect(blocks)}" end ,
+      logger: :platon_appchain
+    )
+    Logger.info(fn -> "================next_page: #{inspect(next_page)}" end ,
+      logger: :platon_appchain
+    )
 
     next_page_params = next_page |> next_page_params(blocks, delete_parameters_from_next_page_params(params))
 
