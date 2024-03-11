@@ -139,16 +139,31 @@ defmodule Indexer.Supervisor do
          [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
         {Indexer.Fetcher.PolygonEdge.WithdrawalExit.Supervisor, [[memory_monitor: memory_monitor]]},
 
-        # for PlatonAppchain, json_rpc_named_arguments only for L2
-        {PlatonAppchain.Supervisor, [[memory_monitor: memory_monitor]]},
-        {Indexer.Fetcher.PlatonAppchain.L1Event.Supervisor, [[memory_monitor: memory_monitor]]},
-        {Indexer.Fetcher.PlatonAppchain.L1Execute.Supervisor, [[memory_monitor: memory_monitor]]},
-        {Indexer.Fetcher.PlatonAppchain.Checkpoint.Supervisor, [[memory_monitor: memory_monitor]]},
-        {Indexer.Fetcher.PlatonAppchain.L2Event.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
-        {Indexer.Fetcher.PlatonAppchain.Commitment.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
-        {Indexer.Fetcher.PlatonAppchain.L2Execute.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
-        {Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
-        {Indexer.Fetcher.PlatonAppchain.L2ValidatorRank.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
+        # for PlatonAppchain fetcher，有config/runtime.exs来控制是否要运行, json_rpc_named_arguments only for L2。
+        configure(PlatonAppchain.Supervisor, [
+          [memory_monitor: memory_monitor]
+        ]),
+        configure(Indexer.Fetcher.PlatonAppchain.L1Event.Supervisor, [
+          [memory_monitor: memory_monitor]
+        ]),
+        configure(Indexer.Fetcher.PlatonAppchain.L1Execute.Supervisor, [
+          [memory_monitor: memory_monitor]
+        ]),
+        configure(Indexer.Fetcher.PlatonAppchain.Checkpoint.Supervisor, [
+          [memory_monitor: memory_monitor]
+        ]),
+        configure(Indexer.Fetcher.PlatonAppchain.Checkpoint.Supervisor, [
+          [memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]
+        ]),
+        #{PlatonAppchain.Supervisor, [[memory_monitor: memory_monitor]]},
+        #{Indexer.Fetcher.PlatonAppchain.L1Event.Supervisor, [[memory_monitor: memory_monitor]]},
+        #{Indexer.Fetcher.PlatonAppchain.L1Execute.Supervisor, [[memory_monitor: memory_monitor]]},
+        #{Indexer.Fetcher.PlatonAppchain.Checkpoint.Supervisor, [[memory_monitor: memory_monitor]]},
+        # {Indexer.Fetcher.PlatonAppchain.L2Event.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
+        # {Indexer.Fetcher.PlatonAppchain.Commitment.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
+        # {Indexer.Fetcher.PlatonAppchain.L2Execute.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
+        # {Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
+        #{Indexer.Fetcher.PlatonAppchain.L2ValidatorRank.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
 
         configure(TransactionBatch.Supervisor, [
           [json_rpc_named_arguments: json_rpc_named_arguments, memory_monitor: memory_monitor]
