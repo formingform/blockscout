@@ -131,17 +131,10 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
     Repo.delete_all(from(de in Commitment, where: de.block_number >= ^starting_block))
   end
 
-  @spec event_to_commitment(boolean(), binary(), binary(),  binary(), binary(), non_neg_integer(), list()) :: map()
-  def event_to_commitment(scan_db, second_topic, third_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
+  @spec event_to_commitment( binary(), binary(),  binary(), binary(), non_neg_integer(), list()) :: map()
+  def event_to_commitment(second_topic, third_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
     Logger.debug(fn -> "convert event to commitment, log.data: #{inspect(data)}" end, logger: :platon_appchain)
     stateRoot = data
-#      if scan_db do
-#        %Explorer.Chain.Data{bytes: data_byte} = data
-#        data_byte
-#      else
-#        [data_byte] = decode_data(data, [:bytes])
-#        data_byte
-#      end
 
     startId = quantity_to_integer(second_topic)
     endId = quantity_to_integer(third_topic)
