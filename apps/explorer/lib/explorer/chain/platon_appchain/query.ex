@@ -90,11 +90,11 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
           from: c.from,
           tx_number: d.tx_number
         },
-        order_by: [desc: c.block_timestamp]
+        order_by: [desc: c.block_number]
       )
 
     base_query
-    |> page_deposits_or_withdrawals(paging_options)
+    |> page_deposits_or_withdrawals_batch(paging_options)
     |> limit(^paging_options.page_size)
     |> select_repo(options).all()
   end
@@ -184,9 +184,8 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
         order_by: [desc: c.block_timestamp]
       )
 
-
     base_query
-    |> page_deposits_or_withdrawals(paging_options)
+    |> page_deposits_or_withdrawals_batch(paging_options)
     |> limit(^paging_options.page_size)
     |> select_repo(options).all()
   end
@@ -251,5 +250,11 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
 
   defp page_deposits_or_withdrawals(query, %PagingOptions{key: {no}}) do
     from(item in query, where: item.event_id < ^no)
+  end
+
+  defp page_deposits_or_withdrawals_batch(query, %PagingOptions{key: nil}), do: query
+
+  defp page_deposits_or_withdrawals_batch(query, %PagingOptions{key: {number}}) do
+    from(item in query, where: item.block_number < ^number)
   end
 end
