@@ -1,7 +1,9 @@
 defmodule Explorer.Repo do
   use Ecto.Repo,
     otp_app: :explorer,
-    adapter: Ecto.Adapters.Postgres
+    adapter: Ecto.Adapters.Postgres,
+    queue_target: 5000,
+    queue_interval: 1000
 
   require Logger
 
@@ -206,7 +208,9 @@ defmodule Explorer.Repo do
   defmodule PlatonAppchain do
     use Ecto.Repo,
         otp_app: :explorer,
-        adapter: Ecto.Adapters.Postgres
+        adapter: Ecto.Adapters.Postgres,
+        queue_target: 5000,
+        queue_interval: 1000
 
     def init(_, opts) do
       db_url = Application.get_env(:explorer, Explorer.Repo.PlatonAppchain)[:url]

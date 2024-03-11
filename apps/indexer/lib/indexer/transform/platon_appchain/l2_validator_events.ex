@@ -29,10 +29,10 @@ defmodule Indexer.Transform.PlatonAppchain.L2ValidatorEvents do
           !is_nil(log.first_topic) && Enum.member?(event_signatures, String.downcase(log.first_topic)) &&
             String.downcase(Helper.address_hash_to_string(log.address_hash)) == l2_stake_handler
         end)
-        |> Enum.map(fn log ->
+        |> Enum.reduce([], fn log, acc ->
           Logger.info("L2 (Stake Event) message found, validator: #{log.second_topic}.")
 
-          L2ValidatorEvent.event_to_l2_validator_events(
+          acc ++ L2ValidatorEvent.event_to_l2_validator_events(
             log.index,
             log.first_topic,
             log.second_topic,

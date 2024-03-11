@@ -590,12 +590,12 @@ config :indexer, Indexer.Fetcher.Withdrawal, first_block: System.get_env("WITHDR
 config :indexer, Indexer.Fetcher.PlatonAppchain.Supervisor, disabled?: !(chain_type == "platon_appchain")
 
 config :indexer, Indexer.Fetcher.PlatonAppchain.L1Event.Supervisor, disabled?: !(chain_type == "platon_appchain")
-config :indexer, Indexer.Fetcher.PlatonAppchain.Commitment.Supervisor, disabled?: !(chain_type == "platon_appchain")
+#config :indexer, Indexer.Fetcher.PlatonAppchain.Commitment.Supervisor, disabled?: (chain_type == "platon_appchain")
 config :indexer, Indexer.Fetcher.PlatonAppchain.L1Execute.Supervisor, disabled?: !(chain_type == "platon_appchain")
-config :indexer, Indexer.Fetcher.PlatonAppchain.L2Event.Supervisor, disabled?: !(chain_type == "platon_appchain")
-config :indexer, Indexer.Fetcher.PlatonAppchain.L2Execute.Supervisor, disabled?: !(chain_type == "platon_appchain")
+#config :indexer, Indexer.Fetcher.PlatonAppchain.L2Event.Supervisor, disabled?: (chain_type == "platon_appchain")
+#config :indexer, Indexer.Fetcher.PlatonAppchain.L2Execute.Supervisor, disabled?: (chain_type == "platon_appchain")
 config :indexer, Indexer.Fetcher.PlatonAppchain.Checkpoint.Supervisor, disabled?: !(chain_type == "platon_appchain")
-config :indexer, Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent.Supervisor, disabled?: !(chain_type == "platon_appchain")
+#config :indexer, Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent.Supervisor, disabled?: (chain_type == "platon_appchain")
 config :indexer, Indexer.Fetcher.PlatonAppchain.L2ValidatorRank.Supervisor, disabled?: !(chain_type == "platon_appchain")
 
 # 配置 Indexer.Fetcher.PlatonAppchain 级别的环境参数

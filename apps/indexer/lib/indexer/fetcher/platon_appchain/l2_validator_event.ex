@@ -156,7 +156,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
 
   # 返回一个map的list(处理slash需要返回一个list)
   # 返回一个map
-  @spec event_to_l2_validator_events(non_neg_integer(), binary(), binary(), binary(), binary(), binary(), non_neg_integer(), list()) :: map()
+  @spec event_to_l2_validator_events(non_neg_integer(), binary(), binary(), binary(), binary(), binary(), non_neg_integer(), list()) :: [map()]
   def event_to_l2_validator_events(log_index, first_topic, second_topic, third_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
     data_bytes =
       case data do
@@ -164,6 +164,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
           %Explorer.Chain.Data{bytes: data_byte} = data
           data_byte
         _ ->
+          Logger.debug(fn -> "convert event_to_l2_validator_events, data: #{inspect(data)}, amount: #{quantity_to_integer(data)}" end,logger: :platon_appchain)
+
           [data_byte] = decode_data(data, [:bytes])
           data_byte
       end
@@ -177,7 +179,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
       case first_topic do
         @l2_biz_event_ValidatorRegistered ->
           [owner, commission_rate, _pubKey, _blsKey] = TypeDecoder.decode_raw(data_bytes, [:address, {:uint, 256}, :bytes, :bytes])
-
+          Logger.debug(fn -> "convert ValidatorRegistered log.data: owner: #{owner},  commission_rate: #{commission_rate}" end,logger: :platon_appchain)
           # 增加L2_validator记录
           # second_topic，需要记录到topic的数据，如果长度>32字节，则取数据的hash，并把hash放入topic，如果数据长度<=32字节，则左补零后放入topic
           validator_hash = Base.decode16!(String.slice(second_topic, -40..-1), case: :mixed)
@@ -196,6 +198,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
 
         @l2_biz_event_StakeAdded ->
           [amount] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
+          Logger.debug(fn -> "convert StakeAdded log.data: amount: #{amount}" end,logger: :platon_appchain)
           # 更新L2_validator记录，增加质押金额
           validator_hash =  Base.decode16!(String.slice(second_topic, -40..-1), case: :mixed)
            #与l2_validator_events导入放在同一个事务中
@@ -213,6 +216,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
 
         @l2_biz_event_DelegationAdded ->
           [amount] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
+          Logger.debug(fn -> "convert DelegationAdded log.data: amount: #{amount}" end,logger: :platon_appchain)
           # 更新L2_validator记录，增加委托金额
           delegator_hash =  Base.decode16!(String.slice(second_topic, -40..-1), case: :mixed)
           validator_hash =  Base.decode16!(String.slice(third_topic, -40..-1), case: :mixed)
@@ -232,6 +236,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
         @l2_biz_event_UnStaked ->
           [amount] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
           validator_hash =  Base.decode16!(String.slice(second_topic, -40..-1), case: :mixed)
+          Logger.debug(fn -> "convert UnStaked log.data: amount: #{amount}" end,logger: :platon_appchain)
+
           #与l2_validator_events导入放在同一个事务中
           # 更新L2_validator记录，减少质押
 #          L2ValidatorService.decrease_stake(validator_hash, amount)
@@ -249,7 +255,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
 
         @l2_biz_event_UnDelegated ->
           [amount] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
-
+          Logger.debug(fn -> "convert UnDelegated log.data: amount: #{amount}" end,logger: :platon_appchain)
           delegator_hash =  Base.decode16!(String.slice(second_topic, -40..-1), case: :mixed)
           validator_hash =  Base.decode16!(String.slice(third_topic, -40..-1), case: :mixed)
           #与l2_validator_events导入放在同一个事务中
@@ -272,6 +278,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
          action_type = PlatonAppchain.l2_validator_event_action_type()[:Slashed]
 
          [validator_hashes, amounts] = TypeDecoder.decode_raw(data_bytes, [{:array, :address}, {:array, {:uint, 256}}])
+         Logger.debug(fn -> "convert Slashed log.data: validator_hashes: #{validator_hashes}, amounts: #{amounts}" end,logger: :platon_appchain)
 
          if length(validator_hashes) != length(amounts) do
            Logger.error(fn -> "l2 validator slash event data error, validators not match to amounts" end , logger: :platon_appchain)
@@ -299,6 +306,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
          action_type = PlatonAppchain.l2_validator_event_action_type()[:UpdateValidatorStatus]
 
          [current_status] = TypeDecoder.decode_raw(data_bytes, [{:uint, 256}])
+
+         Logger.debug(fn -> "convert UpdateValidatorStatus log.data: current_status: #{current_status}" end,logger: :platon_appchain)
          # 更新L2_validator记录，惩罚节点
          # L2ValidatorService.update_validator_status(second_topic, current_status, block_number)
          validator_hash =  Base.decode16!(String.slice(second_topic, -40..-1), case: :mixed)

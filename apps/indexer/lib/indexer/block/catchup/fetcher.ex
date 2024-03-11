@@ -46,8 +46,9 @@ defmodule Indexer.Block.Catchup.Fetcher do
   def task(state) do
     Logger.metadata(fetcher: :block_catchup)
 
+    # 查询未扫描区块范围
     case MissingRangesManipulator.get_latest_batch() do
-      [] ->
+      [] -> # 没有未扫描区块范围列表[1..10, 300..3400]，也可能是：[3200..1420, 420..123]
         %{
           first_block_number: nil,
           last_block_number: nil,
@@ -55,6 +56,7 @@ defmodule Indexer.Block.Catchup.Fetcher do
           shrunk: false
         }
 
+      #把未扫描区块区间，和blocks表中数据比较，得到真正未获取的区块区间列表[3..5, 1302..2492]
       latest_missing_ranges ->
         missing_ranges = filter_consensus_blocks(latest_missing_ranges)
 
@@ -87,14 +89,16 @@ defmodule Indexer.Block.Catchup.Fetcher do
     end
   end
 
+  #过滤已经同步的区块，返回未同步的区块ranges
   defp filter_consensus_blocks(ranges) do
-    filtered_ranges =
+    filtered_ranges = # 根据数据库blocks记录过滤出的未同步区块ranges
       ranges
       |> Enum.map(&Chain.missing_block_number_ranges(&1))
       |> List.flatten()
-
+      #总的ranges - 未同步的ranges
     consensus_blocks = ranges_to_numbers(ranges) -- ranges_to_numbers(filtered_ranges)
 
+    #已经同步的区块，需要删除cache
     consensus_blocks
     |> numbers_to_ranges()
     |> MissingRangesManipulator.clear_batch()
