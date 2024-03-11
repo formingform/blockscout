@@ -85,7 +85,6 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2Executes do
           # Don't update `event_id` as it is a primary key and used for the conflict target
           hash: fragment("EXCLUDED.hash"),
           block_number: fragment("EXCLUDED.block_number"),
-          commitment_hash:  fragment("EXCLUDED.commitment_hash"),
           replay_status:  fragment("EXCLUDED.replay_status"),
           status:  fragment("EXCLUDED.status"),
           inserted_at: fragment("LEAST(?, EXCLUDED.inserted_at)", l.inserted_at), # LEAST返回给定的最小值 EXCLUDED.inserted_at 表示已存在的值
@@ -94,11 +93,10 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2Executes do
       ],
       where:
         fragment(
-          "(EXCLUDED.hash,EXCLUDED.block_number,EXCLUDED.commitment_hash,EXCLUDED.replay_status,
-          EXCLUDED.status) IS DISTINCT FROM (?,?,?,?,?)", # 有冲突时只更新这些字段
+          "(EXCLUDED.hash,EXCLUDED.block_number,EXCLUDED.replay_status,
+          EXCLUDED.status) IS DISTINCT FROM (?,?,?,?)", # 有冲突时只更新这些字段
           l.hash,
           l.block_number,
-          l.commitment_hash,
           l.replay_status,
           l.status
         )

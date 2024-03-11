@@ -12,7 +12,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
 
   import EthereumJSONRPC, only: [quantity_to_integer: 1, integer_to_quantity: 1]
   import Explorer.Helper, only: [decode_data: 2]
-  import Indexer.Fetcher.PlatonAppchain, only: [fill_block_range: 5, get_block_number_by_tag: 3]
+  import Indexer.Fetcher.PlatonAppchain, only: [fill_block_range: 5, get_block_number_by_tag: 3, decode_hex: 1]
 
   alias ABI.TypeDecoder
   alias Explorer.{Chain, Repo}
@@ -165,9 +165,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
           data_byte
         _ ->
           Logger.debug(fn -> "convert event_to_l2_validator_events, data: #{inspect(data)}, amount: #{quantity_to_integer(data)}" end,logger: :platon_appchain)
-
-          [data_byte] = decode_data(data, [:bytes])
-          data_byte
+          PlatonAppchain.decode_hex(data) #其它包里也有decode_hex，所以要PlatonAppchain.
       end
 
     Logger.debug(fn -> "convert L2 log to l2 validator event: #{get_l2_biz_event_name(first_topic)}" end,logger: :platon_appchain)
