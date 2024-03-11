@@ -174,7 +174,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
         query
         |> Repo.all(timeout: :infinity)
         |> Enum.map(fn {second_topic, third_topic, data, l2_transaction_hash, l2_block_number} ->
-          event_to_commitment(scan_db, second_topic, third_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments)
+          event_to_commitment(second_topic, third_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments)
         end)
       else
         {:ok, result} =
@@ -189,7 +189,6 @@ defmodule Indexer.Fetcher.PlatonAppchain.Commitment do
 
         Enum.map(result, fn event ->
           event_to_commitment(
-            scan_db,
             Enum.at(event["topics"], 1),
             Enum.at(event["topics"], 2),
             event["data"],
