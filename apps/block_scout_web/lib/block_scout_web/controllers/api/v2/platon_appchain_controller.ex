@@ -8,6 +8,8 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainController do
       split_list_by_page: 1
     ]
 
+  require Logger
+
   alias Explorer.Chain.PlatonAppchain.Query
 
   action_fallback(BlockScoutWeb.API.V2.FallbackController)

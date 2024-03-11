@@ -3,6 +3,8 @@ defmodule BlockScoutWeb.Chain do
   Converts the `param` to the corresponding resource that uses that format of param.
   """
 
+  require Logger
+
   import Explorer.Chain,
     only: [
       find_or_insert_address_from_hash: 1,
@@ -114,6 +116,7 @@ defmodule BlockScoutWeb.Chain do
 
     next_page_params = Map.merge(params, paging_params)
     current_items_count_string = Map.get(next_page_params, "items_count")
+    Logger.error(fn -> "current_items_count_string  ==============#{inspect(current_items_count_string)}==========================)" end)
 
     items_count =
       if is_binary(current_items_count_string) do
@@ -396,6 +399,17 @@ defmodule BlockScoutWeb.Chain do
     [paging_options: %{@default_paging_options | key: {id}}]
   end
 
+  # clause for platon appchain Latest L1>l2 transactions entities pagination
+  def paging_options(%{"no" => number_string}) when is_binary(number_string) do
+    case Integer.parse(number_string) do
+      {number, ""} ->
+        [paging_options: %{@default_paging_options | key: {number}}]
+
+      _ ->
+        [paging_options: @default_paging_options]
+    end
+  end
+
   def paging_options(_params), do: [paging_options: @default_paging_options]
 
   def put_key_value_to_paging_options([paging_options: paging_options], key, value) do
@@ -605,6 +619,11 @@ defmodule BlockScoutWeb.Chain do
   # clause for Polygon Edge Deposits and Withdrawals
   defp paging_params(%{msg_id: msg_id}) do
     %{"id" => msg_id}
+  end
+
+  # clause for platon appchain l1->l2
+  defp paging_params(%{event_id: event_id}) do
+    %{"no" => event_id}
   end
 
   defp paging_params_with_fiat_value(%CurrentTokenBalance{id: id, value: value} = ctb) do
