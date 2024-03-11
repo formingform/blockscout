@@ -5,7 +5,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Execute do
 
   @optional_attrs ~w(replay_status)a
 
-  @required_attrs ~w(event_id hash block_number commitment_hash status)a
+  @required_attrs ~w(event_id hash block_number status)a
 
   @allowed_attrs @optional_attrs ++ @required_attrs
 
@@ -21,7 +21,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Execute do
                event_id: non_neg_integer(),
                hash:  Hash.t(),
                block_number:  Block.block_number(),
-               commitment_hash:  Hash.t(),
+               # commitment_hash:  Hash.t(),
                replay_status:  non_neg_integer() | nil,
                status:  non_neg_integer()
              }
@@ -31,7 +31,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Execute do
     field(:event_id, :integer, primary_key: true)
     field(:hash, Hash.Full)
     field(:block_number, :integer)
-    field(:commitment_hash, Hash.Full)
+    #field(:commitment_hash, Hash.Full)
     field(:replay_status, :integer)
     field(:status, :integer)
 

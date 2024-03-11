@@ -11,7 +11,7 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2TxExecutes do
       # 交易所在区块
       add(:block_number, :integer, null: false)
       # 关联commitments.hash
-      add(:commitment_hash, :bytea, null: false)
+      #add(:commitment_hash, :bytea, null: false)
       # 回放状态(业务状态) 0-未知 1-成功 2-失败 后续调合约确认哪值表示成功
       add(:replay_status, :integer, null: true)
       # 交易状态:1 成， 0 失败；和ether的tx.status保持一致。
