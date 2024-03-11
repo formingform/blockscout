@@ -141,7 +141,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2Event do
   def event_to_l2_event(second_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
     Logger.debug(fn -> "convert event to l2_event, log.data: #{inspect(data)}" end, logger: :platon_appchain)
 
-    data_bytes = decode_data(data, [:bytes])
+    [data_bytes] = decode_data(data, [:bytes])
 
     Logger.debug(fn -> "decode data result: #{inspect(data_bytes)}" end, logger: :platon_appchain)
 
