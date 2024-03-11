@@ -1074,4 +1074,19 @@ defmodule Indexer.Fetcher.PlatonAppchain do
       "Filled gaps between L2 blocks #{l2_block_start} and #{l2_block_end}. #{count} event(s) were found #{find_place} and written to #{table_name} table."
     )
   end
+
+  @spec decode_hex(binary()) :: binary()
+  def decode_hex("0x") do
+    nil
+  end
+
+  @spec decode_hex(binary()) :: binary()
+  def decode_hex("0x" <> hex) do
+    decode_hex(hex)
+  end
+
+  @spec decode_hex(binary()) :: binary()
+  def decode_hex(hex) do
+    Base.decode16!(hex, case: :mixed)
+  end
 end
