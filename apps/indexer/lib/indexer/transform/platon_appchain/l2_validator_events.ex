@@ -32,7 +32,7 @@ defmodule Indexer.Transform.PlatonAppchain.L2ValidatorEvents do
         |> Enum.map(fn log ->
           Logger.info("L2 (Stake Event) message found, validator: #{log.second_topic}.")
 
-          L2ValidatorEvent.event_to_l2_validator_event(
+          L2ValidatorEvent.event_to_l2_validator_events(
             log.index,
             log.first_topic,
             log.second_topic,
