@@ -73,7 +73,7 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
         left_join: l2e in L2Execute,
         on: c.hash == l2e.commitment_hash,
         group_by: c.hash,
-        select: %{hash: c.hash, tx_number: count(l2e.event_id)}
+        select: %{hash: c.hash, tx_number: coalesce(count(l2e.event_id),0)}
       )
 
     base_query =
@@ -123,7 +123,7 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
         left_join: c in Checkpoint,
         on: l1e.checkpoint_hash == c.hash,
         select: %{
-          epoch: c.epoch,
+          event_id: l2e.event_id,
           from: l2e.from,
           l2_event_hash: l2e.hash,
           tx_type: l2e.tx_type,
@@ -247,50 +247,9 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
     select_repo(options).aggregate(query, :count, timeout: :infinity)
   end
 
-#  @spec deposit_by_transaction_hash(Hash.t()) :: Ecto.Schema.t() | term() | nil
-#  def deposit_by_transaction_hash(hash) do
-#    query =
-#      from(
-#        de in DepositExecute,
-#        inner_join: d in Deposit,
-#        on: d.msg_id == de.msg_id and not is_nil(d.from),
-#        select: %{
-#          msg_id: de.msg_id,
-#          from: d.from,
-#          to: d.to,
-#          success: de.success,
-#          l1_transaction_hash: d.l1_transaction_hash
-#        },
-#        where: de.l2_transaction_hash == ^hash
-#      )
-#
-#    Repo.replica().one(query)
-#  end
-
-#  @spec withdrawal_by_transaction_hash(Hash.t()) :: Ecto.Schema.t() | term() | nil
-#  def withdrawal_by_transaction_hash(hash) do
-#    query =
-#      from(
-#        w in Withdrawal,
-#        left_join: we in WithdrawalExit,
-#        on: we.msg_id == w.msg_id,
-#        select: %{
-#          msg_id: w.msg_id,
-#          from: w.from,
-#          to: w.to,
-#          success: we.success,
-#          l1_transaction_hash: we.l1_transaction_hash
-#        },
-#        where: w.l2_transaction_hash == ^hash and not is_nil(w.from)
-#      )
-#
-#    Repo.replica().one(query)
-#  end
-
   defp page_deposits_or_withdrawals(query, %PagingOptions{key: nil}), do: query
 
   defp page_deposits_or_withdrawals(query, %PagingOptions{key: {no}}) do
-    Logger.error(fn -> "no  ==============#{inspect(no)}==========================)" end)
     from(item in query, where: item.event_id < ^no)
   end
 end

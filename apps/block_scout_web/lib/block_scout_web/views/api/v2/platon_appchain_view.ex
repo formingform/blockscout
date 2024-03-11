@@ -55,7 +55,7 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainView do
       items:
         Enum.map(withdrawals, fn withdrawal ->
           %{
-            "no" => withdrawal.epoch,
+            "no" => withdrawal.event_id,
             "from" => withdrawal.from,
             "l2_txn_hash" => withdrawal.l2_event_hash,
             "type" => withdrawal.tx_type,

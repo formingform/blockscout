@@ -402,8 +402,8 @@ defmodule BlockScoutWeb.Chain do
   # clause for platon appchain Latest L1>l2 transactions entities pagination
   def paging_options(%{"no" => number_string}) when is_binary(number_string) do
     case Integer.parse(number_string) do
-      {number, ""} ->
-        [paging_options: %{@default_paging_options | key: {number}}]
+      {no, ""} ->
+        [paging_options: %{@default_paging_options | key: {no}}]
 
       _ ->
         [paging_options: @default_paging_options]
