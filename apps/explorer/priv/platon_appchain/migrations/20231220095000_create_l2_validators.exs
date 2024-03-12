@@ -9,7 +9,7 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2Validators do
       add(:stake_epoch, :bigint, null: false)
       # 验证人owner地址
       add(:owner_hash, :bytea, null: false)
-      # 拥金比例, 每个结算周期，每个验证人获得总奖励，首先按此金额扣除CommissionRate，剩余的再按质押/委托金额比例分配。
+      # 拥金比例, 每个结算周期，每个验证人获得总奖励，首先按此CommissionRate扣除Commission，剩余的再按质押/委托金额比例分配。
       add(:commission_rate, :integer, null: true, default: 0)
       # 有效质押金额
       add(:stake_amount, :numeric, precision: 100, null: false, default: 0)
