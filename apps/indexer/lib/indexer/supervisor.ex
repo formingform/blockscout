@@ -152,7 +152,7 @@ defmodule Indexer.Supervisor do
         configure(Indexer.Fetcher.PlatonAppchain.Checkpoint.Supervisor, [
           [memory_monitor: memory_monitor]
         ]),
-        configure(Indexer.Fetcher.PlatonAppchain.Checkpoint.Supervisor, [
+        configure(Indexer.Fetcher.PlatonAppchain.L2ValidatorRank.Supervisor, [
           [memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]
         ]),
         #{PlatonAppchain.Supervisor, [[memory_monitor: memory_monitor]]},
