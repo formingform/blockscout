@@ -121,6 +121,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
          returning: true)
   end
 
+  # 增加新的质押节点，如果节点hash已经存在，则更新（实际上，不会有重复主键的，因为解质押的节点信息，已经被移入历史表中）
   def add_new_validator(repo, dataMap) do
     %__MODULE__{}
     |> changeset(dataMap)
@@ -222,5 +223,48 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
          :delete,
          from(x in __MODULE__, where: x.validator_hash == ^addr),
          [])
+  end
+
+
+  def backup_exited_validator(repo, validator_hash, status, exit_block, exit_desc) do
+    query = from v in __MODULE__,
+                 select: %{
+                   validator_hash: v.validator_hash,
+                   stake_epoch: v.stake_epoch,
+                   owner_hash: v.owner_hash,
+                   commission_rate: v.commission_rate,
+                   stake_amount: v.stake_amount,
+                   locking_stake_amount: v.locking_stake_amount,
+                   withdrawal_stake_amount: v.withdrawal_stake_amount,
+                   delegate_amount: v.delegate_amount,
+                   stake_reward: v.stake_reward,
+                   delegate_reward: v.delegate_reward,
+                   rank: v.rank,
+                   name: v.name,
+                   detail: v.detail,
+                   logo: v.logo,
+                   website: v.website,
+                   expect_apr: v.expect_apr,
+                   block_rate: v.block_rate,
+                   auth_status: v.auth_status,
+                   role: v.role,
+                   #status: v.status,
+                   status: ^status,
+                   exit_block: ^exit_block,
+                   exit_desc: ^exit_desc,
+                   inserted_at: v.inserted_at,
+                   updated_at: v.updated_at},
+                 where: v.validator_hash == ^validator_hash
+
+      repo.insert_all(
+        Explorer.Chain.PlatonAppchain.L2ValidatorHistory,
+        query,
+        on_conflict: :replace_all, #{:replace_all_except, [:inserted_at, :updated_at]},
+        conflict_target: [:validator_hash])
+  end
+
+  def delete_exited_validator(repo, validator_hash) do
+    repo.delete_all(
+      from(x in __MODULE__, where: x.validator_hash == ^validator_hash))
   end
 end
