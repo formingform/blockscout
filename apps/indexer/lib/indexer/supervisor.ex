@@ -140,19 +140,19 @@ defmodule Indexer.Supervisor do
         {Indexer.Fetcher.PolygonEdge.WithdrawalExit.Supervisor, [[memory_monitor: memory_monitor]]},
 
         # for PlatonAppchain fetcher，有config/runtime.exs来控制是否要运行, json_rpc_named_arguments only for L2。
-        configure(PlatonAppchain.Supervisor, [
+        configure_platon_appchain(PlatonAppchain.Supervisor, [
           [memory_monitor: memory_monitor]
         ]),
-        configure(Indexer.Fetcher.PlatonAppchain.L1Event.Supervisor, [
+        configure_platon_appchain(Indexer.Fetcher.PlatonAppchain.L1Event.Supervisor, [
           [memory_monitor: memory_monitor]
         ]),
-        configure(Indexer.Fetcher.PlatonAppchain.L1Execute.Supervisor, [
+        configure_platon_appchain(Indexer.Fetcher.PlatonAppchain.L1Execute.Supervisor, [
           [memory_monitor: memory_monitor]
         ]),
-        configure(Indexer.Fetcher.PlatonAppchain.Checkpoint.Supervisor, [
+        configure_platon_appchain(Indexer.Fetcher.PlatonAppchain.Checkpoint.Supervisor, [
           [memory_monitor: memory_monitor]
         ]),
-        configure(Indexer.Fetcher.PlatonAppchain.L2ValidatorRank.Supervisor, [
+        configure_platon_appchain(Indexer.Fetcher.PlatonAppchain.L2ValidatorRank.Supervisor, [
           [memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]
         ]),
         #{PlatonAppchain.Supervisor, [[memory_monitor: memory_monitor]]},
@@ -208,6 +208,14 @@ defmodule Indexer.Supervisor do
       [{process, opts}]
     else
       []
+    end
+  end
+
+  defp configure_platon_appchain(process, opts) do
+    if Application.get_env(:indexer, process)[:enabled] do
+      {process, opts}
+    else
+      {}
     end
   end
 end
