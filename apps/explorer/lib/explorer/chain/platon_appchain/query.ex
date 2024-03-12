@@ -34,14 +34,14 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
         on: l12.event_id >= c.start_id and l12.event_id <= c.end_id,
         select: %{
           event_id: l12.event_id,
-          l1e_hash: l12.l1e_hash,
+          l1_event_hash: l12.l1e_hash,
           tx_type: l12.tx_type,
-          l1e_block_timestamp: l12.l1e_block_timestamp,
-          l2e_hash: l12.l2e_hash,
-          replay_status: l12.replay_status,
+          block_timestamp: l12.l1e_block_timestamp,
+          l2_event_hash: l12.l2e_hash,
+          replay_status: coalesce(l12.replay_status,0),
           start_id: c.start_id,
           end_id: c.end_id,
-          hash: c.hash,
+          commitment_hash: c.hash,
           state_root: c.state_root
         },
         where: not is_nil(l12.event_id),
@@ -59,10 +59,6 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
     query =
       from(
         l1e in L1Event,
-        left_join: l2e in L2Execute,
-        on: l1e.event_id == l2e.event_id,
-        left_join: c in Commitment,
-        on: l2e.commitment_hash == c.hash,
         where: not is_nil(l1e.from)
       )
 
@@ -77,7 +73,7 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
       from(
         c in Commitment,
         left_join: l2e in L2Execute,
-        on: c.hash == l2e.commitment_hash,
+        on: l2e.event_id >= c.start_id and l2e.event_id <= c.end_id,
         group_by: c.hash,
         select: %{hash: c.hash, tx_number: coalesce(count(l2e.event_id),0)}
       )
@@ -139,7 +135,7 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
           checkpoint_hash: l1e.checkpoint_hash,
           state_root: c.state_root,
           l1_exec_hash: l1e.hash,
-          replay_status: l1e.replay_status
+          replay_status: coalesce(l1e.replay_status,0)
         },
         where: not is_nil(l2e.from),
         order_by: [desc: l2e.event_id]
