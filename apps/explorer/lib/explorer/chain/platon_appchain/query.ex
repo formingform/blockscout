@@ -19,27 +19,33 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
   def deposits(options \\ []) do
     paging_options = Keyword.get(options, :paging_options, default_paging_options())
 
-    base_query =
+    l1_l2_subquery =
       from(
         l1e in L1Event,
         left_join: l2e in L2Execute,
         on: l1e.event_id == l2e.event_id,
-        left_join: c in Commitment,
-        on: l2e.commitment_hash == c.hash,
+        select: %{event_id: l1e.event_id,l1e_hash: l1e.hash,tx_type: l1e.tx_type,l1e_block_timestamp: l1e.block_timestamp,l2e_hash: l2e.hash,replay_status: l2e.replay_status}
+      )
+
+    base_query =
+      from(
+        c in Commitment,
+        right_join: l12 in subquery(l1_l2_subquery),
+        on: l12.event_id >= c.start_id and l12.event_id <= c.end_id,
         select: %{
-          event_id: l1e.event_id,
-          l1_txn_hash: l1e.hash,
-          tx_type: l1e.tx_type,
-          block_timestamp: l1e.block_timestamp,
+          event_id: l12.event_id,
+          l1e_hash: l12.l1e_hash,
+          tx_type: l12.tx_type,
+          l1e_block_timestamp: l12.l1e_block_timestamp,
+          l2e_hash: l12.l2e_hash,
+          replay_status: l12.replay_status,
           start_id: c.start_id,
           end_id: c.end_id,
-          commitment_hash: l2e.commitment_hash,
-          state_root: c.state_root,
-          l2_event_hash: l2e.hash,
-          replay_status: l2e.replay_status
+          hash: c.hash,
+          state_root: c.state_root
         },
-        where: not is_nil(l1e.from),
-        order_by: [desc: l1e.event_id]
+        where: not is_nil(l12.event_id),
+        order_by: [desc: l12.event_id]
       )
 
     base_query
