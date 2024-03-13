@@ -1,6 +1,7 @@
 defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
 
   require Ecto.Query
+  require Logger
 
   alias Ecto.{Changeset, Multi, Repo}
   alias Explorer.Chain.Import
@@ -216,7 +217,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
       timeout: timeout,
       timestamps: timestamps
     )
-
+    {:ok, "insert or update validator successfully"}
   end
 
   defp default_on_conflict do

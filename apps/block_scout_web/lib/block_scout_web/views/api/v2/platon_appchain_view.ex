@@ -11,7 +11,7 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainView do
         Enum.map(commitments, fn commitments ->
           %{
             "no" => commitments.event_id,
-            "l1_txn_hash" => commitments.l1_txn_hash,
+            "l1_txn_hash" => commitments.l1_event_hash,
             "tx_type" => commitments.tx_type,
             "block_timestamp" => commitments.block_timestamp,
             "state_batches_index" => Integer.to_string(commitments.start_id) <> "-"  <> Integer.to_string(commitments.end_id),
@@ -55,7 +55,7 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainView do
       items:
         Enum.map(withdrawals, fn withdrawal ->
           %{
-            "no" => withdrawal.epoch,
+            "no" => withdrawal.event_id,
             "from" => withdrawal.from,
             "l2_txn_hash" => withdrawal.l2_event_hash,
             "type" => withdrawal.tx_type,
@@ -85,7 +85,9 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainView do
            "block_timestamp" => withdrawal.block_timestamp,
            "batch_root" => withdrawal.state_root,
            "l2_txns" => withdrawal.l2_txns,
-           "submitter" => "submitter怎么来的？？"
+           "submitter" => withdrawal.from,
+           "tx_fee" => withdrawal.tx_fee
+
          }
         end),
       next_page_params: next_page_params

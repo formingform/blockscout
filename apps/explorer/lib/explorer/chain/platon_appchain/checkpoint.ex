@@ -6,7 +6,7 @@ defmodule Explorer.Chain.PlatonAppchain.Checkpoint do
     Block,
     Data
     }
-  @optional_attrs ~w()a
+  @optional_attrs ~w(from tx_fee)a
 
   @required_attrs ~w(epoch start_block_number end_block_number state_root event_counts block_number hash block_timestamp)a
 
@@ -21,6 +21,8 @@ defmodule Explorer.Chain.PlatonAppchain.Checkpoint do
   * `block_number` - 交易所在L1区块
   * `hash` - checkpoint交易在L1上的hash
   * `block_timestamp` - checkpoint交易所在L1交易时间
+  * `from` - 交易发起者
+  * `tx_fee` - 交易手序费
   """
   @type t :: %__MODULE__{
                epoch: non_neg_integer(),
@@ -31,6 +33,8 @@ defmodule Explorer.Chain.PlatonAppchain.Checkpoint do
                block_number: Block.block_number(),
                hash: Hash.t(),
                block_timestamp: DateTime.t() | nil,
+               from:  Hash.Address.t(),
+               tx_fee: Gas.t() | nil,
              }
 
   @primary_key false
@@ -43,6 +47,8 @@ defmodule Explorer.Chain.PlatonAppchain.Checkpoint do
     field(:block_number, :integer)
     field(:hash, Hash.Full)
     field(:block_timestamp, :utc_datetime_usec)
+    field(:from, Hash.Address)
+    field(:tx_fee, :decimal)
 
     timestamps()
   end

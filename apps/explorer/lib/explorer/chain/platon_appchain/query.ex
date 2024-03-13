@@ -19,27 +19,33 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
   def deposits(options \\ []) do
     paging_options = Keyword.get(options, :paging_options, default_paging_options())
 
-    base_query =
+    l1_l2_subquery =
       from(
         l1e in L1Event,
         left_join: l2e in L2Execute,
         on: l1e.event_id == l2e.event_id,
-        left_join: c in Commitment,
-        on: l2e.commitment_hash == c.hash,
+        select: %{event_id: l1e.event_id,l1e_hash: l1e.hash,tx_type: l1e.tx_type,l1e_block_timestamp: l1e.block_timestamp,l2e_hash: l2e.hash,replay_status: l2e.replay_status}
+      )
+
+    base_query =
+      from(
+        c in Commitment,
+        right_join: l12 in subquery(l1_l2_subquery),
+        on: l12.event_id >= c.start_id and l12.event_id <= c.end_id,
         select: %{
-          event_id: l1e.event_id,
-          l1_txn_hash: l1e.hash,
-          tx_type: l1e.tx_type,
-          block_timestamp: l1e.block_timestamp,
+          event_id: l12.event_id,
+          l1_event_hash: l12.l1e_hash,
+          tx_type: l12.tx_type,
+          block_timestamp: l12.l1e_block_timestamp,
+          l2_event_hash: l12.l2e_hash,
+          replay_status: coalesce(l12.replay_status,0),
           start_id: c.start_id,
           end_id: c.end_id,
-          commitment_hash: l2e.commitment_hash,
-          state_root: c.state_root,
-          l2_event_hash: l2e.hash,
-          replay_status: l2e.replay_status
+          commitment_hash: c.hash,
+          state_root: c.state_root
         },
-        where: not is_nil(l1e.from),
-        order_by: [desc: l1e.event_id]
+        where: not is_nil(l12.event_id),
+        order_by: [desc: l12.event_id]
       )
 
     base_query
@@ -53,10 +59,6 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
     query =
       from(
         l1e in L1Event,
-        left_join: l2e in L2Execute,
-        on: l1e.event_id == l2e.event_id,
-        left_join: c in Commitment,
-        on: l2e.commitment_hash == c.hash,
         where: not is_nil(l1e.from)
       )
 
@@ -71,9 +73,9 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
       from(
         c in Commitment,
         left_join: l2e in L2Execute,
-        on: c.hash == l2e.commitment_hash,
+        on: l2e.event_id >= c.start_id and l2e.event_id <= c.end_id,
         group_by: c.hash,
-        select: %{hash: c.hash, tx_number: count(l2e.event_id)}
+        select: %{hash: c.hash, tx_number: coalesce(count(l2e.event_id),0)}
       )
 
     base_query =
@@ -90,11 +92,11 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
           from: c.from,
           tx_number: d.tx_number
         },
-        order_by: [desc: c.block_timestamp]
+        order_by: [desc: c.block_number]
       )
 
     base_query
-    |> page_deposits_or_withdrawals(paging_options)
+    |> page_deposits_or_withdrawals_batch(paging_options)
     |> limit(^paging_options.page_size)
     |> select_repo(options).all()
   end
@@ -123,7 +125,7 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
         left_join: c in Checkpoint,
         on: l1e.checkpoint_hash == c.hash,
         select: %{
-          epoch: c.epoch,
+          event_id: l2e.event_id,
           from: l2e.from,
           l2_event_hash: l2e.hash,
           tx_type: l2e.tx_type,
@@ -133,7 +135,7 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
           checkpoint_hash: l1e.checkpoint_hash,
           state_root: c.state_root,
           l1_exec_hash: l1e.hash,
-          replay_status: l1e.replay_status
+          replay_status: coalesce(l1e.replay_status,0)
         },
         where: not is_nil(l2e.from),
         order_by: [desc: l2e.event_id]
@@ -160,33 +162,24 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
   def withdrawals_batches(options \\ []) do
     paging_options = Keyword.get(options, :paging_options, default_paging_options())
 
-    count_subquery =
-      from(
-        c in Checkpoint,
-        left_join: l1e in L1Execute,
-        on: c.hash == l1e.checkpoint_hash,
-        group_by: c.hash,
-        select: %{hash: c.hash, tx_number: count(l1e.event_id)}
-      )
-
     base_query =
       from(
         c in Checkpoint,
-        join: d in subquery(count_subquery), on: c.hash == d.hash,
         select: %{
           epoch: c.epoch,
           l1_state_batches_hash: c.hash,
           block_number: c.block_number,
           block_timestamp: c.block_timestamp,
           state_root: c.state_root,
-          l2_txns: d.tx_number
+          l2_txns: c.event_counts,
+          from: c.from,
+          tx_fee: c.tx_fee
         },
         order_by: [desc: c.block_timestamp]
       )
 
-
     base_query
-    |> page_deposits_or_withdrawals(paging_options)
+    |> page_deposits_or_withdrawals_batch(paging_options)
     |> limit(^paging_options.page_size)
     |> select_repo(options).all()
   end
@@ -247,50 +240,15 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
     select_repo(options).aggregate(query, :count, timeout: :infinity)
   end
 
-#  @spec deposit_by_transaction_hash(Hash.t()) :: Ecto.Schema.t() | term() | nil
-#  def deposit_by_transaction_hash(hash) do
-#    query =
-#      from(
-#        de in DepositExecute,
-#        inner_join: d in Deposit,
-#        on: d.msg_id == de.msg_id and not is_nil(d.from),
-#        select: %{
-#          msg_id: de.msg_id,
-#          from: d.from,
-#          to: d.to,
-#          success: de.success,
-#          l1_transaction_hash: d.l1_transaction_hash
-#        },
-#        where: de.l2_transaction_hash == ^hash
-#      )
-#
-#    Repo.replica().one(query)
-#  end
-
-#  @spec withdrawal_by_transaction_hash(Hash.t()) :: Ecto.Schema.t() | term() | nil
-#  def withdrawal_by_transaction_hash(hash) do
-#    query =
-#      from(
-#        w in Withdrawal,
-#        left_join: we in WithdrawalExit,
-#        on: we.msg_id == w.msg_id,
-#        select: %{
-#          msg_id: w.msg_id,
-#          from: w.from,
-#          to: w.to,
-#          success: we.success,
-#          l1_transaction_hash: we.l1_transaction_hash
-#        },
-#        where: w.l2_transaction_hash == ^hash and not is_nil(w.from)
-#      )
-#
-#    Repo.replica().one(query)
-#  end
-
   defp page_deposits_or_withdrawals(query, %PagingOptions{key: nil}), do: query
 
   defp page_deposits_or_withdrawals(query, %PagingOptions{key: {no}}) do
-    Logger.error(fn -> "no  ==============#{inspect(no)}==========================)" end)
     from(item in query, where: item.event_id < ^no)
+  end
+
+  defp page_deposits_or_withdrawals_batch(query, %PagingOptions{key: nil}), do: query
+
+  defp page_deposits_or_withdrawals_batch(query, %PagingOptions{key: {number}}) do
+    from(item in query, where: item.block_number < ^number)
   end
 end
