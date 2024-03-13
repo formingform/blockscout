@@ -1,6 +1,8 @@
 defmodule Explorer.Chain.PlatonAppchain.L2ValidatorHistory do
   use Explorer.Schema
 
+  import Explorer.Chain, only: [default_paging_options: 0, select_repo: 1]
+
   # alias Ecto.Changeset
   alias Explorer.{
     Chain,
@@ -103,62 +105,25 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorHistory do
     |> unique_constraint(:validator_hash)
   end
 
+  @spec list_validators(list()) :: list()
+  def list_validators(options \\ []) do
+    paging_options = Keyword.get(options, :paging_options, default_paging_options())
 
-  def update_changeset(attrs \\ %{}) do
-    %__MODULE__{}
-    |> cast(attrs, @allowed_attrs)
-    |> validate_required(@required_attrs)
-    |> unique_constraint(:validator_hash)
+    base_query =
+      from(
+        v in __MODULE__,
+        order_by: v.validator_hash
+      )
+
+    base_query
+    |> page_history_validators(paging_options)
+    |> limit(^paging_options.page_size)
+    |> select_repo(options).all()
   end
 
-  # 增加新的质押节点历史，如果节点hash已经存在，则更新
-  def add_new_validator_history(dataMap) do
-    changeset(dataMap)
-    |> Repo.insert(
-         on_conflict: [set: [locking_stake_amount: 0, withdrawal_stake_amount: 0, stake_reward: 0, delegate_reward: 0, rank: 0, name: nil, detail: nil, logo: nil, website: nil, expect_apr: 0, block_rate: 0, auth_status: 0, role: 0]],
-         conflict_target: [:validator_hash],
-         returning: true)
-  end
+  defp page_history_validators(query, %PagingOptions{key: nil}), do: query
 
-  # 修改质押金额, 如果increment就是负数，就是减少质押
-  def update_stake_amount(validator_hash, increment) do
-    query = from v in __MODULE__, where: v.address == ^validator_hash
-    Repo.update_all(query, inc: [stake_amount: increment])
-  end
-
-  # 修改委托金额, 如果increment就是负数，就是减少委托
-  def update_delegate_amount(validator_hash, increment) do
-    from(v in __MODULE__, where: v.address == ^validator_hash)
-    |> Repo.update_all(inc: [delegate_amount: increment])
-  end
-
-  # 惩罚验证人，减少每个验证人的质押金额
-  def slash(slash_tuple_list) do
-    Ecto.Multi.new()
-    |> do_slash(slash_tuple_list)
-    |> Repo.transaction()
-  end
-
-  defp do_slash(multi, slash_tuple_list) do
-    Enum.reduce(slash_tuple_list, multi, fn tuple, multi ->
-      Ecto.Multi.update_all(multi, {:slash_validator, elem(tuple, 0)}, from(v in __MODULE__, where: v.validator_hash == ^elem(tuple, 0)), [inc: [stake_amount: 0 - elem(tuple, 1)]])
-    end)
-  end
-
-  def update_status(validator_hash, newStatus) do
-    from(v in __MODULE__, where: v.address == ^validator_hash, update: [set: [status: ^newStatus]])
-    |> Repo.update_all([])
-  end
-
-  def update_rank(rank_tuple_list) do
-    Ecto.Multi.new()
-    |> do_reset_rank(rank_tuple_list)
-    |> Repo.transaction()
-  end
-
-  defp do_reset_rank(multi, rank_tuple_list) do
-    Enum.reduce(rank_tuple_list, multi, fn tuple, multi ->
-      Ecto.Multi.update_all(multi, {:reset_validator_rank, elem(tuple, 0)}, from(v in __MODULE__, where: v.validator_hash == ^elem(tuple, 0)), [set: [rank: elem(tuple, 1)]])
-    end)
+  defp page_history_validators(query, %PagingOptions{key: {validator_hash}}) do
+    from(item in query, where: item.validator_hash > ^validator_hash)  # > 或者 <， 取决于 base_query 中的 order by
   end
 end
