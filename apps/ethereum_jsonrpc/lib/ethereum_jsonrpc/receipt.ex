@@ -117,7 +117,9 @@ defmodule EthereumJSONRPC.Receipt do
           created_contract_address_hash: String.t() | nil,
           status: status(),
           transaction_hash: String.t(),
-          transaction_index: non_neg_integer()
+          transaction_index: non_neg_integer(),
+          transaction_from: String.t(),
+          gas_price: non_neg_integer
         }
   def elixir_to_params(
         %{
@@ -125,7 +127,9 @@ defmodule EthereumJSONRPC.Receipt do
           "gasUsed" => gas_used,
           "contractAddress" => created_contract_address_hash,
           "transactionHash" => transaction_hash,
-          "transactionIndex" => transaction_index
+          "transactionIndex" => transaction_index,
+          "from" => transaction_from,
+          "effectiveGasPrice" => gas_price,
         } = elixir
       ) do
     status = elixir_to_status(elixir)
@@ -136,7 +140,9 @@ defmodule EthereumJSONRPC.Receipt do
       created_contract_address_hash: created_contract_address_hash,
       status: status,
       transaction_hash: transaction_hash,
-      transaction_index: transaction_index
+      transaction_index: transaction_index,
+      from: transaction_from,
+      gas_price: gas_price
     }
   end
 
@@ -253,11 +259,11 @@ defmodule EthereumJSONRPC.Receipt do
   # hash format
   # gas is passed in from the `t:EthereumJSONRPC.Transaction.params/0` to allow pre-Byzantium status to be derived
   defp entry_to_elixir({key, _} = entry)
-       when key in ~w(blockHash contractAddress from gas logsBloom root to transactionHash revertReason type effectiveGasPrice),
+       when key in ~w(blockHash contractAddress from gas logsBloom root to transactionHash revertReason type),
        do: {:ok, entry}
 
   defp entry_to_elixir({key, quantity})
-       when key in ~w(blockNumber cumulativeGasUsed gasUsed transactionIndex) do
+       when key in ~w(blockNumber cumulativeGasUsed gasUsed transactionIndex effectiveGasPrice) do
     result =
       if is_nil(quantity) do
         nil

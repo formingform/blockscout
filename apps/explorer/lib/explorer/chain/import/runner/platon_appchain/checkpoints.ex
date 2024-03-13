@@ -90,6 +90,8 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.Checkpoints do
           block_number: fragment("EXCLUDED.block_number"),
           hash: fragment("EXCLUDED.hash"),
           block_timestamp: fragment("EXCLUDED.block_timestamp"),
+          from: fragment("EXCLUDED.from"),
+          tx_fee: fragment("EXCLUDED.tx_fee"),
           inserted_at: fragment("LEAST(?, EXCLUDED.inserted_at)", l.inserted_at), # LEAST返回给定的最小值 EXCLUDED.inserted_at 表示已存在的值
           updated_at: fragment("GREATEST(?, EXCLUDED.updated_at)", l.updated_at)
         ]
@@ -97,14 +99,16 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.Checkpoints do
       where:
         fragment(
           "(EXCLUDED.start_block_number,EXCLUDED.end_block_number,EXCLUDED.state_root,EXCLUDED.event_counts,EXCLUDED.block_number,
-          EXCLUDED.hash,EXCLUDED.block_timestamp) IS DISTINCT FROM (?,?,?,?,?,?,?)", # 有冲突时只更新这些字段
+          EXCLUDED.hash,EXCLUDED.block_timestamp,EXCLUDED.from,EXCLUDED.tx_fee) IS DISTINCT FROM (?,?,?,?,?,?,?,?,?)", # 有冲突时只更新这些字段
           l.start_block_number,
           l.end_block_number,
           l.state_root,
           l.event_counts,
           l.block_number,
           l.hash,
-          l.block_timestamp
+          l.block_timestamp,
+          l.from,
+          l.tx_fee
         )
     )
   end

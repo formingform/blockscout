@@ -162,26 +162,18 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
   def withdrawals_batches(options \\ []) do
     paging_options = Keyword.get(options, :paging_options, default_paging_options())
 
-    count_subquery =
-      from(
-        c in Checkpoint,
-        left_join: l1e in L1Execute,
-        on: c.hash == l1e.checkpoint_hash,
-        group_by: c.hash,
-        select: %{hash: c.hash, tx_number: count(l1e.event_id)}
-      )
-
     base_query =
       from(
         c in Checkpoint,
-        join: d in subquery(count_subquery), on: c.hash == d.hash,
         select: %{
           epoch: c.epoch,
           l1_state_batches_hash: c.hash,
           block_number: c.block_number,
           block_timestamp: c.block_timestamp,
           state_root: c.state_root,
-          l2_txns: d.tx_number
+          l2_txns: c.event_counts,
+          from: c.from,
+          tx_fee: c.tx_fee
         },
         order_by: [desc: c.block_timestamp]
       )

@@ -85,7 +85,9 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainView do
            "block_timestamp" => withdrawal.block_timestamp,
            "batch_root" => withdrawal.state_root,
            "l2_txns" => withdrawal.l2_txns,
-           "submitter" => "submitter怎么来的？？"
+           "submitter" => withdrawal.from,
+           "tx_fee" => withdrawal.tx_fee
+
          }
         end),
       next_page_params: next_page_params

@@ -10,7 +10,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Checkpoint do
 
   import Ecto.Query
 
-  import EthereumJSONRPC, only: [quantity_to_integer: 1]
+  import EthereumJSONRPC, only: [quantity_to_integer: 1,fetch_transaction_receipts: 2]
 
   alias Explorer.{Repo}
   alias Explorer.Chain.PlatonAppchain.Checkpoint
@@ -84,6 +84,13 @@ defmodule Indexer.Fetcher.PlatonAppchain.Checkpoint do
       #l2上的epoch，一个epoch长度的块高生成一个checkpoint
       event_counts = get_event_counts(start_block_number, end_block_number)
       if event_counts > 0 do
+       # 获取checkpoint的交易回执，并从回执中取得from、gas_used、gas_price
+        transactions_params = [%{gas: 1000000000,hash: event["transactionHash"]}]
+        {:ok, %{logs: logs_list, receipts: receipts_list}} = get_transaction_receipts_by_hash(transactions_params, json_rpc_named_arguments, 100)
+        [first_map | _]  =receipts_list
+        %{gas_price: gas_price,gas_used: gas_used,from: from } = first_map
+        tx_fee = gas_used |> Decimal.new() |> Decimal.mult(Decimal.new(gas_price))
+
         %{epoch: quantity_to_integer(Enum.at(event["topics"], 1)),
           start_block_number: start_block_number,
           end_block_number: end_block_number,
@@ -91,7 +98,9 @@ defmodule Indexer.Fetcher.PlatonAppchain.Checkpoint do
           event_counts: event_counts,
           block_number: l1_block_number,
           hash: event["transactionHash"],
-          block_timestamp: Map.get(timestamps, l1_block_number)
+          block_timestamp: Map.get(timestamps, l1_block_number),
+          from: from,
+          tx_fee: tx_fee
         }
       else
         %{} # 或者返回nil
@@ -107,5 +116,31 @@ defmodule Indexer.Fetcher.PlatonAppchain.Checkpoint do
       where:
         l2_events.block_number >= ^start_block_number and l2_events.block_number <= ^end_block_number)
     |> Repo.one(timeout: :infinity)
+  end
+
+  @spec get_transaction_receipts_by_hash(list(), list(), integer()) :: {:ok, %{logs: list(), receipts: list()}} | {:error, reason :: term}
+  def get_transaction_receipts_by_hash(transaction_params, json_rpc_named_arguments, retries \\ 3) do
+    error_message = &"Cannot fetch transaction receipts by hash #{transaction_params} block number. Error: #{inspect(&1)}"
+    repeated_call(&fetch_transaction_receipts/2, [transaction_params, json_rpc_named_arguments], error_message, retries)
+  end
+
+  defp repeated_call(func, args, error_message, retries_left) do
+    case apply(func, args) do
+      {:ok, _} = res ->
+        res
+      {:ok, _, _} = res ->
+        res
+      {:error, message} = err ->
+        retries_left = retries_left - 1
+
+        if retries_left <= 0 do
+          Logger.error(error_message.(message))
+          err
+        else
+          Logger.error("#{error_message.(message)} Retrying...")
+          :timer.sleep(3000)
+          repeated_call(func, args, error_message, retries_left)
+        end
+    end
   end
 end
