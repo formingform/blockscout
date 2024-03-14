@@ -1,4 +1,4 @@
-defmodule BlockScoutWeb.API.V2.PlatonAppchainController do
+defmodule BlockScoutWeb.API.V2.PlatonAppchainValidatorController do
   use BlockScoutWeb, :controller
 
   import BlockScoutWeb.Chain,
@@ -19,7 +19,7 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainController do
   @spec list_all_validators(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def list_all_validators(conn, params) do
     validators =
-    params
+    []
     |> Keyword.put(:role, "all")
     |> Keyword.put(:api?, true)
     |> L2Validator.list_validators_by_role()
@@ -36,7 +36,6 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainController do
     validators =
     params
     |> Keyword.put(:role, "active")
-    |> Keyword.put(:api?, true)
     |> L2Validator.list_validators_by_role()
 
     conn

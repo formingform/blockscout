@@ -270,7 +270,9 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
       from(x in __MODULE__, where: x.validator_hash == ^validator_hash))
   end
 
-  def list_validators_by_role(%{:role => role_value} = options) do
+  @spec list_validators_by_role([]) :: [__MODULE__.t]
+  def list_validators_by_role(options \\ []) do
+    role_value = Keyword.get(options, :role, "All")
     query =
       case String.downcase(role_value) do
         "all" ->
