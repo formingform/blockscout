@@ -4,7 +4,6 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainValidatorView do
   # l2_validators 是从个struct list，是通过ecto查询得到的数据库记录对象
   defp convert_l2_validator(validator) do
     %{
-      "rank" => validator.rank,
       "validators" => validator.validator_hash,
       "status" => validator.status, # 0: 正常 1：无效 2：低出块 4: 低阈值 8: 双签 32：解质押 64:惩罚
       "stake_epoch" => validator.stake_epoch,
@@ -27,6 +26,15 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainValidatorView do
     }
   end
 
+  defp convert_l2_history_validator(validator) do
+    %{
+      "validators" => validator.validator_hash,
+      "status" => validator.status, # 0: 正常 1：无效 2：低出块 4: 低阈值 8: 双签 32：解质押 64:惩罚
+      "exit_block" => validator.exit_block,
+      "event" => validator.exit_desc
+    }
+  end
+
   @spec render(String.t(), map()) :: map()
   def render("platon_appchain_validators.json", %{validators: validators}) do
     %{items: Enum.map(validators, fn validator -> convert_l2_validator(validator) end)}
@@ -34,7 +42,7 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainValidatorView do
 
   @spec render(String.t(), map()) :: map()
   def render("platon_appchain_history_validators.json", %{validators: validators, next_page_params: next_page_params}) do
-    %{items: Enum.map(validators, fn validator -> convert_l2_validator(validators) end), next_page_params: next_page_params}
+    %{items: Enum.map(validators, fn validator -> convert_l2_history_validator(validator) end), next_page_params: next_page_params}
   end
 
   @spec render(String.t(), map()) :: map()

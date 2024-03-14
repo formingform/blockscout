@@ -34,7 +34,7 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainValidatorController do
   @spec list_active_validators(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def list_active_validators(conn, params) do
     validators =
-    params
+    []
     |> Keyword.put(:role, "active")
     |> L2Validator.list_validators_by_role()
 
@@ -51,7 +51,7 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainValidatorController do
   @spec list_candidate_validators(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def list_candidate_validators(conn, params) do
     validators =
-      params
+      []
       |> Keyword.put(:role, "candidate")
       |> Keyword.put(:api?, true)
       |> L2Validator.list_validators_by_role()
@@ -64,7 +64,7 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainValidatorController do
   end
 
   @doc """
-    Function to handle GET requests to `/api/v2/validators/his` endpoint.
+    Function to handle GET requests to `/api/v2/validators/history` endpoint.
   """
   @spec list_history_validators(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def list_history_validators(conn, params) do

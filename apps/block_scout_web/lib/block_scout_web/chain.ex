@@ -106,6 +106,7 @@ defmodule BlockScoutWeb.Chain do
   @spec next_page_params(any, any, any, any) :: nil | map
   def next_page_params(next_page, list, params, is_ctb_with_fiat_value \\ false)
 
+  # next_page 为空返回nil
   def next_page_params([], _list, _params, _), do: nil
 
   def next_page_params(_, list, params, is_ctb_with_fiat_value) do
@@ -410,6 +411,22 @@ defmodule BlockScoutWeb.Chain do
     end
   end
 
+  def paging_options(%{"validator_hash" => validator_hash_string}) when is_binary(validator_hash_string) do
+    with {:ok, validator_hash} <- string_to_address_hash(validator_hash_string) do
+      [paging_options: %{@default_paging_options | key: {validator_hash}}]
+    else
+      _ ->
+        [paging_options: @default_paging_options]
+    end
+  end
+
+  def paging_options_validator_event(validator_hash, block_number) do
+    case block_number == 0 do
+      true -> [paging_options: %{@default_paging_options | key: {validator_hash}}]
+      _ -> [paging_options: %{@default_paging_options | key: {validator_hash, block_number}}]
+    end
+  end
+
   def paging_options(_params), do: [paging_options: @default_paging_options]
 
   def put_key_value_to_paging_options([paging_options: paging_options], key, value) do
@@ -624,6 +641,11 @@ defmodule BlockScoutWeb.Chain do
   # clause for platon appchain l1->l2
   defp paging_params(%{event_id: event_id}) do
     %{"no" => event_id}
+  end
+
+  # clause for platon appchain l2_validator_event
+  defp paging_params(%{block_number: block_number}) do
+    %{"block_number" => block_number}
   end
 
   defp paging_params_with_fiat_value(%CurrentTokenBalance{id: id, value: value} = ctb) do

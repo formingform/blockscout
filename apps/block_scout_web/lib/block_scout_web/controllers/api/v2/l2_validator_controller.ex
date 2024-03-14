@@ -7,6 +7,7 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorController do
     only: [
       next_page_params: 3,
       paging_options: 1,
+      paging_options_validator_event: 2,
       put_key_value_to_paging_options: 3,
       split_list_by_page: 1,
       parse_block_hash_or_number_param: 1
@@ -47,7 +48,6 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorController do
 
 
   def validators(conn, params) do
-    IO.inspect(params,label: "==========================call L2ValidatorController==============================")
     full_options = select_validator_status(params)
 
     l2_validators_plus_one =
@@ -97,19 +97,33 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorController do
     end
   end
 
-  def staking(conn, params) do
+  def staking(conn, %{"validator_hash" => validator_hash_string, "block_number" => block_number} = params) do
+    %{"validator_hash" => address_hash, "block_number" => block_number} = params
+    with {:format, {:ok, validator_hash}} <- {:format, Chain.string_to_address_hash(validator_hash_string)} do
+
+      {stakings, next_page} =
+        paging_options_validator_event(validator_hash,block_number)
+      |> Validator.get_stakings()
+      |> split_list_by_page()
+
+      next_page_params = next_page_params(next_page, stakings, params)
+
+      conn
+      |> put_status(200)
+      |> render(:stakings, %{stakings: stakings, next_page_params: next_page_params})
+    end
+  end
+
+  def staking(conn, %{"validator_hash" => validator_hash_string} = params) do
     %{"validator_hash" => address_hash} = params
-    with {:format, {:ok, validator_hash_address}} <- {:format, Chain.string_to_address_hash(address_hash)} do
+    with {:format, {:ok, validator_hash}} <- {:format, Chain.string_to_address_hash(validator_hash_string)} do
 
-      query_stakings =
-        [validator_hash: validator_hash_address]
-        |> Keyword.merge(paging_options(params))
-        |> Keyword.merge(@api_true)
-        |> Validator.get_stakings(validator_hash_address)
+      {stakings, next_page} =
+        paging_options_validator_event(validator_hash,0)
+        |> Validator.get_stakings()
+        |> split_list_by_page()
 
-      {stakings, next_page} = split_list_by_page(query_stakings)
-
-      next_page_params = next_page |> next_page_params(stakings, delete_parameters_from_next_page_params(params))
+      next_page_params = next_page_params(next_page, stakings, params)
 
       conn
       |> put_status(200)
