@@ -296,7 +296,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
     |> select_repo(options).all()
   end
 
-  @spec find_by_validator_hash(Hash.Address.t(), [api?]) :: {:ok, L2Validator.t()} | {:error, :not_found}
+  @spec find_by_validator_hash(Hash.Address.t()) :: {:ok, L2Validator.t()} | {:error, :not_found}
   def find_by_validator_hash(%Hash{byte_count: unquote(Hash.Address.byte_count())} = validator_hash, options \\ []) do
     L2Validator
     |> where(hash: ^validator_hash)

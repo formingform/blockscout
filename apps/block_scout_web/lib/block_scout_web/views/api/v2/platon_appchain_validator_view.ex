@@ -2,7 +2,7 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainValidatorView do
   use BlockScoutWeb, :view
 
   # l2_validators 是从个struct list，是通过ecto查询得到的数据库记录对象
-  defp convert_l2_validator(l2_validators) do
+  defp convert_l2_validator(validator) do
     %{
       "validator_hash" => validator.validator_hash,
       "stake_epoch" => validator.stake_epoch,
@@ -27,7 +27,7 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainValidatorView do
 
   @spec render(String.t(), map()) :: map()
   def render("platon_appchain_validators.json", %{validators: validators}) do
-    %{items: Enum.map(validators, fn validator -> convert_l2_validator(validators) end)}
+    %{items: Enum.map(validators, fn validator -> convert_l2_validator(validator) end)}
   end
 
   @spec render(String.t(), map()) :: map()
@@ -37,7 +37,7 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainValidatorView do
 
   @spec render(String.t(), map()) :: map()
   def render("platon_appchain_validator_details.json", %{validator: validator}) do
-    %{items: convert_l2_validator(validator), next_page_params: next_page_params}
+    %{items: convert_l2_validator(validator)}
   end
 
 
