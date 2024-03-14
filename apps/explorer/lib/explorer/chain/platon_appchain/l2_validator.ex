@@ -1,6 +1,8 @@
 defmodule Explorer.Chain.PlatonAppchain.L2Validator do
   use Explorer.Schema
 
+  import Explorer.Chain, only: [default_paging_options: 0, select_repo: 1]
+
   # alias Ecto.Changeset
   alias Explorer.{
     Chain,
@@ -34,7 +36,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
      expect_apr:  预估年收益率，万分之一单位,
      block_rate:  最近24小时出块率，万分之一单位,
      auth_status:  是否验证 0-未验证，1-已验证,
-     role:  0-candidate(质押节点) 1-active(共识节点后续人) 2-verifying(共识节点),
+     role:  0-candidate(质押节点) 1-active(共识节点候选人) 2-verifying(共识节点),
      status:  浏览器目前只判断：0: 正常 1：无效 2：低出块 4: 低阈值 8: 双签 16：解质押 32:惩罚
   """
   @type t :: %__MODULE__{
@@ -266,5 +268,44 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
   def delete_exited_validator(repo, validator_hash) do
     repo.delete_all(
       from(x in __MODULE__, where: x.validator_hash == ^validator_hash))
+  end
+
+  def list_validators_by_role(%{:role => role_value} = options) do
+    query =
+      case String.downcase(role_value) do
+        "all" ->
+          from(
+            v in __MODULE__,
+            order_by: [desc: v.rank]
+          )
+        "active" ->
+          from(
+            v in __MODULE__,
+            where: v.role == 1,
+            order_by: [desc: v.rank]
+          )
+        "candidate" ->
+          from(
+            v in __MODULE__,
+            where: v.role == 0,
+            order_by: [desc: v.rank]
+          )
+      end
+
+    query
+    |> select_repo(options).all()
+  end
+
+  @spec find_by_validator_hash(Hash.Address.t(), [api?]) :: {:ok, L2Validator.t()} | {:error, :not_found}
+  def find_by_validator_hash(%Hash{byte_count: unquote(Hash.Address.byte_count())} = validator_hash, options \\ []) do
+    L2Validator
+    |> where(hash: ^validator_hash)
+    |> select_repo(options).one()
+    |> case do
+         nil ->
+           {:error, :not_found}
+         validator ->
+           {:ok, validator}
+    end
   end
 end
