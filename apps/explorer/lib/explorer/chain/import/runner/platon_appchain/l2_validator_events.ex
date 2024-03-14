@@ -1,7 +1,6 @@
 defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
 
   require Ecto.Query
-  require Logger
 
   alias Ecto.{Changeset, Multi, Repo}
   alias Explorer.Chain.Import
@@ -112,23 +111,11 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
       )
     end)
   end
-  def run(multi, changes_list, %{timestamps: timestamps} = options) do
-    #do nothing
-  end
 
   defp upsert_validator(repo, l2_validator_events, %{timeout: timeout, timestamps: timestamps}) do
-    #do nothing
+    {:ok, "No L2 validator to update"}
   end
   defp upsert_validator(repo, l2_validator_events, %{timeout: timeout, timestamps: timestamps}) when length(l2_validator_events) > 0 do
-
-    exit_validator_hash_list =
-      l2_validator_events
-      |> Enum.reduce([], fn validator_event, acc ->
-        if validator_event.action_type == @l2_validator_event_action_type_UnStaked || validator_event.action_type == @l2_validator_event_action_type_Slashed do
-          [validator_event.validator_hash | acc]
-        end
-      end)
-      |> Enum.uniq() # 去重
 
     validator_hash_list =
     l2_validator_events
@@ -145,6 +132,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
   end
 
   defp backup_exited_validator(repo, l2_validator_events, %{timeout: timeout, timestamps: timestamps}) do
+    {:ok, "No validator to backup"}
   end
   defp backup_exited_validator(repo, l2_validator_events, %{timeout: timeout, timestamps: timestamps}) when length(l2_validator_events) > 0 do
     validator_hash_list =
@@ -158,8 +146,6 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
           _ -> acc
         end
       end)
-    #|> Enum.reverse()
-    #|> Enum.uniq_by(fn {x, _} -> x end) # 去重
 
     Enum.each(validator_hash_list, fn {validator_hash, status, block_number, exit_desc} ->
       case L2ValidatorService.backup_exited_validator(repo, Hash.to_string(validator_hash), status, block_number, exit_desc) do
@@ -171,6 +157,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
   end
 
   defp delete_exited_validator(repo, l2_validator_events, %{timeout: timeout, timestamps: timestamps}) do
+    {:ok, "No validator to delete"}
   end
 
   defp delete_exited_validator(repo, l2_validator_events, %{timeout: timeout, timestamps: timestamps}) when length(l2_validator_events) > 0 do
@@ -217,7 +204,6 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
       timeout: timeout,
       timestamps: timestamps
     )
-    {:ok, "insert or update validator successfully"}
   end
 
   defp default_on_conflict do
