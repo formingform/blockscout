@@ -554,6 +554,10 @@ defmodule BlockScoutWeb.Chain do
     %{"block_number" => number}
   end
 
+  defp paging_params(%{number: number}) do
+    %{"block_number" => number}
+  end
+
   defp paging_params(%InternalTransaction{index: index, transaction_hash: transaction_hash}) do
     {:ok, %Transaction{block_number: block_number, index: transaction_index}} = hash_to_transaction(transaction_hash)
     %{"block_number" => block_number, "transaction_index" => transaction_index, "index" => index}

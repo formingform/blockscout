@@ -12,8 +12,6 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorView do
   end
 
   def render("l2Validators.json", %{validator: validators, next_page_params: next_page_params}) do
-    IO.puts("l2Validators.json view======================================")
-#    %{"items" => Enum.map(validators, &prepare_validator(&1, nil)), "next_page_params" => next_page_params}
     %{"items" => Enum.map(validators, &prepare_validator(&1, nil)), "next_page_params" => next_page_params}
   end
 

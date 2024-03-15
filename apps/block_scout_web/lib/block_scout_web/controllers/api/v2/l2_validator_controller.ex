@@ -56,12 +56,10 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorController do
       |> Keyword.merge(@api_true)
       |> Chain.list_l2Validators()
 
-    Logger.error(fn -> "=l2_validators_plus_one>>> #{inspect(l2_validators_plus_one)}" end, logger: :platon_appchain)
     {validators, next_page} = split_list_by_page(l2_validators_plus_one)
 
     # 组装下个分页信息
     next_page_params = next_page |> next_page_params(validators, delete_parameters_from_next_page_params(params))
-
 
     conn
     |> put_status(200)
@@ -131,39 +129,50 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorController do
     end
   end
 
-  def blocks_produced(conn, params) do
-    %{"validator_hash" => address_hash} = params
-    with {:format, {:ok, validator_hash_address}} <- {:format, Chain.string_to_address_hash(address_hash)} do
+  def blocks_produced(conn, %{"validator_hash" => validator_hash_string, "block_number" => block_number} = params) do
+    %{"validator_hash" => address_hash, "block_number" => block_number} = params
+    with {:format, {:ok, validator_hash}} <- {:format, Chain.string_to_address_hash(validator_hash_string)} do
 
-      query_block_produced =
-        [validator_hash: validator_hash_address]
-        |> Keyword.merge(paging_options(params))
-        |> Keyword.merge(@api_true)
-        |> Validator.get_blocks_produced(validator_hash_address)
+      {block_produceds, next_page} =
+        paging_options_validator_event(validator_hash,block_number)
+        |> Validator.get_blocks_produced()
+        |> split_list_by_page()
 
-      {block_produced, next_page} = split_list_by_page(query_block_produced)
-
-      next_page_params = nil   #next_page |> next_page_params(block_produced, delete_parameters_from_next_page_params(params))
+      next_page_params = next_page_params(next_page, block_produceds, params)
 
       conn
       |> put_status(200)
-      |> render(:block_produced, %{block_produced: block_produced, next_page_params: next_page_params})
+      |> render(:block_produced, %{block_produced: block_produceds, next_page_params: next_page_params})
     end
   end
 
-  def validator_action(conn, params) do
+  def blocks_produced(conn, %{"validator_hash" => validator_hash_string} = params) do
     %{"validator_hash" => address_hash} = params
-    with {:format, {:ok, validator_hash_address}} <- {:format, Chain.string_to_address_hash(address_hash)} do
+    with {:format, {:ok, validator_hash}} <- {:format, Chain.string_to_address_hash(validator_hash_string)} do
 
-      query_validator_action =
-        [validator_hash: validator_hash_address]
-        |> Keyword.merge(paging_options(params))
-        |> Keyword.merge(@api_true)
-        |> Validator.get_validator_action(validator_hash_address)
+      {block_produceds, next_page} =
+        paging_options_validator_event(validator_hash,0)
+        |> Validator.get_blocks_produced()
+        |> split_list_by_page()
 
-      {validator_actions, next_page} = split_list_by_page(query_validator_action)
+      next_page_params = next_page_params(next_page, block_produceds, params)
 
-      next_page_params = next_page |> next_page_params(validator_actions, delete_parameters_from_next_page_params(params))
+      conn
+      |> put_status(200)
+      |> render(:block_produced, %{block_produced: block_produceds, next_page_params: next_page_params})
+    end
+  end
+
+  def validator_action(conn, %{"validator_hash" => validator_hash_string, "block_number" => block_number} = params) do
+    %{"validator_hash" => address_hash, "block_number" => block_number} = params
+    with {:format, {:ok, validator_hash}} <- {:format, Chain.string_to_address_hash(validator_hash_string)} do
+
+      {validator_actions, next_page} =
+        paging_options_validator_event(validator_hash,block_number)
+        |> Validator.get_validator_action()
+        |> split_list_by_page()
+
+      next_page_params = next_page_params(next_page, validator_actions, params)
 
       conn
       |> put_status(200)
@@ -171,19 +180,50 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorController do
     end
   end
 
-  def delegator(conn, params) do
+  def validator_action(conn, %{"validator_hash" => validator_hash_string} = params) do
     %{"validator_hash" => address_hash} = params
-    with {:format, {:ok, validator_hash_address}} <- {:format, Chain.string_to_address_hash(address_hash)} do
+    with {:format, {:ok, validator_hash}} <- {:format, Chain.string_to_address_hash(validator_hash_string)} do
 
-      query_delegator =
-        [validator_hash: validator_hash_address]
-        |> Keyword.merge(paging_options(params))
-        |> Keyword.merge(@api_true)
-        |> Validator.get_delegator(validator_hash_address)
+      {validator_actions, next_page} =
+        paging_options_validator_event(validator_hash,0)
+        |> Validator.get_validator_action()
+        |> split_list_by_page()
 
-      {delegators, next_page} = split_list_by_page(query_delegator)
+      next_page_params = next_page_params(next_page, validator_actions, params)
 
-      next_page_params = next_page |> next_page_params(delegators, delete_parameters_from_next_page_params(params))
+      conn
+      |> put_status(200)
+      |> render(:validator_actions, %{validator_actions: validator_actions, next_page_params: next_page_params})
+    end
+  end
+
+  def delegator(conn, %{"validator_hash" => validator_hash_string, "block_number" => block_number} = params) do
+    %{"validator_hash" => address_hash, "block_number" => block_number} = params
+    with {:format, {:ok, validator_hash}} <- {:format, Chain.string_to_address_hash(validator_hash_string)} do
+
+      {delegators, next_page} =
+        paging_options_validator_event(validator_hash,block_number)
+        |> Validator.get_delegator()
+        |> split_list_by_page()
+
+      next_page_params = next_page_params(next_page, delegators, params)
+
+      conn
+      |> put_status(200)
+      |> render(:delegators, %{delegators: delegators, next_page_params: next_page_params})
+    end
+  end
+
+  def delegator(conn, %{"validator_hash" => validator_hash_string} = params) do
+    %{"validator_hash" => address_hash} = params
+    with {:format, {:ok, validator_hash}} <- {:format, Chain.string_to_address_hash(validator_hash_string)} do
+
+      {delegators, next_page} =
+        paging_options_validator_event(validator_hash,0)
+        |> Validator.get_delegator()
+        |> split_list_by_page()
+
+      next_page_params = next_page_params(next_page, delegators, params)
 
       conn
       |> put_status(200)

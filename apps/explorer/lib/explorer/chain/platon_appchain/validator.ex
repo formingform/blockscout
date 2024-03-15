@@ -74,7 +74,8 @@ defmodule Explorer.Chain.PlatonAppchain.Validator do
           block_timestamp: l.block_timestamp,
           block_number: l.block_number,
           amount: l.amount
-        }
+        },
+        order_by: [desc: l.block_number]
       )
 
     base_query
@@ -83,12 +84,8 @@ defmodule Explorer.Chain.PlatonAppchain.Validator do
     |> select_repo(options).all()
   end
 
-  @spec get_blocks_produced([paging_options | necessity_by_association_option | api?],Hash.Address.t()) :: [Block.t()]
-  def get_blocks_produced(options \\ [],%Hash{byte_count: unquote(Hash.Address.byte_count())} = validator_hash_address) when is_list(options) do
-    #    necessity_by_association = Keyword.get(options, :necessity_by_association, %{})
-    #    paging_options = Keyword.get(options, :paging_options) || @default_paging_options
-    #    block_type = Keyword.get(options, :block_type, "Block")
-
+  @spec get_blocks_produced([]) :: [Block.t()]
+  def get_blocks_produced(options \\ []) when is_list(options) do
     paging_options = Keyword.get(options, :paging_options, default_paging_options())
 
     base_query =
@@ -99,22 +96,19 @@ defmodule Explorer.Chain.PlatonAppchain.Validator do
           block_timestamp: b.timestamp,
           txn: b.size,
           gas_used: b.gas_used,
-        }
+        },
+        order_by: [desc: b.number]
       )
 
     base_query
-    |> page_validator_events(paging_options)
+    |> page_validator_events_blocks(paging_options)
     |> limit(^paging_options.page_size)
     |> select_repo(options).all()
   end
 
 
-  @spec get_validator_action([paging_options | necessity_by_association_option | api?],Hash.Address.t()) :: [L2ValidatorEvent.t()]
-  def get_validator_action(options \\ [],%Hash{byte_count: unquote(Hash.Address.byte_count())} = validator_hash_address) when is_list(options) do
-    #    necessity_by_association = Keyword.get(options, :necessity_by_association, %{})
-    #    paging_options = Keyword.get(options, :paging_options) || @default_paging_options
-    #    block_type = Keyword.get(options, :block_type, "Block")
-
+  @spec get_validator_action([]) :: [L2ValidatorEvent.t()]
+  def get_validator_action(options \\ []) when is_list(options) do
     paging_options = Keyword.get(options, :paging_options, default_paging_options())
 
     base_query =
@@ -125,7 +119,8 @@ defmodule Explorer.Chain.PlatonAppchain.Validator do
           block_timestamp: l.block_timestamp,
           block_number: l.block_number,
           action_desc: l.action_desc
-        }
+        },
+        order_by: [desc: l.block_number]
       )
 
     base_query
@@ -134,8 +129,8 @@ defmodule Explorer.Chain.PlatonAppchain.Validator do
     |> select_repo(options).all()
   end
 
-  @spec get_delegator([paging_options | necessity_by_association_option | api?],Hash.Address.t()) :: [L2ValidatorEvent.t()]
-  def get_delegator(options \\ [],%Hash{byte_count: unquote(Hash.Address.byte_count())} = validator_hash_address) when is_list(options) do
+  @spec get_delegator([]) :: [L2ValidatorEvent.t()]
+  def get_delegator(options \\ []) when is_list(options) do
     paging_options = Keyword.get(options, :paging_options, default_paging_options())
 
     base_query =
@@ -144,7 +139,8 @@ defmodule Explorer.Chain.PlatonAppchain.Validator do
         select: %{
           amount: l.amount,
           action_desc: l.action_desc
-        }
+        },
+        order_by: [desc: l.block_number]
       )
 
     base_query
@@ -163,6 +159,19 @@ defmodule Explorer.Chain.PlatonAppchain.Validator do
     from(item in query,
       where:
         item.validator_hash == ^validator_hash and item.block_number < ^block_number
+    )
+  end
+
+  defp page_validator_event_blocks(query, %PagingOptions{key: nil}), do: query
+
+  defp page_validator_events_blocks(query, %PagingOptions{key: {validator_hash}}) do
+    from(item in query, where: item.miner_hash == ^validator_hash)
+  end
+
+  defp page_validator_events_blocks(query, %PagingOptions{key: {validator_hash,block_number}}) do
+    from(item in query,
+      where:
+        item.miner_hash == ^validator_hash and item.number < ^block_number
     )
   end
 end
