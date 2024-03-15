@@ -30,6 +30,8 @@ defmodule BlockScoutWeb.API.V2.StatsController do
 
     transaction_stats = Helper.get_transaction_stats()
 
+    total_supply = Helper.get_total_supply()
+
     gas_prices =
       case GasPriceOracle.get_gas_prices() do
         {:ok, gas_prices} ->
@@ -56,7 +58,8 @@ defmodule BlockScoutWeb.API.V2.StatsController do
         "static_gas_price" => gas_price,
         "market_cap" => Helper.market_cap(market_cap_type, exchange_rate_from_db),
         "tvl" => exchange_rate_from_db.tvl_usd,
-        "network_utilization_percentage" => network_utilization_percentage()
+        "network_utilization_percentage" => network_utilization_percentage(),
+        "total_supply" => total_supply
       }
       |> add_rootstock_locked_btc()
     )

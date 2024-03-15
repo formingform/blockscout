@@ -135,4 +135,16 @@ defmodule BlockScoutWeb.API.V2.Helper do
     x_days_back = Date.add(latest, -1 * (num_days - 1))
     %{earliest: x_days_back, latest: latest}
   end
+
+  def get_total_supply do
+    if System.get_env("CHAIN_TYPE") == "platon_appchain" do
+      token_contract_address =  System.get_env("INDEXER_PLATON_APPCHAIN_L1_TOKEN_CONTRACT")
+      l1_rpc =  System.get_env("INDEXER_PLATON_APPCHAIN_L1_RPC")
+      tx_data = Ethers.Contracts.ERC20.total_supply()
+      {:ok, total_supply} = Ethers.call(tx_data, to: token_contract_address, rpc_opts: [url: l1_rpc])
+      Integer.to_string(total_supply)
+    else
+      0
+    end
+  end
 end

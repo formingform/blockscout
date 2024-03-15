@@ -7,7 +7,7 @@ defmodule Explorer.Chain.PlatonAppchain.Validator do
 
   alias Explorer.{PagingOptions, Repo}
   alias Explorer.Chain.PlatonAppchain.{L2Validator,L2ValidatorHistory,L2ValidatorEvent}
-  alias Explorer.Chain.{Block,Address, Hash}
+  alias Explorer.Chain.{Block,Address,Hash,Transaction}
 
   @typedoc """
    * `:optional` - the association is optional and only needs to be loaded if available
@@ -75,6 +75,7 @@ defmodule Explorer.Chain.PlatonAppchain.Validator do
           block_number: l.block_number,
           amount: l.amount
         },
+        where: l.action_type == 2,
         order_by: [desc: l.block_number]
       )
 
@@ -91,11 +92,15 @@ defmodule Explorer.Chain.PlatonAppchain.Validator do
     base_query =
       from(
         b in Block,
+        left_join: t in Transaction,
+        on: b.number == t.block_number,
+        group_by: [b.number, b.timestamp, b.size, b.gas_used, b.gas_limit],
         select: %{
           number: b.number,
           block_timestamp: b.timestamp,
           txn: b.size,
           gas_used: b.gas_used,
+          tx_fee_reward: coalesce(sum(t.gas_used * t.gas_price), 0)
         },
         order_by: [desc: b.number]
       )
@@ -140,6 +145,7 @@ defmodule Explorer.Chain.PlatonAppchain.Validator do
           amount: l.amount,
           action_desc: l.action_desc
         },
+        where: l.action_type == 3,
         order_by: [desc: l.block_number]
       )
 

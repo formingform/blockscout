@@ -108,7 +108,7 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorView do
             "block_timestamp" => block.block_timestamp,
             "txn" => block.txn,
             "gas_used" => block.gas_used,
-            "tx_fee_reward" =>"tx_fee_reward待处理",
+            "tx_fee_reward" => block.tx_fee_reward,
             "block_reward" => "block_reward待处理",
           }
         end),

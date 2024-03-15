@@ -117,7 +117,6 @@ defmodule BlockScoutWeb.Chain do
 
     next_page_params = Map.merge(params, paging_params)
     current_items_count_string = Map.get(next_page_params, "items_count")
-    Logger.error(fn -> "current_items_count_string  ==============#{inspect(current_items_count_string)}==========================)" end)
 
     items_count =
       if is_binary(current_items_count_string) do
