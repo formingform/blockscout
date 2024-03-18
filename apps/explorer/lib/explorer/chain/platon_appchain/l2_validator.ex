@@ -310,4 +310,18 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
            {:ok, validator}
     end
   end
+
+#  @spec statistics_validators() :: {non_neg_integer(), :decimal}
+  def statistics_validators() do
+    query =
+      from(l in __MODULE__,
+        select: %{
+          validator_count: coalesce(count(1), 0),
+          total_staked: coalesce(sum(l.stake_amount + l.locking_stake_amount),0)
+        }
+      )
+
+    query
+    |> select_repo([]).one()
+  end
 end

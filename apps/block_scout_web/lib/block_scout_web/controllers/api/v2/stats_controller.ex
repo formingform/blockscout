@@ -13,6 +13,9 @@ defmodule BlockScoutWeb.API.V2.StatsController do
   alias Explorer.Chain.Transaction.History.TransactionStats
   alias Explorer.Counters.AverageBlockTime
   alias Timex.Duration
+  alias Explorer.Chain.PlatonAppchain
+  alias Explorer.Chain.PlatonAppchain.L2Validator
+
 
   @api_true [api?: true]
 
@@ -29,8 +32,6 @@ defmodule BlockScoutWeb.API.V2.StatsController do
     exchange_rate_from_db = Market.get_native_coin_exchange_rate_from_db()
 
     transaction_stats = Helper.get_transaction_stats()
-
-    total_supply = Helper.get_total_supply()
 
     gas_prices =
       case GasPriceOracle.get_gas_prices() do
@@ -58,10 +59,10 @@ defmodule BlockScoutWeb.API.V2.StatsController do
         "static_gas_price" => gas_price,
         "market_cap" => Helper.market_cap(market_cap_type, exchange_rate_from_db),
         "tvl" => exchange_rate_from_db.tvl_usd,
-        "network_utilization_percentage" => network_utilization_percentage(),
-        "total_supply" => total_supply
+        "network_utilization_percentage" => network_utilization_percentage()
       }
       |> add_rootstock_locked_btc()
+      |> add_stats_platon_appchain()
     )
   end
 
@@ -136,6 +137,50 @@ defmodule BlockScoutWeb.API.V2.StatsController do
       stats |> Map.put("rootstock_locked_btc", rootstock_locked_btc)
     else
       _ -> stats
+    end
+  end
+
+  defp add_stats_platon_appchain(stats) do
+    if System.get_env("CHAIN_TYPE") == "platon_appchain" do
+      # 获取token总供应量
+      token_contract_address =  System.get_env("INDEXER_PLATON_APPCHAIN_L1_TOKEN_CONTRACT")
+      l1_rpc =  System.get_env("INDEXER_PLATON_APPCHAIN_L1_RPC")
+      tx_data = Ethers.Contracts.ERC20.total_supply()
+      {:ok, total_supply} = Ethers.call(tx_data, to: token_contract_address, rpc_opts: [url: l1_rpc])
+      stats = stats |> Map.put("total_supply", Integer.to_string(total_supply))
+
+      # 获取总质押量及验证人数
+      %{total_staked: total_assets_staked, validator_count: validator_count}  = L2Validator.statistics_validators()
+      stats = stats |> Map.put("validator_count", validator_count)
+      stats = stats |> Map.put("total_assets_staked", total_assets_staked)
+
+      # TODO 计算质押率
+      excitation_balance = Decimal.new("0") # 激励池余额怎么获取
+      liq_balance =  Decimal.sub(Decimal.new(total_supply), excitation_balance)
+      staked_rate = Decimal.div(total_assets_staked,liq_balance) |> Decimal.mult(100)   # |> Decimal.to_float()
+      stats = stats |> Map.put("staked_rate", staked_rate)
+
+      # 下个checkpoint批次所在区块(取block表最大区块进行计算)
+      %{block_number: block_number_value} = Chain.get_max_block_number()
+      next_l2_state_batch_block = nextL2RoundBlockNumber(block_number_value)
+      stats = stats |> Map.put("next_l2_state_batch_block", next_l2_state_batch_block)
+
+    else
+      stats
+    end
+  end
+
+  def nextL2RoundBlockNumber(current_block_number) do
+    l2_round_size = String.to_integer(System.get_env("INDEXER_PLATON_APPCHAIN_L2_ROUND_SIZE") || 250)
+    next_round = calculateL2Round(current_block_number, l2_round_size)
+    next_round * l2_round_size + 1
+  end
+
+  def calculateL2Round(current_block_number, round_size) do
+    if rem(current_block_number,round_size)==0 do
+      div(current_block_number, round_size)
+    else
+      div(current_block_number, round_size) + 1
     end
   end
 end

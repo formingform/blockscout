@@ -6465,5 +6465,9 @@ defmodule Explorer.Chain do
     where(query, [validator], validator.rank < ^rank)
   end
 
+  def get_max_block_number() do
+    Block.query_max_block_number()
+    |> select_repo([]).one()
+  end
 
 end

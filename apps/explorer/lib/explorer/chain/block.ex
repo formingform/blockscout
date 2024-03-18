@@ -159,4 +159,12 @@ defmodule Explorer.Chain.Block do
   end
 
   def block_type_filter(query, "Uncle"), do: where(query, [block], block.consensus == false)
+
+  def query_max_block_number() do
+    from(b in __MODULE__,
+      select: %{
+        block_number: coalesce(max(b.number), 0)
+      }
+    )
+  end
 end
