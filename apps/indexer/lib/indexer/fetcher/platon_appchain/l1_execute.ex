@@ -106,7 +106,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L1Execute do
         event_id: event_id,
         hash: event["transactionHash"],
         checkpoint_hash: checkpoint_hash,
-        status: Kernel.boolean(status)
+        replay_status: Kernel.boolean(status),
+        status: 1
       }
     end)
   end

@@ -15,10 +15,11 @@ defmodule BlockScoutWeb.API.V2.AddressController do
     only: [delete_parameters_from_next_page_params: 1, token_transfers_types_options: 1]
 
   alias BlockScoutWeb.AccessHelper
-  alias BlockScoutWeb.API.V2.{BlockView, TransactionView, WithdrawalView}
+  alias BlockScoutWeb.API.V2.{BlockView, TransactionView, WithdrawalView, DelegationView}
   alias Explorer.{Chain, Market}
   alias Explorer.Chain.Address.Counters
   alias Indexer.Fetcher.{CoinBalanceOnDemand, TokenBalanceOnDemand}
+  alias Explorer.Chain.PlatonAppchain.Query
 
   @transaction_necessity_by_association [
     necessity_by_association: %{
@@ -386,6 +387,34 @@ defmodule BlockScoutWeb.API.V2.AddressController do
       |> put_status(200)
       |> put_view(WithdrawalView)
       |> render(:withdrawals, %{withdrawals: withdrawals, next_page_params: next_page_params})
+    end
+  end
+
+  def delegations(conn, %{"address_hash_param" => address_hash_string} = params) do
+    with {:format, {:ok, address_hash}} <- {:format, Chain.string_to_address_hash(address_hash_string)},
+         {:ok, false} <- AccessHelper.restricted_access?(address_hash_string, params),
+         {:not_found, {:ok, _address}} <- {:not_found, Chain.hash_to_address(address_hash, @api_true, false)} do
+#      options = @api_true |> Keyword.merge(paging_options(params))
+#      delegations_plus_one = address_hash |> Chain.address_hash_to_delegations(options)
+#      {delegations, next_page} = split_list_by_page(delegations_plus_one)
+#
+#      next_page_params = next_page |> next_page_params(delegations, delete_parameters_from_next_page_params(params))
+
+      params =
+        params
+        |> paging_options()
+        |> Keyword.put(:api?, true)
+
+      {delegations, next_page} =
+        Query.delegations(address_hash,params)
+        |> split_list_by_page()
+
+      next_page_params = next_page_params(next_page, delegations, params)
+
+      conn
+      |> put_status(200)
+      |> put_view(DelegationView)
+      |> render(:delegations, %{delegations: delegations, next_page_params: next_page_params})
     end
   end
 

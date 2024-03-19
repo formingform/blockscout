@@ -239,6 +239,8 @@ defmodule BlockScoutWeb.ApiRouter do
       get("/:address_hash_param/coin-balance-history", V2.AddressController, :coin_balance_history)
       get("/:address_hash_param/coin-balance-history-by-day", V2.AddressController, :coin_balance_history_by_day)
       get("/:address_hash_param/withdrawals", V2.AddressController, :withdrawals)
+      get("/:address_hash_param/delegations", V2.AddressController, :delegations)
+      get("/:address_hash_param/validators", V2.AddressController, :validators)
     end
 
     scope "/tokens" do
@@ -298,8 +300,8 @@ defmodule BlockScoutWeb.ApiRouter do
       end
     end
 
-#    optimism后续改成platon_appchain（待调整）
-    scope "/optimism" do
+#    optimism后续改成platon_appchain
+    scope "/platon-appchain" do
       if System.get_env("CHAIN_TYPE") == "platon_appchain" do
         get("/deposits", V2.PlatonAppchainController, :deposits)
         get("/deposits/count", V2.PlatonAppchainController, :deposits_count)

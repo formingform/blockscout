@@ -36,6 +36,7 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainValidatorController do
     validators =
     []
     |> Keyword.put(:role, "active")
+    |> Keyword.put(:api?, true)
     |> L2Validator.list_validators_by_role()
 
     conn

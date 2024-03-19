@@ -18,31 +18,7 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorController do
   alias Explorer.{Chain}
   alias Explorer.Chain.PlatonAppchain.Validator
 
-  @transaction_necessity_by_association [
-    necessity_by_association: %{
-      [created_contract_address: :names] => :optional,
-      [from_address: :names] => :optional,
-      [to_address: :names] => :optional,
-      :block => :optional,
-      [created_contract_address: :smart_contract] => :optional,
-      [from_address: :smart_contract] => :optional,
-      [to_address: :smart_contract] => :optional
-    }
-  ]
-
   @api_true [api?: true]
-
-  @validator_params [
-    necessity_by_association: %{
-      [miner: :names] => :optional,
-      :uncles => :optional,
-      :nephews => :optional,
-      :rewards => :optional,
-      :transactions => :optional,
-      :withdrawals => :optional
-    },
-    api?: true
-  ]
 
   action_fallback(BlockScoutWeb.API.V2.FallbackController)
 
@@ -101,6 +77,7 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorController do
 
       {stakings, next_page} =
         paging_options_validator_event(validator_hash,block_number)
+      |> Keyword.put(:api?, true)
       |> Validator.get_stakings()
       |> split_list_by_page()
 
@@ -118,6 +95,7 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorController do
 
       {stakings, next_page} =
         paging_options_validator_event(validator_hash,0)
+        |> Keyword.put(:api?, true)
         |> Validator.get_stakings()
         |> split_list_by_page()
 
@@ -135,6 +113,7 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorController do
 
       {block_produceds, next_page} =
         paging_options_validator_event(validator_hash,block_number)
+        |> Keyword.put(:api?, true)
         |> Validator.get_blocks_produced()
         |> split_list_by_page()
 
@@ -152,6 +131,7 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorController do
 
       {block_produceds, next_page} =
         paging_options_validator_event(validator_hash,0)
+        |> Keyword.put(:api?, true)
         |> Validator.get_blocks_produced()
         |> split_list_by_page()
 
@@ -169,6 +149,7 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorController do
 
       {validator_actions, next_page} =
         paging_options_validator_event(validator_hash,block_number)
+        |> Keyword.put(:api?, true)
         |> Validator.get_validator_action()
         |> split_list_by_page()
 
@@ -186,6 +167,7 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorController do
 
       {validator_actions, next_page} =
         paging_options_validator_event(validator_hash,0)
+        |> Keyword.put(:api?, true)
         |> Validator.get_validator_action()
         |> split_list_by_page()
 
@@ -203,6 +185,7 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorController do
 
       {delegators, next_page} =
         paging_options_validator_event(validator_hash,block_number)
+        |> Keyword.put(:api?, true)
         |> Validator.get_delegator()
         |> split_list_by_page()
 
@@ -220,6 +203,7 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorController do
 
       {delegators, next_page} =
         paging_options_validator_event(validator_hash,0)
+        |> Keyword.put(:api?, true)
         |> Validator.get_delegator()
         |> split_list_by_page()
 

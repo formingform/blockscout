@@ -39,8 +39,8 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
           block_timestamp: l12.l1e_block_timestamp,
           l2_event_hash: l12.l2e_hash,
           replay_status: coalesce(l12.replay_status,0),
-          start_id: c.start_id,
-          end_id: c.end_id,
+          start_id: coalesce(c.start_id,0),
+          end_id: coalesce(c.end_id,0),
           commitment_hash: c.hash,
           state_root: c.state_root
         },
@@ -240,6 +240,32 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
     select_repo(options).aggregate(query, :count, timeout: :infinity)
   end
 
+  @spec delegations(Hash.Address.t(),list()) :: list()
+  def delegations(address_hash, options \\ []) do
+    paging_options = Keyword.get(options, :paging_options, default_paging_options())
+
+    base_query =
+      from(
+        l1e in L1Event,
+        left_join: l2e in L2Execute,
+        on: l1e.event_id == l2e.event_id,
+        where: l1e.tx_type == 4 and l2e.replay_status == 1 and l1e.from == ^address_hash,
+        group_by: l1e.validator,
+        select: %{
+          validator: l1e.validator,
+          delegation_amount:  coalesce(sum(l1e.amount),0)
+        },
+        order_by: [desc: l1e.validator]
+      )
+
+    base_query
+    |> page_delegations(paging_options)
+    |> limit(^paging_options.page_size)
+    |> select_repo(options).all()
+  end
+
+
+
   defp page_deposits_or_withdrawals(query, %PagingOptions{key: nil}), do: query
 
   defp page_deposits_or_withdrawals(query, %PagingOptions{key: {no}}) do
@@ -250,5 +276,11 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
 
   defp page_deposits_or_withdrawals_batch(query, %PagingOptions{key: {number}}) do
     from(item in query, where: item.block_number < ^number)
+  end
+
+  defp page_delegations(query, %PagingOptions{key: nil}), do: query
+
+  defp page_delegations(query, %PagingOptions{key: {validator}}) do
+    from(item in query, where: item.validator < ^validator)
   end
 end
