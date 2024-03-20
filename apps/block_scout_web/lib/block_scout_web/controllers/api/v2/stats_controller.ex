@@ -155,10 +155,12 @@ defmodule BlockScoutWeb.API.V2.StatsController do
       stats = stats |> Map.put("total_assets_staked", total_assets_staked)
 
       # 计算质押率
-      with {:ok, excitation_balance} <- get_excitation_balance() do
-        liq_balance =  Decimal.sub(Decimal.new(total_supply), excitation_balance)
-        staked_rate = Decimal.div(total_assets_staked,liq_balance) |> Decimal.mult(100)   # |> Decimal.to_float()
-        stats = stats |> Map.put("staked_rate", staked_rate)
+      case  get_excitation_balance() do
+        {:ok, excitation_balance} ->
+           liq_balance =  Decimal.sub(Decimal.new(total_supply), excitation_balance)
+           staked_rate = Decimal.div(total_assets_staked,liq_balance) |> Decimal.mult(100)   # |> Decimal.to_float()
+           stats = stats |> Map.put("staked_rate", staked_rate)
+        _-> stats = stats |> Map.put("staked_rate", nil)
       end
 
       # 下个checkpoint批次所在区块(取block表最大区块进行计算)
@@ -178,7 +180,7 @@ defmodule BlockScoutWeb.API.V2.StatsController do
     address_balances = EthereumJSONRPC.fetch_balances([%{block_quantity: "latest", hash_data: l2_reward_manager_contract}], json_rpc_named_arguments)
     balance =  case address_balances do
       {:ok, %EthereumJSONRPC.FetchedBalances{params_list: [%{address_hash: address_hash_value, block_number: block_number_value, value: balance}]}} -> {:ok,Decimal.new(balance)}
-      _-> {:error, -1}
+      _-> {:error, nil}
     end
   end
 
