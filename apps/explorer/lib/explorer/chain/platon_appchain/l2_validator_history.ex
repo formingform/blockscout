@@ -112,7 +112,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorHistory do
     base_query =
       from(
         v in __MODULE__,
-        order_by: v.validator_hash
+        order_by: [asc: v.validator_hash]
       )
 
     base_query

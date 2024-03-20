@@ -71,7 +71,8 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorView do
       "total_bonded" => "待统计",
       "self_stakes" => "待统计",
       "delegations" => validator_detail.delegate_amount,
-      "blocks" => "待统计",
+      "blocks" => validator_detail.blocks,
+      "block_rate" => Decimal.round(Decimal.from_float(validator_detail.current_validator_blocks_24 / validator_detail.total_blocks_24 * 100), 2),
       "expect_apr" => validator_detail.expect_apr,
       "total_rewards" => "待统计",    # Decimal.add(validator_detail.stake_reward, validator_detail.delegate_reward),
       "validator_claimable_rewards" => "待统计"

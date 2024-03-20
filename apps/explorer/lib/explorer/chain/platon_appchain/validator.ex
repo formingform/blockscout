@@ -48,15 +48,48 @@ defmodule Explorer.Chain.PlatonAppchain.Validator do
     |> select_repo(options).all()
   end
 
-  @spec get_validator_details(Hash.Address.t()) :: L2Validator.t() |nil
+  @spec get_validator_details(Hash.Address.t()) :: map() |nil
   def get_validator_details(%Hash{byte_count: unquote(Hash.Address.byte_count())} = validator_hash_address) do
+    blocks_total_query =
+      from(
+        b in Block,
+        where: b.miner_hash == ^validator_hash_address,
+        select: %{blocks: coalesce(count(1),0)}
+      )
+
+    # 获取当前时间前24小时的时间戳
+    twenty_four_hours_ago = Timex.shift(DateTime.utc_now(), days: -1)
+
+    total_blocks_query =
+      from(
+        b in Block,
+        where: b.inserted_at >= ^twenty_four_hours_ago,
+        select: %{blocks: coalesce(count(1),0)}
+      )
+
+    current_validator_blocks_query =
+      from(
+        b in Block,
+        where: b.inserted_at >= ^twenty_four_hours_ago and b.miner_hash == ^validator_hash_address,
+        select: %{blocks: coalesce(count(1),0)}
+      )
 
     query =
       from(
         v in L2Validator,
         where: v.validator_hash == ^validator_hash_address,
         limit: 1,
-        select: v
+        select: %{
+          owner_hash: v.owner_hash,
+          commission_rate: v.commission_rate,
+          website: v.website,
+          detail: v.detail,
+          delegate_amount: v.delegate_amount,
+          expect_apr: v.expect_apr,
+          blocks: subquery(blocks_total_query),
+          current_validator_blocks_24: coalesce(subquery(current_validator_blocks_query),0),
+          total_blocks_24: coalesce(subquery(total_blocks_query),1)
+        },
       )
 
     Repo.replica().one(query)

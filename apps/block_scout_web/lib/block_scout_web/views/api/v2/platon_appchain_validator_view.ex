@@ -4,6 +4,7 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainValidatorView do
   # l2_validators 是从个struct list，是通过ecto查询得到的数据库记录对象
   defp convert_l2_validator(validator) do
     %{
+      "rank" => validator.rank,
       "validators" => validator.validator_hash,
       "status" => validator.status, # 0: 正常 1：无效 2：低出块 4: 低阈值 8: 双签 32：解质押 64:惩罚
       "stake_epoch" => validator.stake_epoch,
@@ -28,6 +29,7 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainValidatorView do
 
   defp convert_l2_history_validator(validator) do
     %{
+      "no" => validator.stake_epoch,
       "validators" => validator.validator_hash,
       "status" => validator.status, # 0: 正常 1：无效 2：低出块 4: 低阈值 8: 双签 32：解质押 64:惩罚
       "exit_block" => validator.exit_block,
