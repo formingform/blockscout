@@ -154,15 +154,15 @@ defmodule BlockScoutWeb.API.V2.StatsController do
       stats = stats |> Map.put("validator_count", validator_count)
       stats = stats |> Map.put("total_assets_staked", total_assets_staked)
 
-      # TODO 计算质押率
-      excitation_balance = Decimal.new("0") # 激励池余额怎么获取
+      # 计算质押率
+      excitation_balance = get_excitation_balance()
       liq_balance =  Decimal.sub(Decimal.new(total_supply), excitation_balance)
       staked_rate = Decimal.div(total_assets_staked,liq_balance) |> Decimal.mult(100)   # |> Decimal.to_float()
       stats = stats |> Map.put("staked_rate", staked_rate)
 
       # 下个checkpoint批次所在区块(取block表最大区块进行计算)
       %{block_number: block_number_value} = Chain.get_max_block_number()
-      next_l2_state_batch_block = nextL2RoundBlockNumber(block_number_value)
+      next_l2_state_batch_block = next_l2_round_block_number(block_number_value)
       stats = stats |> Map.put("next_l2_state_batch_block", next_l2_state_batch_block)
 
     else
@@ -170,7 +170,18 @@ defmodule BlockScoutWeb.API.V2.StatsController do
     end
   end
 
-  def nextL2RoundBlockNumber(current_block_number) do
+  # 激励池余额
+  def get_excitation_balance() do
+    json_rpc_named_arguments = json_rpc_named_arguments(System.get_env("ETHEREUM_JSONRPC_HTTP_URL"))
+    l2_reward_manager_contract = json_rpc_named_arguments(System.get_env("INDEXER_PLATON_APPCHAIN_L2_REWARD_MANAGER_CONTRACT"))
+    address_balances = EthereumJSONRPC.fetch_balances([%{block_quantity: "latest", hash_data: l2_reward_manager_contract}], json_rpc_named_arguments)
+    balance =  case address_balances do
+      {:ok, %EthereumJSONRPC.FetchedBalances{params_list: [%{address_hash: address_hash_value, block_number: block_number_value, value: balance}]}} -> Decimal.new(balance)
+      _-> Decimal.new(0)
+    end
+  end
+
+  def next_l2_round_block_number(current_block_number) do
     l2_round_size = String.to_integer(System.get_env("INDEXER_PLATON_APPCHAIN_L2_ROUND_SIZE") || 250)
     next_round = calculateL2Round(current_block_number, l2_round_size)
     next_round * l2_round_size + 1
@@ -182,5 +193,21 @@ defmodule BlockScoutWeb.API.V2.StatsController do
     else
       div(current_block_number, round_size) + 1
     end
+  end
+
+  # 返回 JSON rpc 请求时的参数
+  def json_rpc_named_arguments(rpc_url) do
+    [
+      transport: EthereumJSONRPC.HTTP,
+      transport_options: [
+        http: EthereumJSONRPC.HTTP.HTTPoison,
+        url: rpc_url,
+        http_options: [
+          recv_timeout: :timer.minutes(10),
+          timeout: :timer.minutes(10),
+          hackney: [pool: :ethereum_jsonrpc]
+        ]
+      ]
+    ]
   end
 end
