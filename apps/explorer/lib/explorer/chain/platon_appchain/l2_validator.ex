@@ -325,12 +325,29 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
     |> select_repo([]).one()
   end
 
-#  验证人首页统计
+  #  验证人首页统计(总验证人数)
   def validators_size() do
     query =
       from(l in __MODULE__,
         select: %{
           validator_count: coalesce(count(1), 0)
+        }
+      )
+
+    query
+    |> select_repo([]).one()
+  end
+
+  #  24小时验证人变化数（验证人表24小时新增数-验证人历史表24小时新增数）
+  def validators_24_change_size() do
+    # 获取当前时间前24小时的时间戳
+    twenty_four_hours_ago = Timex.shift(DateTime.utc_now(), days: -1)
+
+    query =
+      from(l in __MODULE__,
+        where: l.inserted_at  >= ^twenty_four_hours_ago,
+        select: %{
+          validators_24_hours: coalesce(count(1), 0)
         }
       )
 

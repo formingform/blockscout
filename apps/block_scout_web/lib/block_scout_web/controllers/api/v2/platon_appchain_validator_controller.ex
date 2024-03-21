@@ -19,12 +19,14 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainValidatorController do
   def stats(conn, _params) do
 
    %{validator_count: validator_count} = L2Validator.validators_size()
+   %{validators_24_hours: validators_24_hours} = L2Validator.validators_24_change_size()
+   %{history_validators_24_hours: history_validators_24_hours} = L2ValidatorHistory.validators_24_change_size()
 
    json(
    conn,
    %{
      "validators" => validator_count,
-     "validators_24_hours" => "待处理",
+     "validators_24_hours" => validators_24_hours-history_validators_24_hours,
      "total_bonded" => "待确认",
      "total_bonded_24_hours" => "待确认",
      "reward_pool" => "待确认"
