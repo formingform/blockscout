@@ -258,6 +258,7 @@ defmodule BlockScoutWeb.ApiRouter do
 
     # 验证人相关接口（待调整）
     scope "/validators" do
+      get("/stats", V2.PlatonAppchainValidatorController, :stats) # 验证人统计信息
       get("/all", V2.PlatonAppchainValidatorController, :list_all_validators) # 获取所有节点（包括出块验证人，候选共识节点，质押节点）
       get("/active", V2.PlatonAppchainValidatorController, :list_active_validators) # 获取所有候选共识节点
       get("/candidate", V2.PlatonAppchainValidatorController, :list_candidate_validators) # 获取所有质押节点

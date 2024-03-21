@@ -15,6 +15,22 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainValidatorController do
 
   action_fallback(BlockScoutWeb.API.V2.FallbackController)
 
+  # TODO 统计数据如何取
+  def stats(conn, _params) do
+
+   %{validator_count: validator_count} = L2Validator.validators_size()
+
+   json(
+   conn,
+   %{
+     "validators" => validator_count,
+     "validators_24_hours" => "待处理",
+     "total_bonded" => "待确认",
+     "total_bonded_24_hours" => "待确认",
+     "reward_pool" => "待确认"
+   }
+  )
+  end
 
   @spec list_all_validators(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def list_all_validators(conn, params) do

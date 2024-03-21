@@ -311,13 +311,26 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
     end
   end
 
-#  @spec statistics_validators() :: {non_neg_integer(), :decimal}
+  #  首页统计
   def statistics_validators() do
     query =
       from(l in __MODULE__,
         select: %{
           validator_count: coalesce(count(1), 0),
           total_staked: coalesce(sum(l.stake_amount + l.locking_stake_amount),0)
+        }
+      )
+
+    query
+    |> select_repo([]).one()
+  end
+
+#  验证人首页统计
+  def validators_size() do
+    query =
+      from(l in __MODULE__,
+        select: %{
+          validator_count: coalesce(count(1), 0)
         }
       )
 
