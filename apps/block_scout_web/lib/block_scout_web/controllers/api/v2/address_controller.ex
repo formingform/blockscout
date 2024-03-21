@@ -15,7 +15,7 @@ defmodule BlockScoutWeb.API.V2.AddressController do
     only: [delete_parameters_from_next_page_params: 1, token_transfers_types_options: 1]
 
   alias BlockScoutWeb.AccessHelper
-  alias BlockScoutWeb.API.V2.{BlockView, TransactionView, WithdrawalView, DelegationView}
+  alias BlockScoutWeb.API.V2.{BlockView, TransactionView, WithdrawalView, DelegationView, ValidatorView}
   alias Explorer.{Chain, Market}
   alias Explorer.Chain.Address.Counters
   alias Indexer.Fetcher.{CoinBalanceOnDemand, TokenBalanceOnDemand}
@@ -415,6 +415,29 @@ defmodule BlockScoutWeb.API.V2.AddressController do
       |> put_status(200)
       |> put_view(DelegationView)
       |> render(:delegations, %{delegations: delegations, next_page_params: next_page_params})
+    end
+  end
+
+  def validators(conn, %{"address_hash_param" => address_hash_string} = params) do
+    with {:format, {:ok, address_hash}} <- {:format, Chain.string_to_address_hash(address_hash_string)},
+         {:not_found, {:ok, _address}} <- {:not_found, Chain.hash_to_address(address_hash, @api_true, false)} do
+
+      IO.puts("==================================================")
+      params =
+        params
+        |> paging_options()
+        |> Keyword.put(:api?, true)
+
+      {validators, next_page} =
+        Query.validators(address_hash,params)
+        |> split_list_by_page()
+
+      next_page_params = next_page_params(next_page, validators, params)
+
+      conn
+      |> put_status(200)
+      |> put_view(ValidatorView)
+      |> render(:validators, %{validators: validators, next_page_params: next_page_params})
     end
   end
 

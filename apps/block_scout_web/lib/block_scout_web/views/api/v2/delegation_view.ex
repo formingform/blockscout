@@ -12,6 +12,9 @@ defmodule BlockScoutWeb.API.V2.DelegationView do
   def prepare_delegation(delegation) do
     %{
       "validator" => delegation.validator,
+      "name" => delegation.name,
+      "logo" => delegation.logo,
+      "status" => delegation.status,
       "delegation_amount" => delegation.delegation_amount, # 有效委托
 #      "invalid_delegation_amount" => delegation.invalid_delegation_amount
 #      "unbonding" => delegation.unbonding,

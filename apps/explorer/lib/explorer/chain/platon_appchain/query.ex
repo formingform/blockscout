@@ -6,13 +6,17 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
   import Ecto.Query,
     only: [
       from: 2,
-      limit: 2
+      limit: 2,
+      order_by: 3,
+      subquery: 1,
+      union: 2,
+      where: 3
     ]
 
   import Explorer.Chain, only: [default_paging_options: 0, select_repo: 1]
 
   alias Explorer.{PagingOptions, Repo}
-  alias Explorer.Chain.PlatonAppchain.{L1Event, L1Execute,L2Event,L2Execute, Commitment,Checkpoint}
+  alias Explorer.Chain.PlatonAppchain.{L1Event, L1Execute,L2Event,L2Execute, Commitment,Checkpoint,L2Validator,L2ValidatorHistory}
   alias Explorer.Chain.{Block, Hash, Transaction}
 
   @spec deposits(list()) :: list()
@@ -244,15 +248,21 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
   def delegations(address_hash, options \\ []) do
     paging_options = Keyword.get(options, :paging_options, default_paging_options())
 
+    # TODO 如果验证人移到历史表时，需要关联历史表查询
     base_query =
       from(
         l1e in L1Event,
-        left_join: l2e in L2Execute,
+        join: l2e in L2Execute,
         on: l1e.event_id == l2e.event_id,
+        left_join: v in L2Validator,
+        on: l1e.validator == v.validator_hash,
         where: l1e.tx_type == 4 and l2e.replay_status == 1 and l1e.from == ^address_hash,
-        group_by: l1e.validator,
+        group_by: [l1e.validator,v.name,v.logo,v.status],
         select: %{
           validator: l1e.validator,
+          name: v.name,
+          logo: v.logo,
+          status: v.status,
           delegation_amount:  coalesce(sum(l1e.amount),0)
         },
         order_by: [desc: l1e.validator]
@@ -264,6 +274,35 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
     |> select_repo(options).all()
   end
 
+  @spec validators(Hash.Address.t(),list()) :: list()
+  def validators(address_hash, options \\ []) do
+    paging_options = Keyword.get(options, :paging_options, default_paging_options())
+
+    # TODO 如果验证人移到历史表时，需要关联历史表查询
+    base_query =
+      from(
+        l1e in L1Event,
+        join: l2e in L2Execute,
+        on: l1e.event_id == l2e.event_id,
+        left_join: v in L2Validator,
+        on: l1e.validator == v.validator_hash,
+        where: l1e.tx_type >= 2 and l1e.tx_type <= 3 and l2e.replay_status == 1 and l1e.from == ^address_hash,
+        group_by: [l1e.validator,v.name,v.logo,v.status],
+        select: %{
+          validator: l1e.validator,
+          name: v.name,
+          logo: v.logo,
+          status: v.status,
+          stake_amount:  coalesce(sum(l1e.amount),0)
+        },
+        order_by: [desc: l1e.validator]
+      )
+
+    base_query
+    |> page_delegations(paging_options)
+    |> limit(^paging_options.page_size)
+    |> select_repo(options).all()
+  end
 
 
   defp page_deposits_or_withdrawals(query, %PagingOptions{key: nil}), do: query
