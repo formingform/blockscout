@@ -414,7 +414,7 @@ defmodule BlockScoutWeb.API.V2.AddressController do
       conn
       |> put_status(200)
       |> put_view(DelegationView)
-      |> render(:delegations, %{delegations: delegations, next_page_params: next_page_params})
+      |> render(:delegations, %{delegations: delegations,delegator: address_hash_string, next_page_params: next_page_params})
     end
   end
 
