@@ -13,6 +13,7 @@ defmodule BlockScoutWeb.API.V2.TransactionView do
   alias Explorer.Chain.PolygonEdge.Reader
   alias Explorer.Chain.Transaction.StateChange
   alias Explorer.Counters.AverageBlockTime
+  alias Explorer.Chain.PlatonAppchain.Query
   alias Timex.Duration
 
   import BlockScoutWeb.Account.AuthController, only: [current_user: 1]
@@ -363,6 +364,8 @@ defmodule BlockScoutWeb.API.V2.TransactionView do
 
     decoded_input_data = decoded_input(decoded_input)
 
+    platon_appchain_actions = Query.get_platon_appchain_actions(transaction.hash)
+
     result = %{
       "hash" => transaction.hash,
       "result" => status,
@@ -414,6 +417,7 @@ defmodule BlockScoutWeb.API.V2.TransactionView do
       "token_transfers" => token_transfers(transaction.token_transfers, conn, single_tx?),
       "token_transfers_overflow" => token_transfers_overflow(transaction.token_transfers, single_tx?),
       "actions" => transaction_actions(transaction.transaction_actions),
+      "platon_appchain_actions"=> platon_appchain_actions,
       "exchange_rate" => Market.get_coin_exchange_rate().usd_value,
       "method" => method_name(transaction, decoded_input),
       "tx_types" => tx_types(transaction),

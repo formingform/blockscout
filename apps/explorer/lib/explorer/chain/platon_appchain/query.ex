@@ -16,7 +16,7 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
   import Explorer.Chain, only: [default_paging_options: 0, select_repo: 1]
 
   alias Explorer.{PagingOptions, Repo}
-  alias Explorer.Chain.PlatonAppchain.{L1Event, L1Execute,L2Event,L2Execute, Commitment,Checkpoint,L2Validator,L2ValidatorHistory}
+  alias Explorer.Chain.PlatonAppchain.{L1Event, L1Execute, L2Event, L2Execute, Commitment, Checkpoint, L2Validator, L2ValidatorHistory}
   alias Explorer.Chain.{Block, Hash, Transaction}
 
   @spec deposits(list()) :: list()
@@ -304,6 +304,44 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
     |> select_repo(options).all()
   end
 
+  @spec get_platon_appchain_actions(Hash.Full.t()) :: L1Event.t() | L2Event.t()
+  def get_platon_appchain_actions(tx_hash) do
+    l2_execute_query =
+      from(
+        l2e in L2Execute,
+        left_join: l1e in L1Event,
+        on: l2e.event_id == l1e.event_id,
+        where: l2e.hash == ^tx_hash,
+        select: %{
+          tx_type: l1e.tx_type,
+          amount:  l1e.amount,
+          from: l1e.from,
+          to: l1e.to
+        }
+      )
+    l2_query =
+      from(
+        l2e in L2Event,
+        where: l2e.hash == ^tx_hash,
+        select: %{
+          tx_type: l2e.tx_type,
+          amount:  l2e.amount,
+          from: l2e.from,
+          to: l2e.to
+        }
+      )
+    executes = l2_execute_query |> Repo.one()
+    if (executes != nil) do
+      executes
+    else
+      events = l2_query |> Repo.one()
+      if (events != nil) do
+        events
+      else
+        nil
+      end
+    end
+  end
 
   defp page_deposits_or_withdrawals(query, %PagingOptions{key: nil}), do: query
 
