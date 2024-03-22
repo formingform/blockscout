@@ -68,14 +68,19 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorView do
       "commission" => validator_detail.commission_rate,
       "website" => validator_detail.website,
       "detail" => validator_detail.detail,
-      "total_bonded" => "待统计",
-      "self_stakes" => "待统计",
-      "delegations" => validator_detail.delegate_amount,
+      "total_bonded" => "有效总质押", # 有效总质押
+      "self_stakes" => "有效的自有质押", # 有效的自有质押
+      "unbonding" => "解质押-锁定中的数据", # 解质押-锁定中的数据
+      "pending_withdrawal" => "已解锁-可以提取的数量", # 已解锁-可以提取的数量
+      "delegations" => validator_detail.delegate_amount,  # 有效委托量
+      "delegations_proportion" => "委托占比",  # 占比（占节点有效总质押的比例）
       "blocks" => validator_detail.blocks,
-      "block_rate" => Decimal.round(Decimal.from_float(validator_detail.current_validator_blocks_24 / validator_detail.total_blocks_24 * 100), 2),
+      "block_rate" => Decimal.round(Decimal.from_float(validator_detail.current_validator_blocks_24 / validator_detail.total_blocks_24 * 100), 2), #每日24小时结算周期内已出区块 除以 该期间应出的区块数
       "expect_apr" => validator_detail.expect_apr,
       "total_rewards" => "待统计",    # Decimal.add(validator_detail.stake_reward, validator_detail.delegate_reward),
-      "validator_claimable_rewards" => "待统计"
+      "validator_rewards" => "待统计",    # 验证人奖励
+      "delegator_rewards" => "待统计",    # 委托奖励
+      "validator_claimable_rewards" => "待统计" # 验证人可领取的数量
     }
   end
 
@@ -109,6 +114,7 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorView do
             "block_timestamp" => block.block_timestamp,
             "txn" => block.txn,
             "gas_used" => block.gas_used,
+            "gas_used_percentage" => "待处理",
             "tx_fee_reward" => block.tx_fee_reward,
             "block_reward" => "block_reward待处理",
           }

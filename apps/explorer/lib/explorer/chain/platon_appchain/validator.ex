@@ -106,9 +106,9 @@ defmodule Explorer.Chain.PlatonAppchain.Validator do
           hash: l.hash,
           block_timestamp: l.block_timestamp,
           block_number: l.block_number,
-          amount: l.amount
+          amount: fragment("CASE WHEN ? IN (1, 2) THEN ? ELSE -? END", l.action_type, l.amount, l.amount)
         },
-        where: l.action_type == 2,
+        where: l.action_type in [1, 2, 4, 5, 8],
         order_by: [desc: l.block_number]
       )
 
