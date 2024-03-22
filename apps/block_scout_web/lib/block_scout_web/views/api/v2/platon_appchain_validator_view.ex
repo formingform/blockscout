@@ -44,7 +44,8 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainValidatorView do
 
   @spec render(String.t(), map()) :: map()
   def render("platon_appchain_history_validators.json", %{validators: validators, next_page_params: next_page_params}) do
-    %{items: Enum.map(validators, fn validator -> convert_l2_history_validator(validator) end), next_page_params: next_page_params}
+    items = Enum.with_index(validators) |> Enum.map(fn {validator, index} -> {convert_l2_history_validator(validator) |> Map.put("index", index + 1)} end)
+    %{items: items, next_page_params: next_page_params}
   end
 
   @spec render(String.t(), map()) :: map()
