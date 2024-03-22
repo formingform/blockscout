@@ -143,4 +143,26 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorHistory do
   defp page_history_validators(query, %PagingOptions{key: {validator_hash}}) do
     from(item in query, where: item.validator_hash > ^validator_hash)  # > 或者 <， 取决于 base_query 中的 order by
   end
+
+  # 根据owner_hash查询validator数量
+  def count_by_owner_hash(owner_hash) do
+    query =
+      from(l in __MODULE__,
+        select:  coalesce(count(1), 0),
+        where: l.owner_hash == ^owner_hash
+      )
+
+    Repo.one(query)
+  end
+
+  # 根据validator_hash查询validator数量
+  def count_by_validator_hash(validator_hash) do
+    query =
+      from(l in __MODULE__,
+        select:  coalesce(count(1), 0),
+        where: l.validator_hash == ^validator_hash
+      )
+
+    Repo.one(query)
+  end
 end

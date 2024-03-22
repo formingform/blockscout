@@ -9,6 +9,7 @@ defmodule BlockScoutWeb.API.V2.AddressView do
   alias Explorer.{Chain, Market}
   alias Explorer.Chain.Address.Counters
   alias Explorer.Chain.{Address, SmartContract}
+  alias Explorer.Chain.PlatonAppchain.{L2Validator, L2ValidatorHistory}
 
   @api_true [api?: true]
 
@@ -109,7 +110,11 @@ defmodule BlockScoutWeb.API.V2.AddressView do
       "has_token_transfers" => Counters.check_if_token_transfers_at_address(address.hash, @api_true),
       "watchlist_address_id" => Chain.select_watchlist_address_id(get_watchlist_id(conn), address.hash),
       "has_beacon_chain_withdrawals" => Counters.check_if_withdrawals_at_address(address.hash, @api_true)
-    })
+    }
+    |> check_validator_owner(address.hash)
+    |> check_validator_account(address.hash)
+    |> add_total_assets_staked(address.hash)
+    )
   end
 
   def prepare_token_balance(token_balance, fetch_token_instance? \\ false) do
@@ -169,5 +174,54 @@ defmodule BlockScoutWeb.API.V2.AddressView do
       end
 
     TokenView.render("token_instance.json", %{token_instance: token_instance, token: token})
+  end
+
+
+  defp check_validator_owner(address,address_hash) do
+    if System.get_env("CHAIN_TYPE") == "platon_appchain" do
+      # 判断地址是否是validator owner hash
+      owner_count  = L2Validator.count_by_owner_hash(address_hash)
+      if owner_count > 0 do
+        address = address |> Map.put("owner_address", true)
+      else
+        owner_count  = L2ValidatorHistory.count_by_owner_hash(address_hash)
+        if owner_count > 0 do
+          address = address |> Map.put("owner_address", true)
+        else
+          address = address |> Map.put("owner_address", false)
+        end
+      end
+    else
+      address
+    end
+  end
+
+  defp check_validator_account(address,address_hash) do
+    if System.get_env("CHAIN_TYPE") == "platon_appchain" do
+      # 判断地址是否是validator hash
+      owner_count  = L2Validator.count_by_validator_hash(address_hash)
+      if owner_count > 0 do
+        address = address |> Map.put("validator_address", true)
+      else
+        owner_count  = L2ValidatorHistory.count_by_validator_hash(address_hash)
+        if owner_count > 0 do
+          address = address |> Map.put("validator_address", true)
+        else
+          address = address |> Map.put("validator_address", false)
+        end
+      end
+    else
+      address
+    end
+  end
+
+  defp add_total_assets_staked(address,address_hash) do
+    if System.get_env("CHAIN_TYPE") == "platon_appchain" do
+      total_assets_staked = "待处理"
+      # TODO 所有状态质押金+委托金总和
+      address = address |> Map.put("total_assets_staked", total_assets_staked)
+    else
+      address
+    end
   end
 end

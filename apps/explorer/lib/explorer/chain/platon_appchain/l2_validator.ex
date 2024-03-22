@@ -354,4 +354,26 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
     query
     |> select_repo([]).one()
   end
+
+  # 根据owner_hash查询validator数量
+  def count_by_owner_hash(owner_hash) do
+    query =
+      from(l in __MODULE__,
+        select:  coalesce(count(1), 0),
+        where: l.owner_hash == ^owner_hash
+      )
+
+    Repo.one(query)
+  end
+
+  # 根据validator_hash查询validator数量
+  def count_by_validator_hash(validator_hash) do
+    query =
+      from(l in __MODULE__,
+        select:  coalesce(count(1), 0),
+        where: l.validator_hash == ^validator_hash
+      )
+
+    Repo.one(query)
+  end
 end
