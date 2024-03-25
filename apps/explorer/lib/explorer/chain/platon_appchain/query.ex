@@ -249,7 +249,7 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
     paging_options = Keyword.get(options, :paging_options, default_paging_options())
 
     # TODO 如果验证人移到历史表时，需要关联历史表查询
-    base_query =
+    query1 =
       from(
         l1e in L1Event,
         join: l2e in L2Execute,
@@ -263,10 +263,47 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
           name: v.name,
           logo: v.logo,
           status: v.status,
-          delegation_amount:  coalesce(sum(l1e.amount),0)
-        },
-        order_by: [desc: l1e.validator]
+          delegation_amount:  coalesce(sum(l1e.amount),0),
+          total_staking_amount:  coalesce(sum(v.stake_amount+v.delegate_amount),0) #节点总质押
+        }
+#        order_by: [desc: l1e.validator]
       )
+
+    query2 =
+      from(
+        l1e in L1Event,
+        join: l2e in L2Execute,
+        on: l1e.event_id == l2e.event_id,
+        left_join: v in L2ValidatorHistory,
+        on: l1e.validator == v.validator_hash,
+        where: l1e.tx_type == 4 and l2e.replay_status == 1 and l1e.from == ^address_hash,
+        group_by: [l1e.validator,v.name,v.logo,v.status],
+        select: %{
+          validator: l1e.validator,
+          name: v.name,
+          logo: v.logo,
+          status: v.status,
+          delegation_amount:  coalesce(sum(l1e.amount),0),
+          total_staking_amount:  coalesce(sum(v.stake_amount+v.delegate_amount),0) #节点总质押
+        }
+#        order_by: [desc: l1e.validator]
+      )
+
+    base_query_union = Ecto.Query.union_all(query1, ^query2)
+
+    base_query =
+      from(
+        u in subquery(base_query_union),
+        select: %{
+          validator: u.validator,
+          name: u.name,
+          logo: u.logo,
+          status: u.status,
+          delegation_amount:  u.delegation_amount,
+          total_staking_amount:  u.total_staking_amount
+        },
+        order_by: [desc: u.validator]
+    )
 
     base_query
     |> page_delegations(paging_options)

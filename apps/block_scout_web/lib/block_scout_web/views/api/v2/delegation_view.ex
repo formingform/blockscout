@@ -11,9 +11,11 @@ defmodule BlockScoutWeb.API.V2.DelegationView do
   end
 
   def prepare_delegation(delegation,delegator_address) do
-    # 调底层合约查询数据
+    # 调底层合约查询数据（可以领取的数量）
     validator_address = Explorer.Chain.Hash.to_string(delegation.validator)
-    withdrawableOfDelegate = L2StakeHandler.withdrawableOfDelegate(validator_address,delegator_address)
+    withdraw_ableOf_delegate = L2StakeHandler.withdrawableOfDelegate(validator_address,delegator_address)
+
+    pending_withdrawals_of_delegate = L2StakeHandler.pendingWithdrawalsOfDelegate(validator_address,delegator_address)
 
 
     %{
@@ -21,11 +23,23 @@ defmodule BlockScoutWeb.API.V2.DelegationView do
       "name" => delegation.name,
       "logo" => delegation.logo,
       "status" => delegation.status,
-      "delegation_amount" => delegation.delegation_amount, # 有效委托
+      "delegation_amount" => delegation.delegation_amount, # 有效委托（？？）
+      "delegation_percentage" => calc_delegation_percentage(delegation.delegation_amount,delegation.total_staking_amount), # 有效委托百分比（？？）
 #      "invalid_delegation_amount" => delegation.invalid_delegation_amount
 #      "unbonding" => delegation.unbonding,
-#      "pending_withdrawal" => delegation.pending_withdrawal,
-      "claimable_rewards" => withdrawableOfDelegate
+      "pending_withdrawal" => pending_withdrawals_of_delegate,
+      "claimable_rewards" => withdraw_ableOf_delegate
     }
+  end
+
+  defp calc_delegation_percentage(delegation_amount,total_staking_amount) do
+    delegation_percentage =
+      if total_staking_amount == 0 do
+        0
+      else
+        dividend = Decimal.div(delegation_amount, total_staking_amount)
+        multiplied = Decimal.mult(dividend, Decimal.new(100))
+        Decimal.round(multiplied, 2)
+      end
   end
 end
