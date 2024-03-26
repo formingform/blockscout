@@ -181,7 +181,8 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
 
   defp do_reset_rank(multi, rank_tuple_list) do
     Enum.reduce(rank_tuple_list, multi, fn tuple, multi ->
-      Ecto.Multi.update_all(multi, {:reset_validator_rank, elem(tuple, 0)}, from(v in __MODULE__, where: v.validator_hash == ^elem(tuple, 0)), [set: [rank: elem(tuple, 1)]])
+      Ecto.Multi.update_all(multi, {:reset_validator_rank, elem(tuple, 0)}, from(v in __MODULE__, where: v.validator_hash == ^elem(tuple, 0)),
+        [set: [rank: elem(tuple, 1),locking_stake_amount: elem(tuple, 2),withdrawal_stake_amount:  elem(tuple, 3)]])
     end)
   end
 

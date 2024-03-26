@@ -69,10 +69,12 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorRank do
       #把列表中的序号，作为rank赋值给所有质押节点
       rank_tuple_list = all_candidates
         |> Enum.with_index(1)
-        |> Enum.map(fn {element, idx} ->  {element[:validator_hash], idx} end)
-#      all_candidates
-#      |> Enum.with_index(1)
-#      |> Enum.map(fn {element, idx} -> Map.put(element, :rank, idx) end)
+        |> Enum.map(fn {element, idx} ->  {
+             element[:validator_hash],
+                                  idx,
+              L2StakeHandler.pendingWithdrawalsOfStake(element[:validator_hash]),
+              L2StakeHandler.withdrawableOfStake(element[:validator_hash]),
+          } end)
 
       L2ValidatorService.update_rank(rank_tuple_list)
     end

@@ -254,7 +254,7 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
         l1e in L1Event,
         join: l2e in L2Execute,
         on: l1e.event_id == l2e.event_id,
-        left_join: v in L2Validator,
+        join: v in L2Validator,
         on: l1e.validator == v.validator_hash,
         where: l1e.tx_type == 4 and l2e.replay_status == 1 and l1e.from == ^address_hash,
         group_by: [l1e.validator,v.name,v.logo,v.status],
@@ -266,7 +266,6 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
           delegation_amount:  coalesce(sum(l1e.amount),0),
           total_staking_amount:  coalesce(sum(v.stake_amount+v.delegate_amount),0) #节点总质押
         }
-#        order_by: [desc: l1e.validator]
       )
 
     query2 =
@@ -274,7 +273,7 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
         l1e in L1Event,
         join: l2e in L2Execute,
         on: l1e.event_id == l2e.event_id,
-        left_join: v in L2ValidatorHistory,
+        join: v in L2ValidatorHistory,
         on: l1e.validator == v.validator_hash,
         where: l1e.tx_type == 4 and l2e.replay_status == 1 and l1e.from == ^address_hash,
         group_by: [l1e.validator,v.name,v.logo,v.status],
@@ -286,7 +285,6 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
           delegation_amount:  coalesce(sum(l1e.amount),0),
           total_staking_amount:  coalesce(sum(v.stake_amount+v.delegate_amount),0) #节点总质押
         }
-#        order_by: [desc: l1e.validator]
       )
 
     base_query_union = Ecto.Query.union_all(query1, ^query2)
