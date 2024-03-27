@@ -7,7 +7,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
     Wei
     }
 
-  @optional_attrs ~w(action_desc amount)a
+  @optional_attrs ~w(action_desc amount delegator_hash)a
 
   @required_attrs ~w(hash log_index block_number validator_hash action_type block_timestamp)a
 
@@ -22,6 +22,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
   * `block_timestamp` - 交易所在区块时间戳
   * `log_index` - 日志索引
   * `hash` - 事件所在交易hash
+  * `delegator_hash` - 委托人地址
   """
   @type t :: %__MODULE__{
                hash: Hash.t(),
@@ -32,6 +33,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
                action_desc: String.t() | nil,
                amount: Wei.t() | nil,
                block_timestamp: DateTime.t() | nil,
+               delegator_hash: Hash.Address.t(),
              }
 
   @primary_key false
@@ -44,6 +46,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
     field(:action_desc, :string)
     field(:amount, Wei)
     field(:block_timestamp, :utc_datetime_usec)
+    field(:delegator_hash, Hash.Address)
     timestamps()
   end
 

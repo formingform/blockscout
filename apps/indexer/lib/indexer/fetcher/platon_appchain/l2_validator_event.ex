@@ -158,6 +158,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
   # 返回一个map
   @spec event_to_l2_validator_events(non_neg_integer(), binary(), binary(), binary(), binary(), binary(), non_neg_integer(), list()) :: [map()]
   def event_to_l2_validator_events(log_index, first_topic, second_topic, third_topic, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
+
     data_bytes =
       case data do
         %Explorer.Chain.Data{} ->
@@ -228,6 +229,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent do
             action_type: PlatonAppchain.l2_validator_event_action_type()[:DelegationAdded],
             action_desc: "delegator: 0x#{Base.encode16(delegator_hash)}",
             amount: amount,
+            delegator_hash: delegator_hash,
             block_timestamp: timestamp
           }]
 

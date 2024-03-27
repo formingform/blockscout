@@ -217,6 +217,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
           action_desc: fragment("EXCLUDED.action_desc"),
           amount: fragment("EXCLUDED.amount"),
           block_timestamp: fragment("EXCLUDED.block_timestamp"),
+          delegator_hash: fragment("EXCLUDED.delegator_hash"),
           inserted_at: fragment("LEAST(?, EXCLUDED.inserted_at)", l.inserted_at), # LEAST返回给定的最小值 EXCLUDED.inserted_at 表示已存在的值
           updated_at: fragment("GREATEST(?, EXCLUDED.updated_at)", l.updated_at)
         ]
@@ -224,12 +225,13 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
       where:
         fragment(
           "(EXCLUDED.block_number,EXCLUDED.action_type,EXCLUDED.action_desc,EXCLUDED.amount,
-          EXCLUDED.block_timestamp) IS DISTINCT FROM (?,?,?,?,?)", # 有冲突时只更新这些字段
+          EXCLUDED.block_timestamp,EXCLUDED.delegator_hash) IS DISTINCT FROM (?,?,?,?,?,?)", # 有冲突时只更新这些字段
           l.block_number,
           l.action_type,
           l.action_desc,
           l.amount,
-          l.block_timestamp
+          l.block_timestamp,
+          l.delegator_hash
         )
     )
   end

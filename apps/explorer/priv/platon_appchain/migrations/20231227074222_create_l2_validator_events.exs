@@ -18,6 +18,8 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2ValidatorEvents do
       add(:action_desc, :string, null: true)
       # 金额(增加/减少用负数表示)
       add(:amount, :numeric, precision: 100, null: false)
+      # 委托人地址
+      add(:delegator_hash, :bytea, null: false)
       # 交易时间
       add(:block_timestamp, :"timestamp without time zone", null: true)
       timestamps(null: false, type: :utc_datetime_usec)
