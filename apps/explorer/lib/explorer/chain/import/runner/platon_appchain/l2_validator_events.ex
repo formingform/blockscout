@@ -137,12 +137,12 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
       end)
   end
 
-  defp upsert_validator(repo, updated_validator_hashes, %{timeout: timeout, timestamps: timestamps}) do
-    {:ok, "No L2 validator to update"}
-  end
+#  defp upsert_validator(repo, updated_validator_hashes, %{timeout: timeout, timestamps: timestamps}) do
+#    {:ok, "No L2 validator to update"}
+#  end
 
   # 跟新验证人信息，需要根据validator_hash去链上查询validator的信息，用upsert的模式（insert/update）更新表数据，l2_validators.status是个复合状态
-  defp upsert_validator(repo, updated_validator_hashes, %{timeout: timeout, timestamps: timestamps}) when length(updated_validator_hashes) > 0 do
+  defp upsert_validator(repo, updated_validator_hashes, %{timeout: timeout, timestamps: timestamps}) do
     Enum.each(updated_validator_hashes, fn validator_hash ->
       case L2ValidatorService.upsert_validator(repo, Hash.to_string(validator_hash)) do
         {:ok, _result} -> :ok
@@ -152,11 +152,11 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
     {:ok, "Update L2 validator successfully"}
   end
 
-  defp backup_exited_validator(repo, existed_validator_infos, %{timeout: timeout, timestamps: timestamps}) do
-    {:ok, "No validator to backup"}
-  end
+#  defp backup_exited_validator(repo, existed_validator_infos, %{timeout: timeout, timestamps: timestamps}) do
+#    {:ok, "No validator to backup"}
+#  end
   # 把验证人备份到l2_validator_historys表，实际上insert into select from的过程
-  defp backup_exited_validator(repo, existed_validator_infos, %{timeout: timeout, timestamps: timestamps}) when length(existed_validator_infos) > 0 do
+  defp backup_exited_validator(repo, existed_validator_infos, %{timeout: timeout, timestamps: timestamps}) do
     Enum.each(existed_validator_infos, fn {validator_hash, status, block_number, exit_desc} ->
       case L2ValidatorService.backup_exited_validator(repo, Hash.to_string(validator_hash), status, block_number, exit_desc) do
         {:ok, _result} -> :ok
@@ -166,11 +166,11 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
     {:ok, "Backup exited L2 validator successfully"}
   end
 
-  defp delete_exited_validator(repo, existed_validator_infos, %{timeout: timeout, timestamps: timestamps}) do
-    {:ok, "No validator to delete"}
-  end
+#  defp delete_exited_validator(repo, existed_validator_infos, %{timeout: timeout, timestamps: timestamps}) do
+#    {:ok, "No validator to delete"}
+#  end
   # 删除验证人，把验证人从l2_validators表里删除
-  defp delete_exited_validator(repo, existed_validator_infos, %{timeout: timeout, timestamps: timestamps}) when length(existed_validator_infos) > 0 do
+  defp delete_exited_validator(repo, existed_validator_infos, %{timeout: timeout, timestamps: timestamps}) do
     Enum.each(existed_validator_infos, fn {validator_hash, _status, _block_number, _exit_desc} ->
       case L2ValidatorService.delete_exited_validator(repo, Hash.to_string(validator_hash)) do
         {:ok, _result} -> :ok
