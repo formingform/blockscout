@@ -41,7 +41,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Delegator do
     field(:delegate_amount, Wei)
     field(:locking_delegate_amount, Wei)
     field(:withdrawal_delegate_amount, Wei)
-    field(:delegate_amount, Wei)
+    field(:delegate_reward, Wei)
 
     timestamps()
   end
