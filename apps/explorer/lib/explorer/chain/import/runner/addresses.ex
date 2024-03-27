@@ -85,9 +85,9 @@ defmodule Explorer.Chain.Import.Runner.Addresses do
       |> Enum.sort_by(& &1.hash)# 通过上面找出的最大地址，给group排序？
 
     multi
-    |> Multi.run(:filter_addresses, fn repo, _ ->
-      Instrumenter.block_import_stage_runner( #计算和记录运行时间
-        fn -> filter_addresses(repo, ordered_changes_list) end,# 这个是真正执行的函数，这个函数是对db查询操作，返回值如何使用？{:ok, {filtered_addresses, existing_addresses_map}}
+    |> Multi.run(:filter_addresses, fn repo, _ ->  #runer是个fn/2，第一个参数是repo, 第二个参数是修改的数据
+      Instrumenter.block_import_stage_runner( #计算和记录运行时间，返回 filter_addresses/2的结果： {:ok, {[map()], map()}}
+        fn -> filter_addresses(repo, ordered_changes_list) end,# 这个是真正执行的函数，这个函数是对db查询操作，返回值如何使用？{:ok, {filtered_addresses, existing_addresses_map}}，类型是：{:ok, {[map()], map()}}
         :addresses,
         :addresses,
         :filter_addresses
