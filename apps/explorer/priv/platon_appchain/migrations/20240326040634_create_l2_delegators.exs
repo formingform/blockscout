@@ -6,7 +6,7 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2Delegators do
       # 委托人地址, delegator_hash
       add(:delegator_hash, :bytea, null: false, primary_key: true)
       # 验证人地址, validator_hash
-      add(:validatorr_hash, :bytea, null: false, primary_key: true)
+      add(:validator_hash, :bytea, null: false, primary_key: true)
       # 有效委托金额
       add(:delegate_amount, :numeric, precision: 100, null: false, default: 0)
       # 锁定的委托金额
