@@ -1,4 +1,4 @@
-defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2Delegator do
+defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2Delegators do
 
   require Ecto.Query
 
@@ -21,7 +21,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2Delegator do
   def ecto_schema_module, do: L2Delegator
 
   @impl Import.Runner
-  def option_key, do: :l2_delegator
+  def option_key, do: :l2_delegators
 
   @spec imported_table_row() :: %{:value_description => binary(), :value_type => binary()}
 
@@ -43,12 +43,12 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2Delegator do
       |> Map.put_new(:timeout, @timeout)
       |> Map.put(:timestamps, timestamps)
 
-    Multi.run(multi, :insert_l2_delegator, fn repo, _ ->
+    Multi.run(multi, :insert_l2_delegators, fn repo, _ ->
       Instrumenter.block_import_stage_runner(
         fn -> insert(repo, changes_list, insert_options) end,
         :block_referencing,
-        :l2_delegator,
-        :l2_delegator
+        :l2_delegators,
+        :l2_delegators
       )
     end)
   end
