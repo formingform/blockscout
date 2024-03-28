@@ -13,8 +13,10 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2Delegators do
       add(:locking_delegate_amount, :numeric, precision: 100, null: false, default: 0)
       # 可提取的委托金额
       add(:withdrawal_delegate_amount, :numeric, precision: 100, null: false, default: 0)
-      # 委托奖励
-      add(:delegate_reward, :numeric, precision: 100, null: false, default: 0)
+      # 已提取的委托奖励
+      add(:withdrawn_delegate_reward, :numeric, precision: 100, null: false, default: 0)
+      # 待提取的委托奖励
+      add(:pending_delegate_reward, :numeric, precision: 100, null: false, default: 0)
 
       timestamps(null: false, type: :utc_datetime_usec)
     end
