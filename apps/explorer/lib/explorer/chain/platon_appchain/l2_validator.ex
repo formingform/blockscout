@@ -28,12 +28,14 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
      delegate_amount:  有效委托金额,
      stake_reward:  验证人可领取奖励（出块与质押）,
      delegate_reward:  委托奖励,
+     pending_validator_rewards:  验证人可提取的金额,
      rank: 排名，获取所有质押节点返回的列表序号,
      name:  String.t(),
      detail:  String.t(),
      logo:  String.t(),
      website:  String.t(),
      expect_apr:  预估年收益率，万分之一单位,
+     produced_blocks:  最近24小时出块数,
      block_rate:  最近24小时出块率，万分之一单位,
      auth_status:  是否验证 0-未验证，1-已验证,
      role:  0-candidate(质押节点) 1-active(共识节点候选人) 2-verifying(共识节点),
@@ -50,12 +52,14 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
                delegate_amount:  Wei.t(),
                stake_reward:  Wei.t(),
                delegate_reward:  Wei.t(),
+               pending_validator_rewards:  Wei.t(),
                rank: non_neg_integer(),
                name:  String.t(),
                detail:  String.t(),
                logo:  String.t(),
                website:  String.t(),
                expect_apr:  integer(),
+               produced_blocks:  non_neg_integer(),
                block_rate:  integer(),
                auth_status:  non_neg_integer(),
                role:  non_neg_integer(),
@@ -74,12 +78,14 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
     field(:delegate_amount, Wei)
     field(:stake_reward, Wei)
     field(:delegate_reward, Wei)
+    field(:pending_validator_rewards, Wei)
     field(:rank, :integer)
     field(:name, :string)
     field(:detail, :string)
     field(:logo, :string)
     field(:website, :string)
     field(:expect_apr, :integer)
+    field(:produced_blocks, :integer)
     field(:block_rate, :integer)
     field(:auth_status, :integer)
     field(:role, :integer)
@@ -173,16 +179,16 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
     |> Repo.update_all([])
   end
 
-  def update_rank(rank_tuple_list) do
+  def update_rank_and_amount(rank_tuple_list) do
     Ecto.Multi.new()
-    |> do_reset_rank(rank_tuple_list)
+    |> do_reset_rank_and_amount(rank_tuple_list)
     |> Repo.transaction()
   end
 
-  defp do_reset_rank(multi, rank_tuple_list) do
+  defp do_reset_rank_and_amount(multi, rank_tuple_list) do
     Enum.reduce(rank_tuple_list, multi, fn tuple, multi ->
       Ecto.Multi.update_all(multi, {:reset_validator_rank, elem(tuple, 0)}, from(v in __MODULE__, where: v.validator_hash == ^elem(tuple, 0)),
-        [set: [rank: elem(tuple, 1),locking_stake_amount: elem(tuple, 2),withdrawal_stake_amount:  elem(tuple, 3)]])
+        [set: [rank: elem(tuple, 1),locking_stake_amount: elem(tuple, 2),withdrawal_stake_amount:  elem(tuple, 3),pending_validator_rewards:  elem(tuple, 4)]])
     end)
   end
 

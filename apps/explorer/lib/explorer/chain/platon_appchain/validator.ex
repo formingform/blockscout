@@ -58,21 +58,21 @@ defmodule Explorer.Chain.PlatonAppchain.Validator do
       )
 
     # 获取当前时间前24小时的时间戳
-    twenty_four_hours_ago = Timex.shift(DateTime.utc_now(), days: -1)
-
-    total_blocks_query =
-      from(
-        b in Block,
-        where: b.inserted_at >= ^twenty_four_hours_ago,
-        select: %{blocks: coalesce(count(1),0)}
-      )
-
-    current_validator_blocks_query =
-      from(
-        b in Block,
-        where: b.inserted_at >= ^twenty_four_hours_ago and b.miner_hash == ^validator_hash_address,
-        select: %{blocks: coalesce(count(1),0)}
-      )
+#    twenty_four_hours_ago = Timex.shift(DateTime.utc_now(), days: -1)
+#
+#    total_blocks_query =
+#      from(
+#        b in Block,
+#        where: b.inserted_at >= ^twenty_four_hours_ago,
+#        select: %{blocks: coalesce(count(1),0)}
+#      )
+#
+#    current_validator_blocks_query =
+#      from(
+#        b in Block,
+#        where: b.inserted_at >= ^twenty_four_hours_ago and b.miner_hash == ^validator_hash_address,
+#        select: %{blocks: coalesce(count(1),0)}
+#      )
 
     query =
       from(
@@ -84,11 +84,18 @@ defmodule Explorer.Chain.PlatonAppchain.Validator do
           commission_rate: v.commission_rate,
           website: v.website,
           detail: v.detail,
+          stake_amount: v.stake_amount,
           delegate_amount: v.delegate_amount,
+          locking_stake_amount: v.locking_stake_amount,
+          withdrawal_stake_amount: v.withdrawal_stake_amount,
+          stake_reward: v.stake_reward,
+          delegate_reward: v.delegate_reward,
           expect_apr: v.expect_apr,
           blocks: subquery(blocks_total_query),
-          current_validator_blocks_24: coalesce(subquery(current_validator_blocks_query),0),
-          total_blocks_24: coalesce(subquery(total_blocks_query),1)
+          block_rate: v.block_rate,
+          pending_validator_rewards: v.pending_validator_rewards
+#          current_validator_blocks_24: coalesce(subquery(current_validator_blocks_query),0),
+#          total_blocks_24: coalesce(subquery(total_blocks_query),1)
         },
       )
 

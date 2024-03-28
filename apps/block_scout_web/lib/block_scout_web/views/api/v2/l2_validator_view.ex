@@ -63,24 +63,29 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorView do
   def render("validator_details.json", %{
     validator_detail: validator_detail
   }) do
+    total_bonded = Decimal.add(Decimal.new(validator_detail.stake_amount.value),Decimal.new(validator_detail.delegate_amount.value))
+    percent = if Decimal.cmp(total_bonded, 0) == :eq do 0 else Decimal.mult(Decimal.div(validator_detail.delegate_amount.value,total_bonded),Decimal.new("100")) end
+    delegations_proportion =  if Decimal.cmp(percent, 0) == :eq do 0 else Decimal.round(percent, 2) end
+    percent = Decimal.div(validator_detail.delegate_amount.value,total_bonded)
+
     %{
       "owner_address" => validator_detail.owner_hash,
       "commission" => validator_detail.commission_rate,
       "website" => validator_detail.website,
       "detail" => validator_detail.detail,
-      "total_bonded" => "有效总质押", # 有效总质押
-      "self_stakes" => "有效的自有质押", # 有效的自有质押
-      "unbonding" => "解质押-锁定中的数据", # 解质押-锁定中的数据
-      "pending_withdrawal" => "已解锁-可以提取的数量", # 已解锁-可以提取的数量
+      "total_bonded" => total_bonded, # 有效总质押
+      "self_stakes" => validator_detail.stake_amount, # 有效的自有质押
+      "unbonding" => validator_detail.locking_stake_amount, # 解质押-锁定中的数据
+      "pending_withdrawal" =>  validator_detail.withdrawal_stake_amount, # 已解锁-可以提取的数量
       "delegations" => validator_detail.delegate_amount,  # 有效委托量
-      "delegations_proportion" => "委托占比",  # 占比（占节点有效总质押的比例）
+      "delegations_proportion" => delegations_proportion,  # 占比（占节点有效总质押的比例）
       "blocks" => validator_detail.blocks,
-      "block_rate" => Decimal.round(Decimal.from_float(validator_detail.current_validator_blocks_24 / validator_detail.total_blocks_24 * 100), 2), #每日24小时结算周期内已出区块 除以 该期间应出的区块数
+      "block_rate" => validator_detail.block_rate, #每日24小时结算周期内已出区块 除以 该期间应出的区块数(待处理)
       "expect_apr" => validator_detail.expect_apr,
-      "total_rewards" => "待统计",    # Decimal.add(validator_detail.stake_reward, validator_detail.delegate_reward),
-      "validator_rewards" => "待统计",    # 验证人奖励
-      "delegator_rewards" => "待统计",    # 委托奖励
-      "validator_claimable_rewards" => "待统计" # 验证人可领取的数量
+      "total_rewards" =>Decimal.add(Decimal.new(validator_detail.stake_reward.value),Decimal.new(validator_detail.delegate_reward.value)),    # Decimal.add(validator_detail.stake_reward, validator_detail.delegate_reward),
+      "validator_rewards" => validator_detail.stake_reward,    # 验证人奖励
+      "delegator_rewards" => validator_detail.delegate_reward,    # 委托奖励
+      "validator_claimable_rewards" => validator_detail.pending_validator_rewards # 验证人可领取的数量
     }
   end
 

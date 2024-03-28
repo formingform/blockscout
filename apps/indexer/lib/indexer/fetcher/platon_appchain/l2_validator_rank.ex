@@ -12,7 +12,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorRank do
   require Logger
 
   alias Indexer.Helper
-  alias Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler
+  alias Indexer.Fetcher.PlatonAppchain.Contracts.{L2StakeHandler,L2RewardManager}
   alias Indexer.Fetcher.PlatonAppchain
   alias Indexer.Fetcher.PlatonAppchain.L2ValidatorService
 
@@ -74,9 +74,10 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorRank do
                                   idx,
               L2StakeHandler.pendingWithdrawalsOfStake(element[:validator_hash]),
               L2StakeHandler.withdrawableOfStake(element[:validator_hash]),
+              L2RewardManager.pendingValidatorRewards(element[:validator_hash])
           } end)
 
-      L2ValidatorService.update_rank(rank_tuple_list)
+      L2ValidatorService.update_rank_and_amount(rank_tuple_list)
     end
 
     # 计算下次获取round出块验证人的块高，并算出大概需要delay多久

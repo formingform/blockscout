@@ -3,7 +3,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L2RewardManager do
   L2 reward manager contract interface encapsulation
   """
   alias Ethers
-  use Ethers.Contract, abi_file: "config/abi/L2_RewardManager.json", default_address: Application.get_all_env(:indexer)[Indexer.Fetcher.PlatonAppchain.Contracts][:l2_reward_manager]
+#  use Ethers.Contract, abi_file: "config/abi/L2_RewardManager.json", default_address: Application.get_all_env(:indexer)[Indexer.Fetcher.PlatonAppchain.Contracts][:l2_reward_manager]
+  use Ethers.Contract, abi_file: "config/abi/L2_RewardManager.json", default_address: "0x1000000000000000000000000000000000000006"
 
   @rpc_opts [url: System.get_env("ETHEREUM_JSONRPC_HTTP_URL"), http_headers: [{"Content-Type", "application/json"}]]
 

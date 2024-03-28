@@ -24,6 +24,8 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2ValidatorHistorys do
       add(:stake_reward, :numeric, precision: 100, null: false, default: 0)
       # 委托奖励
       add(:delegate_reward, :numeric, precision: 100, null: false, default: 0)
+      # 验证人可提取的金额
+      add(:pending_validator_rewards, :numeric, precision: 100, null: false, default: 0)
       # 排名，获取所有质押节点返回的列表序号
       add(:rank, :integer, null: false, default: 0)
       # 验证人名称
@@ -36,6 +38,8 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2ValidatorHistorys do
       add(:website, :string, null: true)
       # 预估年收益率
       add(:expect_apr, :integer, null: true)
+      # 最近24小时出块数
+      add(:produced_blocks, :bigint, null: true)
       # 最近24小时出块率
       add(:block_rate, :integer, null: true)
       # 是否验证 0-未验证，1-已验证

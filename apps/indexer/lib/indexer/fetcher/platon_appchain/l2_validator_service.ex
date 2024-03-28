@@ -68,11 +68,11 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorService do
   end
 
   # [{validator_hash, rank},{...}]
-  def update_rank(rank_tuple_list) do
+  def update_rank_and_amount(rank_tuple_list) do
      Logger.info(fn -> "update l2 validators rank: (#{inspect(rank_tuple_list)})" end,
        logger: :platon_appchain
      )
-    L2Validator.update_rank(rank_tuple_list)
+    L2Validator.update_rank_and_amount(rank_tuple_list)
   end
 
   def backup_exited_validator(repo, validator_hash, status, exit_number, exit_desc) do
