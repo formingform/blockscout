@@ -122,7 +122,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2RewardEvent do
     Repo.delete_all(from(w in L2Event, where: w.block_number >= ^starting_block))
   end
 
-  @spec event_to_l2_reward_event( binary(), binary(), binary(), binary(), list()) :: map()
+  @spec event_to_l2_reward_event( binary(), binary(), binary(), list()) :: map()
   def event_to_l2_reward_event(data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
     Logger.debug(fn -> "convert event to l2_event, log.data: #{inspect(data)}" end, logger: :platon_appchain)
 
@@ -206,7 +206,6 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2RewardEvent do
     filtered_events = Enum.reject(l2_reward_events, &Enum.empty?/1)
     if Enum.count(filtered_events) > 0 do
       Logger.debug(fn -> "to import l2 reward events:(#{inspect(filtered_events)})" end , logger: :platon_appchain)
-      if
     end
     Enum.count(filtered_events)
   end

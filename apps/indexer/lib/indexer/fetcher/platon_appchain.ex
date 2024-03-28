@@ -593,7 +593,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   end
 
   @spec init_l2(
-          Explorer.Chain.PlatonAppchain.L2Event | Explorer.Chain.PlatonAppchain.L2Execute | Explorer.Chain.PlatonAppchain.L2ValidatorEvent / Explorer.Chain.PlatonAppchain.Commitment,
+          Explorer.Chain.PlatonAppchain.L2Event | Explorer.Chain.PlatonAppchain.L2Execute | Explorer.Chain.PlatonAppchain.L2ValidatorEvent | Explorer.Chain.PlatonAppchain.Commitment,
           list(),
           pid(),
           binary(),
@@ -796,7 +796,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   end
 
 
-  @spec fill_block_range(integer(), integer(), L2Execute | L2Event | Commitment | L2ValidatorEvent / L2RewardEvent, binary(), list(), boolean()) :: integer()
+  @spec fill_block_range(integer(), integer(), L2Execute | L2Event | Commitment | L2ValidatorEvent | L2RewardEvent, binary(), list(), boolean()) :: integer()
   def fill_block_range(
         l2_block_start,
         l2_block_end,
