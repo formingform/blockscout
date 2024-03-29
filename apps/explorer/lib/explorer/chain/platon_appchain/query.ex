@@ -16,7 +16,7 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
   import Explorer.Chain, only: [default_paging_options: 0, select_repo: 1]
 
   alias Explorer.{PagingOptions, Repo}
-  alias Explorer.Chain.PlatonAppchain.{L1Event, L1Execute, L2Event, L2Execute, Commitment, Checkpoint, L2Validator, L2ValidatorHistory}
+  alias Explorer.Chain.PlatonAppchain.{L1Event, L1Execute, L2Event, L2Execute, Commitment, Checkpoint, L2Validator, L2ValidatorHistory, L2Delegator}
   alias Explorer.Chain.{Block, Hash, Transaction}
 
   @spec deposits(list()) :: list()
@@ -248,42 +248,45 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
   def delegations(address_hash, options \\ []) do
     paging_options = Keyword.get(options, :paging_options, default_paging_options())
 
-    # TODO 如果验证人移到历史表时，需要关联历史表查询
     query1 =
       from(
-        l1e in L1Event,
-        join: l2e in L2Execute,
-        on: l1e.event_id == l2e.event_id,
+        d in L2Delegator,
         join: v in L2Validator,
-        on: l1e.validator == v.validator_hash,
-        where: l1e.tx_type == 4 and l2e.replay_status == 1 and l1e.from == ^address_hash,
-        group_by: [l1e.validator,v.name,v.logo,v.status],
+        on: d.validator_hash == v.validator_hash,
+        where: v.validator_hash == ^address_hash,
         select: %{
-          validator: l1e.validator,
+          validator: v.validator_hash,
           name: v.name,
           logo: v.logo,
           status: v.status,
-          delegation_amount:  coalesce(sum(l1e.amount),0),
-          total_staking_amount:  coalesce(sum(v.stake_amount+v.delegate_amount),0) #节点总质押
+          delegate_amount:  d.delegate_amount,
+          locking_delegate_amount:  d.locking_delegate_amount,
+          withdrawal_delegate_amount:  d.withdrawal_delegate_amount,
+          withdrawn_delegate_reward:  d.withdrawn_delegate_reward,
+          pending_delegate_reward:  d.pending_delegate_reward,
+          node_stake_amount:  v.stake_amount,
+          node_delegate_amount:  v.delegate_amount
         }
       )
 
     query2 =
       from(
-        l1e in L1Event,
-        join: l2e in L2Execute,
-        on: l1e.event_id == l2e.event_id,
+        d in L2Delegator,
         join: v in L2ValidatorHistory,
-        on: l1e.validator == v.validator_hash,
-        where: l1e.tx_type == 4 and l2e.replay_status == 1 and l1e.from == ^address_hash,
-        group_by: [l1e.validator,v.name,v.logo,v.status],
+        on: d.validator_hash == v.validator_hash,
+        where: v.validator_hash == ^address_hash,
         select: %{
-          validator: l1e.validator,
+          validator: v.validator_hash,
           name: v.name,
           logo: v.logo,
           status: v.status,
-          delegation_amount:  coalesce(sum(l1e.amount),0),
-          total_staking_amount:  coalesce(sum(v.stake_amount+v.delegate_amount),0) #节点总质押
+          delegate_amount:  d.delegate_amount,
+          locking_delegate_amount:  d.locking_delegate_amount,
+          withdrawal_delegate_amount:  d.withdrawal_delegate_amount,
+          withdrawn_delegate_reward:  d.withdrawn_delegate_reward,
+          pending_delegate_reward:  d.pending_delegate_reward,
+          node_stake_amount:  v.stake_amount,
+          node_delegate_amount:  v.delegate_amount
         }
       )
 
@@ -297,8 +300,13 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
           name: u.name,
           logo: u.logo,
           status: u.status,
-          delegation_amount:  u.delegation_amount,
-          total_staking_amount:  u.total_staking_amount
+          delegate_amount:  u.delegate_amount,
+          locking_delegate_amount:  u.locking_delegate_amount,
+          withdrawal_delegate_amount:  u.withdrawal_delegate_amount,
+          withdrawn_delegate_reward:  u.withdrawn_delegate_reward,
+          pending_delegate_reward:  u.pending_delegate_reward,
+          node_stake_amount:  u.node_stake_amount,
+          node_delegate_amount:  u.node_delegate_amount
         },
         order_by: [desc: u.validator]
     )
@@ -313,8 +321,7 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
   def validators(address_hash, options \\ []) do
     paging_options = Keyword.get(options, :paging_options, default_paging_options())
 
-    # TODO 如果验证人移到历史表时，需要关联历史表查询
-    base_query =
+    query1 =
       from(
         l1e in L1Event,
         join: l2e in L2Execute,
@@ -329,8 +336,40 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
           logo: v.logo,
           status: v.status,
           stake_amount:  coalesce(sum(l1e.amount),0)
+        }
+      )
+
+    query2 =
+      from(
+        l1e in L1Event,
+        join: l2e in L2Execute,
+        on: l1e.event_id == l2e.event_id,
+        left_join: v in L2ValidatorHistory,
+        on: l1e.validator == v.validator_hash,
+        where: l1e.tx_type >= 2 and l1e.tx_type <= 3 and l2e.replay_status == 1 and l1e.from == ^address_hash,
+        group_by: [l1e.validator,v.name,v.logo,v.status],
+        select: %{
+          validator: l1e.validator,
+          name: v.name,
+          logo: v.logo,
+          status: v.status,
+          stake_amount:  coalesce(sum(l1e.amount),0)
+        }
+      )
+
+    base_query_union = Ecto.Query.union_all(query1, ^query2)
+
+    base_query =
+      from(
+        u in subquery(base_query_union),
+        select: %{
+          validator: u.validator,
+          name: u.name,
+          logo: u.logo,
+          status: u.status,
+          stake_amount:  u.stake_amount
         },
-        order_by: [desc: l1e.validator]
+        order_by: [desc: u.validator]
       )
 
     base_query

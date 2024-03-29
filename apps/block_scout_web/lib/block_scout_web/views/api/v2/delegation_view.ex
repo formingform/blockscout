@@ -3,6 +3,7 @@ defmodule BlockScoutWeb.API.V2.DelegationView do
 
   alias BlockScoutWeb.API.V2.Helper
   alias Explorer.Chain.Withdrawal
+  alias Indexer.Fetcher.PlatonAppchain.Contracts.L2Delegator
   alias Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler
 
   @spec render(String.t(), map()) :: map()
@@ -11,28 +12,28 @@ defmodule BlockScoutWeb.API.V2.DelegationView do
   end
 
   def prepare_delegation(delegation,delegator_address) do
-    # 调底层合约查询数据（可以领取的数量）
-    validator_address = Explorer.Chain.Hash.to_string(delegation.validator)
-    withdraw_ableOf_delegate = L2StakeHandler.withdrawableOfDelegate(validator_address,delegator_address)
-
-    pending_withdrawals_of_delegate = L2StakeHandler.pendingWithdrawalsOfDelegate(validator_address,delegator_address)
-
+#    # 调底层合约查询数据（可以领取的数量）
+#    validator_address = Explorer.Chain.Hash.to_string(delegation.validator)
+#    withdraw_ableOf_delegate = L2StakeHandler.withdrawableOfDelegate(validator_address,delegator_address)
+#
+#    pending_withdrawals_of_delegate = L2StakeHandler.pendingWithdrawalsOfDelegate(validator_address,delegator_address)
 
     %{
       "validator" => delegation.validator,
       "name" => delegation.name,
       "logo" => delegation.logo,
       "status" => delegation.status,
-      "delegation_amount" => delegation.delegation_amount, # 有效委托（？？）
-      "delegation_percentage" => calc_delegation_percentage(delegation.delegation_amount,delegation.total_staking_amount), # 有效委托百分比（？？）
-#      "invalid_delegation_amount" => delegation.invalid_delegation_amount
-#      "unbonding" => delegation.unbonding,
-      "pending_withdrawal" => pending_withdrawals_of_delegate,
-      "claimable_rewards" => withdraw_ableOf_delegate
+      "delegation_amount" => delegation.delegation_amount,
+      "delegation_percentage" => calc_delegation_percentage(delegation.delegation_amount,delegation.node_stake_amount,delegation.node_delegate_amount), # 有效委托百分比（？？）
+      "invalid_delegation_amount" => "怎么取？",
+      "unbonding" => delegation.locking_delegate_amount,
+      "pending_withdrawal" => delegation.withdrawal_delegate_amount,
+      "claimable_rewards" => delegation.pending_delegate_reward
     }
   end
 
-  defp calc_delegation_percentage(delegation_amount,total_staking_amount) do
+  defp calc_delegation_percentage(delegation_amount,node_stake_amount,node_delegate_amount) do
+    total_staking_amount = Decimal.add(Decimal.new(node_stake_amount.value), Decimal.new(node_delegate_amount.value))
     delegation_percentage =
       if total_staking_amount == 0 do
         0
