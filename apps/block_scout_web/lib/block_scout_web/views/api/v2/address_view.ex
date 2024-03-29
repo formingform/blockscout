@@ -217,8 +217,7 @@ defmodule BlockScoutWeb.API.V2.AddressView do
 
   defp add_total_assets_staked(address,address_hash) do
     if System.get_env("CHAIN_TYPE") == "platon_appchain" do
-      total_assets_staked = "待处理"
-      # TODO 所有状态质押金+委托金总和
+      total_assets_staked = L2Validator.get_validator_total_assets_staked
       address = address |> Map.put("total_assets_staked", total_assets_staked)
     else
       address

@@ -393,4 +393,16 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
 
     Repo.one(query)
   end
+
+  # 根据validator_hash查询validator数量
+  def get_validator_total_assets_staked(validator_hash) do
+    query =
+      from(l in __MODULE__,
+        select: coalesce(sum(l.stake_amount + l.locking_stake_amount),0),
+        where: l.validator_hash == ^validator_hash
+      )
+
+    Repo.one(query)
+  end
 end
+
