@@ -10,6 +10,7 @@ defmodule Explorer.Chain.PlatonAppchain.DailyStatic do
     }
 
   alias Explorer.Chain.{Wei}
+  alias Explorer.Chain.PlatonAppchain.L2Validator
 
   @optional_attrs ~w(total_validator_size total_bonded)a
 
@@ -20,7 +21,7 @@ defmodule Explorer.Chain.PlatonAppchain.DailyStatic do
   @typedoc """
      static_date： 统计日期,
      total_validator_size:  总验证人数(活跃与候选节点),
-     delegate_amount:  有效总质押量（不包含解质押或解委托的）,
+     total_bonded:  有效总质押量（不包含解质押或解委托的）,
   """
   @type t :: %__MODULE__{
                static_date: String.t(),
@@ -51,5 +52,32 @@ defmodule Explorer.Chain.PlatonAppchain.DailyStatic do
 
     query
     |> select_repo([]).one()
+  end
+
+  def find_by_static_date(static_date) do
+    query =
+      from(d in __MODULE__,
+        select: count(1),
+        where: d.static_date == ^static_date
+      )
+
+    query
+    |> select_repo([]).one()
+  end
+
+  def static_validator() do
+    query =
+      from(
+        l in L2Validator,
+        select: %{
+          static_date: fragment("to_char(CURRENT_DATE - INTERVAL '1 day', 'YYYYMMDD')"),
+          total_validator_size: count(1),
+          total_bonded: sum(l.stake_amount + l.delegate_amount),
+          inserted_at: fragment("CURRENT_TIMESTAMP"),
+          updated_at: fragment("CURRENT_TIMESTAMP")
+        }
+      )
+
+    Repo.insert_all(__MODULE__, query)
   end
 end
