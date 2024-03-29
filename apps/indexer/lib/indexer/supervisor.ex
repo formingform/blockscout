@@ -160,6 +160,7 @@ defmodule Indexer.Supervisor do
         {Indexer.Fetcher.PlatonAppchain.L1Execute.Supervisor, [[memory_monitor: memory_monitor]]},
         {Indexer.Fetcher.PlatonAppchain.Checkpoint.Supervisor, [[memory_monitor: memory_monitor]]},
         # {Indexer.Fetcher.PlatonAppchain.L2Event.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
+        # {Indexer.Fetcher.PlatonAppchain.L2RewardEvent.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
         # {Indexer.Fetcher.PlatonAppchain.Commitment.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
         # {Indexer.Fetcher.PlatonAppchain.L2Execute.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},
         # {Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent.Supervisor, [[memory_monitor: memory_monitor, json_rpc_named_arguments: json_rpc_named_arguments]]},

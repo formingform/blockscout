@@ -11,7 +11,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Delegator do
 
   alias Explorer.Chain.{Address, Block, Hash, Wei}
 
-  @optional_attrs ~w(locking_delegate_amount withdrawal_delegate_amount delegate_reward)a
+  @optional_attrs ~w(locking_delegate_amount withdrawal_delegate_amount withdrawn_delegate_reward pending_delegate_reward)a
 
   @required_attrs ~w(delegator_hash validator_hash delegate_amount)a
 
@@ -23,7 +23,8 @@ defmodule Explorer.Chain.PlatonAppchain.L2Delegator do
      delegate_amount:  有效委托金额,
      locking_delegate_amount:  锁定的委托金额,
      withdrawal_delegate_amount:  可提取的委托金额,
-     delegate_reward: 委托奖励,
+     withdrawn_delegate_reward: 已提取的委托奖励,
+     pending_delegate_reward: 待提取的委托奖励
   """
   @type t :: %__MODULE__{
     delegator_hash: Hash.Address.t(),
@@ -31,7 +32,8 @@ defmodule Explorer.Chain.PlatonAppchain.L2Delegator do
     delegate_amount:  Wei.t(),
     locking_delegate_amount: Wei.t(),
     withdrawal_delegate_amount: Wei.t(),
-    delegate_reward: Wei.t(),
+    withdrawn_delegate_reward: Wei.t(),
+    pending_delegate_reward: Wei.t(),
   }
 
   @primary_key false
@@ -41,7 +43,8 @@ defmodule Explorer.Chain.PlatonAppchain.L2Delegator do
     field(:delegate_amount, Wei)
     field(:locking_delegate_amount, Wei)
     field(:withdrawal_delegate_amount, Wei)
-    field(:delegate_reward, Wei)
+    field(:withdrawn_delegate_reward, Wei)
+    field(:pending_delegate_reward, Wei)
 
     timestamps()
   end
@@ -52,5 +55,11 @@ defmodule Explorer.Chain.PlatonAppchain.L2Delegator do
     |> cast(attrs, @allowed_attrs)  # 确保@allowed_attrs中指定的key才会赋值到结构体中
     |> validate_required(@required_attrs)
     |> unique_constraint(:validator_hash)
+  end
+
+  # 修改已提取的委托奖励, 如果increment就是负数，就是减少委托
+  def update_withdrawn_delegator_reward(delegator_hash, validator_hash, increment) do
+    from(v in __MODULE__, where: v.validator_hash == ^validator_hash and v.delegator_hash == ^delegator_hash)
+    |> Repo.update_all(inc: [withdrawn_delegate_reward: increment])
   end
 end

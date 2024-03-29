@@ -26,6 +26,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
      locking_stake_amount:  锁定的质押金额,
      withdrawal_stake_amount:  可提取的质押金额,
      delegate_amount:  有效委托金额,
+     withdrawn_reward: 已提取的奖励
      stake_reward:  验证人可领取奖励（出块与质押）,
      delegate_reward:  委托奖励,
      pending_validator_rewards:  验证人可提取的金额,

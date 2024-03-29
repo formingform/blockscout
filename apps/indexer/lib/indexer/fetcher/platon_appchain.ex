@@ -20,7 +20,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   alias Explorer.{Chain, Repo}
   alias Indexer.{Helper}
   alias Explorer.Chain.PlatonAppchain
-  alias Indexer.Fetcher.PlatonAppchain.{L1Event, L1Execute, L2Event, L2Execute, L2ValidatorEvent, Commitment, Checkpoint}
+  alias Indexer.Fetcher.PlatonAppchain.{L1Event, L1Execute, L2Event, L2Execute, L2ValidatorEvent, L2RewardEvent, Commitment, Checkpoint}
 
 
   @fetcher_name :platon_appchain
@@ -796,7 +796,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   end
 
 
-  @spec fill_block_range(integer(), integer(), L2Execute | L2Event | Commitment | L2ValidatorEvent, binary(), list(), boolean()) :: integer()
+  @spec fill_block_range(integer(), integer(), L2Execute | L2Event | Commitment | L2ValidatorEvent | L2RewardEvent, binary(), list(), boolean()) :: integer()
   def fill_block_range(
         l2_block_start,
         l2_block_end,
@@ -805,7 +805,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
         json_rpc_named_arguments,
         scan_db
       )
-      when calling_module in [L2Execute, L2Event, Commitment, L2ValidatorEvent] do
+      when calling_module in [L2Execute, L2Event, Commitment, L2ValidatorEvent, L2RewardEvent] do
     eth_get_logs_range_size =
       Application.get_all_env(:indexer)[Indexer.Fetcher.PlatonAppchain][:platon_appchain_eth_get_logs_range_size]
 
@@ -886,6 +886,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
         calling_module == Commitment -> "NewCommitment"
         calling_module == L2Event -> "L2StateSynced"
         calling_module == L2ValidatorEvent -> "L2StakeEvent"
+        calling_module == L2RewardEvent -> "L2RewardEvent"
       end
 
       log_blocks_chunk_handling(
