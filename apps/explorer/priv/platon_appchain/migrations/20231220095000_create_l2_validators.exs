@@ -19,6 +19,8 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2Validators do
       add(:withdrawal_stake_amount, :numeric, precision: 100, null: false, default: 0)
       # 有效委托金额
       add(:delegate_amount, :numeric, precision: 100, null: false, default: 0)
+      # 验证人已提取的奖励
+      add(:withdrawn_reward, :numeric, precision: 100, null: false, default: 0)
       # 验证人可领取奖励（出块与质押）
       add(:stake_reward, :numeric, precision: 100, null: false, default: 0)
       # 委托奖励

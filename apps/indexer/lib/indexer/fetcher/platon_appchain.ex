@@ -59,6 +59,8 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   #L2上发生的业务交易类型，这些业务，可能是因为用户在L1发起的，也可能是在L2发起的，也可能系统发起的
   @l2_validator_event_action_type [ValidatorRegistered: 1, StakeAdded: 2, DelegationAdded: 3, UnStaked: 4, UnDelegated: 5, Slashed: 6, StakeWithdrawalRegistered: 7, StakeWithdrawal: 8, DelegateWithdrawalRegistered: 9, DelegateWithdrawal: 10, UpdateValidatorStatus: 11]
 
+  @l2_reward_event_action_type [delegator: 1, validator: 2]
+
   @l2_validator_status [Valid: 0b0000, Invalid: 0b0001, LowBlocks: 0b0010, LowThreshold: 0b0100, Duplicated: 0b1000, Unstaked: 0b00100000, Slashing: 0b01000000]
 
   # 缺省的出块间隔时间，毫秒
@@ -115,6 +117,10 @@ defmodule Indexer.Fetcher.PlatonAppchain do
 
   def l2_validator_event_action_type() do
     @l2_validator_event_action_type
+  end
+
+  def l2_reward_event_action_type() do
+    @l2_reward_event_action_type
   end
 
 
@@ -297,7 +303,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
 
 
   @spec get_last_l2_item(module()) :: {non_neg_integer() | nil, binary() | nil}
-  def get_last_l2_item(table) when table in [Explorer.Chain.PlatonAppchain.L2Event, Explorer.Chain.PlatonAppchain.L2Execute, Explorer.Chain.PlatonAppchain.L2ValidatorEvent, Explorer.Chain.PlatonAppchain.Commitment] do
+  def get_last_l2_item(table) when table in [Explorer.Chain.PlatonAppchain.L2Event, Explorer.Chain.PlatonAppchain.L2Execute, Explorer.Chain.PlatonAppchain.L2ValidatorEvent, Explorer.Chain.PlatonAppchain.L2RewardEvent, Explorer.Chain.PlatonAppchain.Commitment] do
     #实际上可以取max(number) in blocks
     query =
       from(item in table,
@@ -593,7 +599,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   end
 
   @spec init_l2(
-          Explorer.Chain.PlatonAppchain.L2Event | Explorer.Chain.PlatonAppchain.L2Execute | Explorer.Chain.PlatonAppchain.L2ValidatorEvent | Explorer.Chain.PlatonAppchain.Commitment,
+          Explorer.Chain.PlatonAppchain.L2Event | Explorer.Chain.PlatonAppchain.L2Execute | Explorer.Chain.PlatonAppchain.L2ValidatorEvent | Explorer.Chain.PlatonAppchain.L2RewardEvent | Explorer.Chain.PlatonAppchain.Commitment,
           list(),
           pid(),
           binary(),
@@ -603,7 +609,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
           list()
         ) :: {:ok, map()} | :ignore
   def init_l2(table, env, pid, contract_address, contract_name, table_name, entity_name, json_rpc_named_arguments)
-      when table in [Explorer.Chain.PlatonAppchain.L2Event, Explorer.Chain.PlatonAppchain.L2Execute, Explorer.Chain.PlatonAppchain.L2ValidatorEvent, Explorer.Chain.PlatonAppchain.Commitment] do
+      when table in [Explorer.Chain.PlatonAppchain.L2Event, Explorer.Chain.PlatonAppchain.L2Execute, Explorer.Chain.PlatonAppchain.L2ValidatorEvent, Explorer.Chain.PlatonAppchain.L2RewardEvent, Explorer.Chain.PlatonAppchain.Commitment] do
 
     with {:start_block_l2_undefined, false} <- {:start_block_l2_undefined, is_nil(env[:start_block_l2])},
          {:contract_address_valid, true} <- {:contract_address_valid, Helper.is_address_correct?(contract_address)},

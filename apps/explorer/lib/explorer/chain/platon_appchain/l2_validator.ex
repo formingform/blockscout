@@ -11,7 +11,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
 
   alias Explorer.Chain.{Address, Block, Hash, Wei}
 
-  @optional_attrs ~w(locking_stake_amount withdrawal_stake_amount stake_reward delegate_reward rank name detail logo website expect_apr block_rate auth_status role)a
+  @optional_attrs ~w(locking_stake_amount withdrawal_stake_amount withdrawn_reward stake_reward delegate_reward rank name detail logo website expect_apr block_rate auth_status role)a
 
   @required_attrs ~w(validator_hash owner_hash stake_amount delegate_amount commission_rate stake_epoch status)a
 
@@ -51,6 +51,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
                locking_stake_amount:  Wei.t(),
                withdrawal_stake_amount:  Wei.t(),
                delegate_amount:  Wei.t(),
+               withdrawn_reward: Wei.t(),
                stake_reward:  Wei.t(),
                delegate_reward:  Wei.t(),
                pending_validator_rewards:  Wei.t(),
@@ -77,6 +78,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
     field(:locking_stake_amount, Wei)
     field(:withdrawal_stake_amount, Wei)
     field(:delegate_amount, Wei)
+    field(:withdrawn_reward, Wei)
     field(:stake_reward, Wei)
     field(:delegate_reward, Wei)
     field(:pending_validator_rewards, Wei)
@@ -154,6 +156,12 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
   def update_stake_amount(validator_hash, increment) do
     query = from v in __MODULE__, where: v.validator_hash == ^validator_hash
     Repo.update_all(query, inc: [stake_amount: increment])
+  end
+
+  # 修改质押金额, 如果increment就是负数，就是减少质押
+  def update_withdrawn_reward(validator_hash, increment) do
+    query = from v in __MODULE__, where: v.validator_hash == ^validator_hash
+    Repo.update_all(query, inc: [withdrawn_reward: increment])
   end
 
   # 修改委托金额, 如果increment就是负数，就是减少委托

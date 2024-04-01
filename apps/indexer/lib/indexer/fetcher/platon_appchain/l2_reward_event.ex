@@ -17,14 +17,13 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2RewardEvent do
   alias ABI.TypeDecoder
   alias Explorer.{Chain, Repo}
   alias Explorer.Chain.Log
-  alias Explorer.Chain.PlatonAppchain.L2Delegator
   alias Indexer.Fetcher.PlatonAppchain
 
   @fetcher_name :platon_appchain_l2_reward_event
 
-  @l2_withdraw_validator_rewards_event "0xedaf3c471ebd67d60c29efe34b639ede7d6a1d92eaeb3f503e784971e67118a5"
+  @l2_withdraw_validator_rewards_event "0xb1208165cd498a8357a1a86bbfc0d721060a056e8071e8d4a251428b5efb24d6"
 
-  @l2_withdraw_delegator_rewards_event "7a8dc26796a1e50e6e190b70259f58f6a4edd5b22280ceecc82b687b8e982869"
+  @l2_withdraw_delegator_rewards_event "0xa03fb819557c2f18e46480598e54ee3f5fa40811c2019a51c56647ad8636d782"
 
   def child_spec(start_link_arguments) do
     spec = %{
@@ -49,13 +48,13 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2RewardEvent do
     env = Application.get_all_env(:indexer)[__MODULE__]
 
     PlatonAppchain.init_l2(
-      L2Event,
+      L2RewardEvent,
       env,
       self(),
       env[:l2_reward_manager],
       "L2RewardManager",
-      "l2_events",
-      "L2Events",
+      "l2_reward_events",
+      "L2RewardEvents",
       json_rpc_named_arguments
     )
   end
@@ -87,7 +86,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2RewardEvent do
       ) do
     # find and fill all events between start_block and "safe" block
     # the "safe" block can be "latest" (when safe_block_is_latest == true)
-    fill_block_range(
+
+    PlatonAppchain.fill_block_range_no_event_id(
       start_block,
       safe_block,
       {__MODULE__, L2RewardEvent},
@@ -99,7 +99,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2RewardEvent do
       # find and fill all events between "safe" and "latest" block (excluding "safe")
       {:ok, latest_block} = PlatonAppchain.get_block_number_by_tag("latest", json_rpc_named_arguments, 100_000_000)
 
-      fill_block_range(
+      PlatonAppchain.fill_block_range_no_event_id(
         safe_block + 1,
         latest_block,
         {__MODULE__, L2RewardEvent},
@@ -119,11 +119,11 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2RewardEvent do
 
   @spec remove(non_neg_integer()) :: no_return()
   def remove(starting_block) do
-    Repo.delete_all(from(w in L2Event, where: w.block_number >= ^starting_block))
+    Repo.delete_all(from(w in L2RewardEvent, where: w.block_number >= ^starting_block))
   end
 
-  @spec event_to_l2_reward_event( binary(), binary(), binary(), list()) :: map()
-  def event_to_l2_reward_event(data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
+  @spec event_to_l2_reward_event( non_neg_integer(), binary(), binary(), binary(), list()) :: map()
+  def event_to_l2_reward_event(log_index, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments) do
     Logger.debug(fn -> "convert event to l2_event, log.data: #{inspect(data)}" end, logger: :platon_appchain)
 
     [data_bytes] = decode_data(data, [:bytes])
@@ -132,31 +132,40 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2RewardEvent do
 
     sig = binary_part(data_bytes, 0, 32)
 
-    {:ok, l2_block_timestamp} = PlatonAppchain.get_block_timestamp_by_number(l2_block_number, json_rpc_named_arguments, 100_000_000)
+    {:ok, timestamp} = PlatonAppchain.get_block_timestamp_by_number(l2_block_number, json_rpc_named_arguments, 100_000_000)
+    block_number = quantity_to_integer(l2_block_number)
     case Base.encode16(sig, case: :lower) do
       @l2_withdraw_delegator_rewards_event ->
         # {WITHDRAW_DELEGATOR_REWARD_SIG, validator, amount, delegator}
         [_sig, validator, amount, delegator] = TypeDecoder.decode_raw(data_bytes, [{:bytes, 32}, :address, {:uint, 256}, :address])
         Logger.debug(fn -> "withdraw delegator rewards event: validator-#{inspect(validator)}, delegator-#{inspect(delegator)}, amount-#{amount}" end, logger: :platon_appchain)
-        L2Delegator.update_withdrawn_delegator_reward(delegator, validator, amount)
-        %{
-          "validator": validator,
-          "amount": amount,
-          "caller": delegator
-        }
+        [%{
+          log_index: log_index,
+          validator_hash: validator,
+          caller_hash: delegator,
+          block_number: block_number,
+          hash: l2_transaction_hash,
+          action_type: PlatonAppchain.l2_reward_event_action_type()[:delegator],
+          amount: amount,
+          block_timestamp: timestamp
+        }]
 
       @l2_withdraw_validator_rewards_event ->
         # {WITHDRAW_VALIDATOR_REWARD_SIG, validator, amount, caller}
         [_sig, validator, amount, caller] = TypeDecoder.decode_raw(data_bytes, [{:bytes, 32}, :address, {:uint, 256}, :address])
         Logger.debug(fn -> "withdraw validator rewards event: validator-#{inspect(validator)}, caller-#{inspect(caller)}, amount-#{amount}" end, logger: :platon_appchain)
-        # todo 是否需要更新validator表对应的字段
-        %{
-          "validator": validator,
-          "amount": amount,
-          "caller": caller
-        }
+        [%{
+          log_index: log_index,
+          validator_hash: validator,
+          caller_hash: caller,
+          block_number: block_number,
+          hash: l2_transaction_hash,
+          action_type: PlatonAppchain.l2_reward_event_action_type()[:validator],
+          amount: amount,
+          block_timestamp: timestamp
+        }]
       _ ->
-        %{}
+        [%{}]
     end
   end
 
@@ -172,7 +181,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2RewardEvent do
       if scan_db do
         query =
           from(log in Log,
-            select: {log.data, log.transaction_hash, log.block_number},
+            select: {log.index, log.data, log.transaction_hash, log.block_number},
             where:
               log.first_topic == @l2_withdraw_validator_rewards_event or log.first_topic == @l2_withdraw_delegator_rewards_event and log.address_hash == ^l2_reward_manager and
               log.block_number >= ^block_start and log.block_number <= ^block_end
@@ -180,8 +189,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2RewardEvent do
 
         query
         |> Repo.all(timeout: :infinity)
-        |> Enum.map(fn {data, l2_transaction_hash, l2_block_number} ->
-          event_to_l2_reward_event(data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments)
+        |> Enum.map(fn {index, data, l2_transaction_hash, l2_block_number} ->
+          event_to_l2_reward_event(index, data, l2_transaction_hash, l2_block_number, json_rpc_named_arguments)
         end)
       else
         {:ok, result} =
@@ -195,6 +204,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2RewardEvent do
           )
         Enum.map(result, fn event ->
           event_to_l2_reward_event(
+            event["logIndex"],
             event["data"],
             event["transactionHash"],
             event["blockNumber"],  # 这里event["blockNumber"]获取的block_number是16进制的
@@ -206,6 +216,11 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2RewardEvent do
     filtered_events = Enum.reject(l2_reward_events, &Enum.empty?/1)
     if Enum.count(filtered_events) > 0 do
       Logger.debug(fn -> "to import l2 reward events:(#{inspect(filtered_events)})" end , logger: :platon_appchain)
+      {:ok, _} =
+        Chain.import(%{
+          l2_reward_events: %{params: filtered_events},
+          timeout: :infinity
+        })
     end
     Enum.count(filtered_events)
   end
