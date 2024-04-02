@@ -50,18 +50,18 @@ defmodule Indexer.Fetcher.PlatonAppchain.DailyStats do
     yesterday_datetime = Timex.shift(Timex.now(), days: -1)
     # 昨天日期8位字符串
     static_date = Timex.format!(yesterday_datetime, "{YYYY}{0M}{0D}")
-    IO.inspect(static_date)
 
     records = DailyStatic.find_by_static_date(static_date)
     if records == 0 do
       DailyStatic.static_validator()
     end
 
+    # 一天结束时间与第二天开始时间都是0点，这里获取第二天开始时间+10秒做为每天统计时间
     end_time = Timex.end_of_day(current_datetime)
     time_diff = Timex.diff(end_time, current_datetime)
 
-    # 如果统计过，再过24小时进行，否则过1分钟进行
-    Process.send_after(self(), :continue, if records == 1 do time_diff  else 60*1000 end)
+    # 如果统计过，则到第二天开始时间+10秒再进行，否则过1分钟进行
+    Process.send_after(self(), :continue, if records == 1 do time_diff+10000  else 60*1000 end)
 
     {:noreply,state}
   end
