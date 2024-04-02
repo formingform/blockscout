@@ -56,13 +56,21 @@ defmodule Indexer.Fetcher.PlatonAppchain.DailyStats do
       DailyStatic.static_validator()
     end
 
-    # 一天结束时间与第二天开始时间都是0点，这里获取第二天开始时间+10秒做为每天统计时间
-    end_time = Timex.end_of_day(current_datetime)
-    time_diff = Timex.diff(end_time, current_datetime)
-
-    # 如果统计过，则到第二天开始时间+10秒再进行，否则过1分钟进行
-    Process.send_after(self(), :continue, if records == 1 do time_diff+10000  else 60*1000 end)
+    Process.send_after(self(), :continue, calculate_delay_millisecond(current_datetime,records))
 
     {:noreply,state}
+  end
+
+
+  # 如果统计过，则到第二天开始时间+10秒再进行，否则过1分钟进行
+  defp calculate_delay_millisecond(current_datetime,records) do
+    # 一天结束时间与第二天开始时间都是0点，这里获取第二天开始时间+10秒做为每天统计时间
+    end_time = Timex.end_of_day(current_datetime)
+    time_diff = Timex.diff(end_time, current_datetime, :millisecond)
+    if  records == 1 do
+      time_diff+10000
+    else
+      60*1000
+    end
   end
 end
