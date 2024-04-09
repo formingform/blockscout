@@ -150,11 +150,12 @@ defmodule ConfigHelper do
   def block_transformer do
     block_transformers = %{
       "clique" => Blocks.Clique,
-      "base" => Blocks.Base
+      "base" => Blocks.Base,
+      "platon_appchain" => Blocks.PlatonAppchain,
     }
 
     # Compile time environment variable access requires recompilation.
-    configured_transformer = safe_get_env("BLOCK_TRANSFORMER", "base")
+    configured_transformer = safe_get_env("BLOCK_TRANSFORMER", "platon_appchain")
 
     case Map.get(block_transformers, configured_transformer) do
       nil ->

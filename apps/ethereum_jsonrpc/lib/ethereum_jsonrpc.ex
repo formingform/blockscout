@@ -579,6 +579,20 @@ defmodule EthereumJSONRPC do
     end
   end
 
+  @doc """
+  Converts `t:timestamp/0` to `t:quantity/0`
+  时间转成DateTime.t精度会丢失，所以此处理返回13位或者10位数字
+  """
+  def timestamp_to_datetime_unix(timestamp) do
+    case quantity_to_integer(timestamp) do
+      nil ->
+        nil
+
+      quantity ->
+        quantity
+    end
+  end
+
   defp fetch_blocks_by_params(params, request, json_rpc_named_arguments)
        when is_list(params) and is_function(request, 1) do
     id_to_params = id_to_params(params)

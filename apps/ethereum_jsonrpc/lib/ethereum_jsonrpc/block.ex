@@ -4,7 +4,7 @@ defmodule EthereumJSONRPC.Block do
   and [`eth_getBlockByNumber`](https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_getblockbynumber).
   """
 
-  import EthereumJSONRPC, only: [quantity_to_integer: 1, timestamp_to_datetime: 1]
+  import EthereumJSONRPC, only: [quantity_to_integer: 1, timestamp_to_datetime: 1, timestamp_to_datetime_unix: 1]
 
   alias EthereumJSONRPC.{Transactions, Uncles, Withdrawals}
 
@@ -704,7 +704,8 @@ defmodule EthereumJSONRPC.Block do
        do: entry
 
   defp entry_to_elixir({"timestamp" = key, timestamp}, _block) do
-    {key, timestamp_to_datetime(timestamp)}
+#    {key, timestamp_to_datetime(timestamp)}
+    {key, timestamp_to_datetime_unix(timestamp)}
   end
 
   defp entry_to_elixir({"transactions" = key, transactions}, _block) do
