@@ -40,6 +40,7 @@ defmodule Explorer.Chain do
   alias Explorer.Counters.{LastFetchedCounter, TokenHoldersCounter, TokenTransfersCounter}
 
   alias Explorer.Chain
+  alias Explorer.Helper
 
   alias Explorer.Chain.{
     Address,
@@ -4944,11 +4945,11 @@ defmodule Explorer.Chain do
 
       min_block_unix_timestamp =
         min_block_timestamp
-        |> Timex.to_unix()
+        |> DateTime.to_unix(:millisecond)
 
       max_block_unix_timestamp =
         max_block_timestamp
-        |> Timex.to_unix()
+        |> DateTime.to_unix(:millisecond)
 
       blocks_delta = max_block_number - min_block_number
 
@@ -5038,7 +5039,7 @@ defmodule Explorer.Chain do
   end
 
   defp add_date_to_balance(balance, date) do
-    formatted_date = Timex.from_unix(date)
+    formatted_date = Helper.from_unix(date)
     %{balance | block_timestamp: formatted_date}
   end
 

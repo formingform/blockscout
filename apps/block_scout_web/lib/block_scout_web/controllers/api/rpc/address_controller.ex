@@ -4,6 +4,7 @@ defmodule BlockScoutWeb.API.RPC.AddressController do
   alias BlockScoutWeb.API.RPC.Helper
   alias Explorer.{Chain, Etherscan}
   alias Explorer.Chain.{Address, Wei}
+  alias Explorer.Helper
   alias Explorer.Etherscan.{Addresses, Blocks}
   alias Indexer.Fetcher.CoinBalanceOnDemand
 
@@ -458,7 +459,8 @@ defmodule BlockScoutWeb.API.RPC.AddressController do
   def put_timestamp(options, params, timestamp_param_key) do
     with %{^timestamp_param_key => timestamp_param} <- params,
          {unix_timestamp, ""} <- Integer.parse(timestamp_param),
-         {:ok, timestamp} <- DateTime.from_unix(unix_timestamp) do
+         {:ok, timestamp} <- Helper.from_unix(unix_timestamp) do
+
       Map.put(options, String.to_atom(timestamp_param_key), timestamp)
     else
       _ ->

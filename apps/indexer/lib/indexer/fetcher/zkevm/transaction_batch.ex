@@ -11,6 +11,7 @@ defmodule Indexer.Fetcher.Zkevm.TransactionBatch do
   import EthereumJSONRPC, only: [integer_to_quantity: 1, json_rpc: 2, quantity_to_integer: 1]
 
   alias Explorer.Chain
+  alias Explorer.Helper
   alias Explorer.Chain.Events.Publisher
   alias Explorer.Chain.Zkevm.Reader
 
@@ -208,7 +209,7 @@ defmodule Indexer.Fetcher.Zkevm.TransactionBatch do
                                                                     {batches, l2_txs, l1_txs, next_id, hash_to_id} =
                                                                       _acc ->
         number = quantity_to_integer(Map.get(res.result, "number"))
-        {:ok, timestamp} = DateTime.from_unix(quantity_to_integer(Map.get(res.result, "timestamp")))
+        timestamp = Helper.from_unix(quantity_to_integer(Map.get(res.result, "timestamp")))
         l2_transaction_hashes = Map.get(res.result, "transactions")
         global_exit_root = Map.get(res.result, "globalExitRoot")
         acc_input_hash = Map.get(res.result, "accInputHash")

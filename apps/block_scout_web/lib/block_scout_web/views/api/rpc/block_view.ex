@@ -14,7 +14,7 @@ defmodule BlockScoutWeb.API.RPC.BlockView do
 
     data = %{
       "blockNumber" => to_string(block.number),
-      "timeStamp" => DateTime.to_unix(block.timestamp),
+      "timeStamp" => DateTime.to_unix(block.timestamp, :millisecond),
       "blockMiner" => Hash.to_string(block.miner_hash),
       "blockReward" => reward_as_string,
       "uncles" => nil,

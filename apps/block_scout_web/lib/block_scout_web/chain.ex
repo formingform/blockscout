@@ -465,7 +465,7 @@ defmodule BlockScoutWeb.Chain do
       {timestamp_int, ""} ->
         timestamp =
           timestamp_int
-          |> DateTime.from_unix!(:second)
+          |> Helper.from_unix()
 
         {:ok, timestamp}
 

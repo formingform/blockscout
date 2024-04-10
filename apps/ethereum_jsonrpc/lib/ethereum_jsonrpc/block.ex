@@ -704,8 +704,8 @@ defmodule EthereumJSONRPC.Block do
        do: entry
 
   defp entry_to_elixir({"timestamp" = key, timestamp}, _block) do
-#    {key, timestamp_to_datetime(timestamp)}
-    {key, timestamp_to_datetime_unix(timestamp)}
+    {key, timestamp_to_datetime(timestamp)}
+#    {key, timestamp_to_datetime_unix(timestamp)}
   end
 
   defp entry_to_elixir({"transactions" = key, transactions}, _block) do

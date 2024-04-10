@@ -4,6 +4,7 @@ defmodule BlockScoutWeb.AddressView do
   require Logger
 
   alias BlockScoutWeb.{AccessHelper, LayoutView}
+  alias Explorer.Helper
   alias Explorer.Account.CustomABI
   alias Explorer.{Chain, CustomContractsHelper, Repo}
   alias Explorer.Chain.Address.Counters
@@ -237,7 +238,7 @@ defmodule BlockScoutWeb.AddressView do
 
   def format_datetime_string(unix_date) do
     unix_date
-    |> DateTime.from_unix!()
+    |> Helper.from_unix()
     |> Timex.format!("{M}-{D}-{YYYY}")
   end
 

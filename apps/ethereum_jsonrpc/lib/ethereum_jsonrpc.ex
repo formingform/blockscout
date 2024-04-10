@@ -41,6 +41,7 @@ defmodule EthereumJSONRPC do
     Utility.EndpointAvailabilityObserver,
     Variant
   }
+  alias Explorer.Helper
 
   @default_throttle_timeout :timer.minutes(2)
 
@@ -569,13 +570,7 @@ defmodule EthereumJSONRPC do
         nil
 
       quantity ->
-        length = String.length(Integer.to_string(quantity))
-        if length == 13 do
-          quantity = div(quantity, 1000)
-          Timex.from_unix(quantity)
-        else
-          Timex.from_unix(quantity)
-        end
+        Helper.from_unix(quantity)
     end
   end
 

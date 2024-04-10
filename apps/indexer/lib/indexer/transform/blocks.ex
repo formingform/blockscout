@@ -51,7 +51,7 @@ defmodule Indexer.Transform.Blocks do
       block.number,
       block.gas_limit,
       block.gas_used,
-      DateTime.to_unix(block.timestamp),
+      DateTime.to_unix(block.timestamp, :millisecond),
       decode(block.extra_data),
       decode(block.mix_hash),
       decode(block.nonce)

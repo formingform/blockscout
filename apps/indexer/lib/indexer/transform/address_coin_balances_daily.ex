@@ -4,6 +4,7 @@ defmodule Indexer.Transform.AddressCoinBalancesDaily do
   """
 
   import EthereumJSONRPC, only: [integer_to_quantity: 1, json_rpc: 2, quantity_to_integer: 1, request: 1]
+  import Explorer.Helper, only: [from_unix: 1]
 
   def params_set(%{coin_balances_params: coin_balances_params_set, blocks: blocks}) do
     coin_balances_params =
@@ -32,7 +33,7 @@ defmodule Indexer.Transform.AddressCoinBalancesDaily do
                    |> request()
                    |> json_rpc(json_rpc_named_arguments) do
               timestamp = quantity_to_integer(timestamp_raw)
-              DateTime.from_unix!(timestamp)
+              from_unix(timestamp)
             end
           end
 

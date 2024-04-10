@@ -11,6 +11,7 @@ defmodule Explorer.Market.History.Source.Price.CryptoCompare do
   """
 
   alias Explorer.Market.History.Source.Price, as: SourcePrice
+  alias Explorer.Helper
   alias HTTPoison.Response
 
   @behaviour SourcePrice
@@ -45,7 +46,7 @@ defmodule Explorer.Market.History.Source.Price.CryptoCompare do
   @spec date(unix_timestamp()) :: Date.t()
   def date(unix_timestamp) do
     unix_timestamp
-    |> DateTime.from_unix!()
+    |> Helper.from_unix()
     |> DateTime.to_date()
   end
 

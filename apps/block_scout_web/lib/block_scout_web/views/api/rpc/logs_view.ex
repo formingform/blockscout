@@ -46,7 +46,7 @@ defmodule BlockScoutWeb.API.RPC.LogsView do
 
   defp datetime_to_hex(datetime) do
     datetime
-    |> DateTime.to_unix()
+    |> DateTime.to_unix(:millisecond)
     |> integer_to_hex()
   end
 end

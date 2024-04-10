@@ -13,7 +13,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   import EthereumJSONRPC,
          only: [fetch_block_number_by_tag: 2, json_rpc: 2, integer_to_quantity: 1, quantity_to_integer: 1, request: 1]
 
-  import Explorer.Helper, only: [parse_integer: 1]
+  import Explorer.Helper, only: [parse_integer: 1, from_unix: 1]
 
   alias EthereumJSONRPC.Block.ByNumber
   alias EthereumJSONRPC.Blocks
@@ -348,9 +348,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
            get_block_timestamp_by_number(first_block, json_rpc_named_arguments, 100_000_000),
          {:ok, last_safe_block_timestamp} <-
            get_block_timestamp_by_number(last_safe_block, json_rpc_named_arguments, 100_000_000) do
-
       block_check_interval = ceil(DateTime.diff(last_safe_block_timestamp, first_block_timestamp, :second) / 2)
-
       Logger.info("Block check interval is calculated as #{block_check_interval} seconds.")
       {:ok, block_check_interval, last_safe_block}
     else
@@ -397,7 +395,8 @@ defmodule Indexer.Fetcher.PlatonAppchain do
          false <- is_nil(timestamp) do
       # {:ok, quantity_to_integer(timestamp)}
       # {:ok, timestamp} = DateTime.from_unix(quantity_to_integer(timestamp))
-      DateTime.from_unix(quantity_to_integer(timestamp))
+      date = from_unix(quantity_to_integer(timestamp))
+      {:ok, date}
     else
       {:error, message} ->
         {:error, message}
@@ -419,7 +418,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
          false <- is_nil(miner),
          timestamp <- Map.get(block, "timestamp"),
          false <- is_nil(timestamp) do
-      {:ok, datetime} = DateTime.from_unix(quantity_to_integer(timestamp))
+      datetime = from_unix(quantity_to_integer(timestamp))
       {:ok, miner, datetime}
     else
       {:error, message} ->
@@ -495,7 +494,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     |> get_blocks_by_events(json_rpc_named_arguments, 100_000_000)
     |> Enum.reduce(%{}, fn block, acc ->
       block_number = quantity_to_integer(Map.get(block, "number"))
-      {:ok, timestamp} = DateTime.from_unix(quantity_to_integer(Map.get(block, "timestamp")))
+      timestamp = from_unix(quantity_to_integer(Map.get(block, "timestamp")))
       miner = Map.get(block, "miner")
       #from = Map.get(block, "from")
       Map.put(acc, "#{block_number}_miner", miner) |> Map.put(block_number, timestamp)

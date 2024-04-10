@@ -35,4 +35,16 @@ defmodule Explorer.Helper do
       _ -> nil
     end
   end
+
+
+  def from_unix(unix_timestamp) do
+    length = String.length(Integer.to_string(unix_timestamp))
+    if length == 13 do
+      {:ok, date} = DateTime.from_unix(unix_timestamp, :millisecond)
+      date
+    else
+      {:ok, date} = DateTime.from_unix(unix_timestamp)
+      date
+    end
+  end
 end
