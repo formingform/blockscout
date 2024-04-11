@@ -140,6 +140,7 @@ defmodule Explorer.Chain.PlatonAppchain.Validator do
           block_timestamp: b.timestamp,
           txn: b.size,
           gas_used: b.gas_used,
+          gas_limit: b.gas_limit,
           tx_fee_reward: coalesce(sum(t.gas_used * t.gas_price), 0)
         },
         order_by: [desc: b.number]
