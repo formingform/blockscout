@@ -54,7 +54,7 @@ defmodule Indexer.Transform.PlatonAppchainBlocks do
       block.number,
       block.gas_limit,
       block.gas_used,
-      block.timestamp,
+      DateTime.to_unix(block.timestamp, :millisecond),
       block.extra_data,
       decode(block.nonce)
     ]
