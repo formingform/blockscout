@@ -58,6 +58,10 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2Validators do
       add(:status, :integer, null: false, default: 0)
       # 0-candidate(质押节点) 1-active(共识节点候选人) 2-verifying(共识节点)
       add(:role, :integer, null: false, default: 0)
+      # 退出区块
+      add(:exit_block, :bigint, null: false)
+      # 退出内容
+      add(:exit_desc, :string, null: true)
 
       timestamps(null: false, type: :utc_datetime_usec)
     end

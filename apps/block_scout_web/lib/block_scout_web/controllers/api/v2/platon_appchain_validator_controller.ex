@@ -11,7 +11,6 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainValidatorController do
   require Logger
 
   alias Explorer.Chain.PlatonAppchain.{L2Validator, DailyStatic}
-  alias Explorer.Chain.PlatonAppchain.L2ValidatorHistory
   alias Explorer.Chain.{Wei}
 
   action_fallback(BlockScoutWeb.API.V2.FallbackController)
@@ -119,7 +118,7 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainValidatorController do
       params
       |> paging_options()
       |> Keyword.put(:api?, true)
-      |> L2ValidatorHistory.list_validators()
+      |> L2Validator.list_history_validators()
       |> split_list_by_page()
 
     next_page_params = next_page_params(next_page, validators, params)
