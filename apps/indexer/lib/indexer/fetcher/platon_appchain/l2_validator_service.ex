@@ -3,21 +3,12 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorService do
   更新l2_validator表记录.
   """
   require Logger
-
+  use Bitwise
   alias Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler
   alias Explorer.Chain
   alias Explorer.Chain.PlatonAppchain.L2Validator
   alias Indexer.Fetcher.PlatonAppchain
 
-  #
-  #    iex > add_new_validator("0x97ab3d4f7f5051f127b0e9f8d10772125d94d65b")
-  #    {:ok, %Explorer.Chain.PlatonAppchain.L2Validator{...}}
-  #
-  @spec add_new_validator(Repo.t(), binary()) :: {:ok, L2Validator.t()} | {:error, reason :: String.t()}
-  def add_new_validator(repo, validator_hex) do
-    validatorMap = L2StakeHandler.getValidator(validator_hex)
-    L2Validator.add_new_validator(repo, validatorMap)
-  end
 
   @spec upsert_validator(Repo.t(), binary()) :: {:ok, integer()} | {:error, reason :: String.t()}
   def upsert_validator(repo, validator_hex) do
@@ -25,9 +16,19 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorService do
     L2Validator.upsert_validator(repo, validatorMap)
   end
 
-  @spec update_validator(Repo.t(), binary()) :: {:ok, integer()} | {:error, reason :: String.t()}
-  def update_validator(repo, validator_hex) do
+  @spec update_validator(Repo.t(), binary(), integer()) :: {:ok, integer()} | {:error, reason :: String.t()}
+  def update_validator(repo, validator_hex, block_no) do
     validatorMap = L2StakeHandler.getValidator(validator_hex)
+    exit_info =
+      cond do
+        PlatonAppchain.l2_validator_is_unstaked(validatorMap.status) ->  %{exit_block: block_no, exit_desc: "Unstaked"}
+        PlatonAppchain.l2_validator_is_slashed(validatorMap.status) ->  %{exit_block: block_no, exit_desc: "Slashing"}
+        PlatonAppchain.l2_validator_is_duplicated(validatorMap.status) ->  %{exit_block: block_no, exit_desc: "Duplicated"}
+        PlatonAppchain.l2_validator_is_lowBlocks(validatorMap.status) ->  %{exit_block: block_no, exit_desc: "LowBlocks"}
+        PlatonAppchain.l2_validator_is_lowThreshold(validatorMap.status) ->  %{exit_block: block_no, exit_desc: "LowThreshold"}
+        true -> %{}
+      end
+    Map.merge(validatorMap, exit_info)
     L2Validator.update_validator(repo, validatorMap)
   end
 
@@ -81,9 +82,9 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorService do
     L2Validator.update_rank_and_amount(rank_tuple_list)
   end
 
-#  def backup_exited_validator(repo, validator_hash, status, exit_number, exit_desc) do
-#    L2Validator.backup_exited_validator(repo, validator_hash, status, exit_number, exit_desc)
-#  end
+  def backup_exited_validator(repo, validator_hash, status, exit_number, exit_desc) do
+    L2Validator.backup_exited_validator(repo, validator_hash, status, exit_number, exit_desc)
+  end
 
   def delete_exited_validator(repo, validator_hash) do
     L2Validator.delete_exited_validator(repo, validator_hash)
