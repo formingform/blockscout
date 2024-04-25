@@ -81,9 +81,9 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorService do
     L2Validator.update_rank_and_amount(rank_tuple_list)
   end
 
-  def backup_exited_validator(repo, validator_hash, status, exit_number, exit_desc) do
-    L2Validator.backup_exited_validator(repo, validator_hash, status, exit_number, exit_desc)
-  end
+#  def backup_exited_validator(repo, validator_hash, status, exit_number, exit_desc) do
+#    L2Validator.backup_exited_validator(repo, validator_hash, status, exit_number, exit_desc)
+#  end
 
   def delete_exited_validator(repo, validator_hash) do
     L2Validator.delete_exited_validator(repo, validator_hash)

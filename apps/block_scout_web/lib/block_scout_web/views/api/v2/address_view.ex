@@ -9,7 +9,7 @@ defmodule BlockScoutWeb.API.V2.AddressView do
   alias Explorer.{Chain, Market}
   alias Explorer.Chain.Address.Counters
   alias Explorer.Chain.{Address, SmartContract}
-  alias Explorer.Chain.PlatonAppchain.{L2Validator, L2ValidatorHistory}
+  alias Explorer.Chain.PlatonAppchain.L2Validator
 
   @api_true [api?: true]
 
@@ -183,13 +183,6 @@ defmodule BlockScoutWeb.API.V2.AddressView do
       owner_count  = L2Validator.count_by_owner_hash(address_hash)
       if owner_count > 0 do
         address = address |> Map.put("owner_address", true)
-      else
-        owner_count  = L2ValidatorHistory.count_by_owner_hash(address_hash)
-        if owner_count > 0 do
-          address = address |> Map.put("owner_address", true)
-        else
-          address = address |> Map.put("owner_address", false)
-        end
       end
     else
       address
@@ -202,13 +195,6 @@ defmodule BlockScoutWeb.API.V2.AddressView do
       owner_count  = L2Validator.count_by_validator_hash(address_hash)
       if owner_count > 0 do
         address = address |> Map.put("validator_address", true)
-      else
-        owner_count  = L2ValidatorHistory.count_by_validator_hash(address_hash)
-        if owner_count > 0 do
-          address = address |> Map.put("validator_address", true)
-        else
-          address = address |> Map.put("validator_address", false)
-        end
       end
     else
       address
