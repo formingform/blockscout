@@ -117,9 +117,9 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
   end
 
   def update_validator(repo, dataMap) do
-    repo.one(__MODULE__, address: dataMap.validator_hash)
+    repo.get_by(__MODULE__, validator_hash: dataMap.validator_hash)
     |> changeset(dataMap)
-    |> Repo.update!
+    |> repo.update()
   end
 
   @spec upsert_validator(Ecto.Repo.t(), map()) :: {:ok, Ecto.Schema.t()} | {:eroror, reason :: String.t()}
@@ -127,7 +127,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
     %__MODULE__{}
     |> cast(dataMap, @allowed_attrs)  # 确保@allowed_attrs中指定的key才会赋值到结构体中
     |> repo.insert(
-         on_conflict: :replace_all,
+         on_conflict: :replace_all,   # replace_all 更新所有字段
          conflict_target: [:validator_hash],
          returning: true)
   end

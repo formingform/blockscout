@@ -163,6 +163,8 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler do
 
   ## Parameters
     * `periodType`(integer) - represents a period of a certain type
+     1: round: from 1; 如果是0表示创始块中的数据
+     2: epoch: from 1; 如果是0表示创始块中的数据
     * `period`(integer) - represents the number of intervals
 
   ## Returns

@@ -66,6 +66,10 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
     # 创建超时时间和时间戳信息的map
     update_transactions_options = %{timeout: transactions_timeout, timestamps: timestamps}
 
+    # 把 l2_validator_events 按 action_type 是否是新增验证人 分组
+    # event_groups是个map，key: true / false value: [2_validator_event]
+    registered_events_and_others = Enum.group_by(changes_list, fn(e) -> e[:action_type] == PlatonAppchain.l2_validator_event_action_type()[:ValidatorRegistered] end)
+
     multi
     |> Multi.run(:insert_l2_validator_events, fn repo, _ ->
       Instrumenter.block_import_stage_runner(
@@ -75,120 +79,112 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
         :l2_validator_events
       )
     end)
-    |> Multi.run(:upsert_l2_validator_at_validator_events, fn repo,
-                                                              %{
-                                                                insert_l2_validator_events: l2_validator_events
-                                                              }
-                                                              when is_list(l2_validator_events)  ->
+    |> Multi.run(:add_new_l2_validators, fn repo,
+                                                  %{
+                                                    true => registered_events
+                                                  } = registered_events_and_others
+                                                  when is_list(registered_events)  ->
       Instrumenter.block_import_stage_runner(
-        fn -> upsert_validator(repo, l2_validator_events, update_transactions_options) end,
-        :l2_validator_events,
-        :l2_validator_events,
-        :upsert_l2_validator_at_validator_events
+        fn -> register_validator(repo, registered_events, update_transactions_options) end,
+        :l2_validators,
+        :l2_validators,
+        :register_l2_validators
       )
     end)
-    |> Multi.run(:backup_l2_validator_at_validator_events, fn repo,
-                                                              %{
-                                                                insert_l2_validator_events: l2_validator_events
-                                                              }
-                                                              when is_list(l2_validator_events)  ->
+    |> Multi.run(:update_l2_validators, fn repo,
+                                                  %{
+                                                    false => updated_events
+                                                  } = registered_events_and_others
+                                                  when is_list(updated_events)  ->
       Instrumenter.block_import_stage_runner(
-        fn -> backup_exited_validator(repo, l2_validator_events, update_transactions_options) end,
-        :l2_validator_events,
-        :l2_validator_events,
-        :backup_exited_l2_validator_at_validator_events
-      )
-    end)
-    |> Multi.run(:delete_l2_validator_at_validator_events, fn repo,
-                                                              %{
-                                                                insert_l2_validator_events: l2_validator_events
-                                                              }
-                                                              when is_list(l2_validator_events)  ->
-      Instrumenter.block_import_stage_runner(
-        fn -> delete_exited_validator(repo, l2_validator_events, update_transactions_options) end,
-        :l2_validator_events,
-        :l2_validator_events,
-        :delete_l2_validator_at_validator_events
+        fn -> update_validator(repo, updated_events, update_transactions_options) end,
+        :l2_validators,
+        :l2_validators,
+        :update_l2_validators
       )
     end)
   end
 
-#  defp upsert_validator(repo, l2_validator_events, %{timeout: timeout, timestamps: timestamps}) do
-#    Logger.error(fn -> "run L2ValidatorEvents import==============#{inspect(l2_validator_events)}========upsert_validator with null=================)" end)
-#    {:ok, "No L2 validator to update"}
-#  end
-  defp upsert_validator(repo, l2_validator_events, %{timeout: timeout, timestamps: timestamps})  do
-#    Logger.error(fn -> "run L2ValidatorEvents import==============#{inspect(l2_validator_events)}========upsert_validator when length(l2_validator_events) > 0=================)" end)
-    validator_hash_list =
-    l2_validator_events
+
+  defp register_validator(repo, l2_new_validator_events, %{timeout: timeout, timestamps: timestamps})  do
+    registered_validator_hash_list =
+      l2_new_validator_events
     |> Enum.reduce([], fn validator_event, acc ->  [validator_event.validator_hash | acc] end)
     |> Enum.uniq() # 去重
-    # 需要用upsert的模式（insert/update）更新表数据， l2_validators.status是个复合状态
-    Enum.each(validator_hash_list, fn validator_hash ->
+    # 需要用upsert的模式（insert/update）新增表数据， l2_validators.status是个复合状态
+    Enum.each(registered_validator_hash_list, fn validator_hash ->
       case L2ValidatorService.upsert_validator(repo, Hash.to_string(validator_hash)) do
         {:ok, _result} -> :ok
-        {:error, _reason} -> throw({:error, "Update L2 validator failed"})
+        {:error, _reason} -> throw({:error, "add new validator(s) failed"})
       end
     end)
-    {:ok, "Update L2 validator successfully"}
+    {:ok, "add new validator(s) successfully"}
   end
+
+  defp update_validator(repo, l2_validator_updated_events, %{timeout: timeout, timestamps: timestamps})  do
+    updated_validator_hash_list =
+      l2_validator_updated_events
+      |> Enum.reduce([], fn validator_event, acc ->  [validator_event.validator_hash | acc] end)
+      |> Enum.uniq() # 去重
+
+    Enum.each(updated_validator_hash_list, fn validator_hash ->
+      case L2ValidatorService.update_validator(repo, Hash.to_string(validator_hash)) do
+        {:ok, _result} -> :ok
+        {:error, _reason} -> throw({:error, "add new validator(s) failed"})
+      end
+    end)
+    {:ok, "add new validator(s) successfully"}
+  end
+
+
 
 #  defp backup_exited_validator(repo, l2_validator_events, %{timeout: timeout, timestamps: timestamps}) do
-#    Logger.error(fn -> "run L2ValidatorEvents import==============#{inspect(l2_validator_events)}========backup_exited_validator with when length(l2_validator_events) is null=================)" end)
-#    {:ok, "No validator to backup"}
+#    validator_hash_list =
+#      l2_validator_events
+#      |> Enum.reduce([], fn validator_event, acc ->
+#        case validator_event.action_type do
+#          @l2_validator_event_action_type_UnStaked ->
+#            [%{validator_hash: validator_event.validator_hash, status: 32, block_number: validator_event.block_number, exit_desc: "UnStaked"} | acc]
+#          @l2_validator_event_action_type_Slashed  ->
+#            [%{validator_hash: validator_event.validator_hash, status: 64, block_number: validator_event.block_number, exit_desc: "Slashed"} | acc]
+#          _ -> acc
+#        end
+#      end)
+#    if validator_hash_list == nil do
+#      {:ok, "No validators exited and to backup to history"}
+#    end
+#
+#    Enum.each(validator_hash_list, fn {validator_hash, status, block_number, exit_desc} ->
+#      case L2ValidatorService.backup_exited_validator(repo, Hash.to_string(validator_hash), status, block_number, exit_desc) do
+#        {:ok, _result} -> :ok
+#        {:error, _reason} -> throw({:error, "Backup exited l2 validator failed"})
+#      end
+#    end)
+#    {:ok, "Backup exited L2 validator successfully"}
 #  end
-  defp backup_exited_validator(repo, l2_validator_events, %{timeout: timeout, timestamps: timestamps}) do
-#    Logger.error(fn -> "run L2ValidatorEvents import==============#{inspect(l2_validator_events)}========backup_exited_validator with when length(l2_validator_events) > 0=================)" end)
-    validator_hash_list =
-      l2_validator_events
-      |> Enum.reduce([], fn validator_event, acc ->
-        case validator_event.action_type do
-          @l2_validator_event_action_type_UnStaked ->
-            [%{validator_hash: validator_event.validator_hash, status: 32, block_number: validator_event.block_number, exit_desc: "UnStaked"} | acc]
-          @l2_validator_event_action_type_Slashed  ->
-            [%{validator_hash: validator_event.validator_hash, status: 64, block_number: validator_event.block_number, exit_desc: "Slashed"} | acc]
-          _ -> acc
-        end
-      end)
-    if validator_hash_list == nil do
-      {:ok, "No validators exited and to backup to history"}
-    end
-
-    Enum.each(validator_hash_list, fn {validator_hash, status, block_number, exit_desc} ->
-      case L2ValidatorService.backup_exited_validator(repo, Hash.to_string(validator_hash), status, block_number, exit_desc) do
-        {:ok, _result} -> :ok
-        {:error, _reason} -> throw({:error, "Backup exited l2 validator failed"})
-      end
-    end)
-    {:ok, "Backup exited L2 validator successfully"}
-  end
 
 #  defp delete_exited_validator(repo, l2_validator_events, %{timeout: timeout, timestamps: timestamps}) do
-#    {:ok, "No validator to delete"}
+#    validator_hash_list =
+#      l2_validator_events
+#      |> Enum.reduce([], fn validator_event, acc ->
+#        if validator_event.action_type == @l2_validator_event_action_type_UnStaked || validator_event.action_type == @l2_validator_event_action_type_Slashed do
+#          [%{validator_hash: validator_event.validator_hash, block_number: validator_event.block_number} | acc]
+#        end
+#      end)
+#      #|> Enum.reverse()
+#      #|> Enum.uniq_by(fn {x, _} -> x end) # 去重
+#    if validator_hash_list == nil do
+#      {:ok, "No validators to delete"}
+#    else
+#      Enum.each(validator_hash_list, fn validator_hash ->
+#        case L2ValidatorService.delete_exited_validator(repo, Hash.to_string(validator_hash)) do
+#          {:ok, _result} -> :ok
+#          {:error, _reason} -> throw({:error, "Delete existed L2 validator failed"})
+#        end
+#      end)
+#      {:ok, "Delete existed L2 validator successfully"}
+#    end
 #  end
-
-  defp delete_exited_validator(repo, l2_validator_events, %{timeout: timeout, timestamps: timestamps}) do
-    validator_hash_list =
-      l2_validator_events
-      |> Enum.reduce([], fn validator_event, acc ->
-        if validator_event.action_type == @l2_validator_event_action_type_UnStaked || validator_event.action_type == @l2_validator_event_action_type_Slashed do
-          [%{validator_hash: validator_event.validator_hash, block_number: validator_event.block_number} | acc]
-        end
-      end)
-      #|> Enum.reverse()
-      #|> Enum.uniq_by(fn {x, _} -> x end) # 去重
-    if validator_hash_list == nil do
-      {:ok, "No validators to delete"}
-    else
-      Enum.each(validator_hash_list, fn validator_hash ->
-        case L2ValidatorService.delete_exited_validator(repo, Hash.to_string(validator_hash)) do
-          {:ok, _result} -> :ok
-          {:error, _reason} -> throw({:error, "Delete existed L2 validator failed"})
-        end
-      end)
-      {:ok, "Delete existed L2 validator successfully"}
-    end
-  end
 
 
 

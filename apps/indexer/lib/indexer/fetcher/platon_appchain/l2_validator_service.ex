@@ -25,6 +25,12 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2ValidatorService do
     L2Validator.upsert_validator(repo, validatorMap)
   end
 
+  @spec update_validator(Repo.t(), binary()) :: {:ok, integer()} | {:error, reason :: String.t()}
+  def update_validator(repo, validator_hex) do
+    validatorMap = L2StakeHandler.getValidator(validator_hex)
+    L2Validator.update_validator(repo, validatorMap)
+  end
+
   @spec increase_stake(binary(), integer()) :: {:ok, L2Validator.t()} | {:error, reason :: String.t()}
   def increase_stake(validator_hash, increment) do
     L2Validator.update_stake_amount(validator_hash, increment)
