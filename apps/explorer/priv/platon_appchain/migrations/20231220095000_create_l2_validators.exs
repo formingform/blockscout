@@ -49,13 +49,18 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2Validators do
       #	LowBlocks                                // 0010: The validator was low block rate
       #	LowThreshold                             // 0100: The validator's stake was lower than minimum stake threshold
       #	Duplicated                               // 1000: The validator was duplicate block or duplicate signature
-      #	Unstaked                                 // 0010,0000: The validator was unstaked
-      #	Slashing                                 // 0100,0000: The validator is being slashed
+      #	Unstaked                                 // 0001,0000: The validator was unstaked
+      #	Slashing                                 // 0010,0000: The validator is being slashed
       #	Valided      = 0                         // 0000: The validator was activated
       #	NotExist     = 1 << 31                   // 1000,xxxx,... : The validator is not exist
       # 底层是用bit来存储的，是个复合状态
-      # 浏览器目前只判断：0: 正常 1：无效 2：低出块 4: 低阈值 8: 双签 32：解质押 64:惩罚
+      # 浏览器目前只判断：0: 正常 1：无效 2：低出块 4: 低阈值 8: 双签 16：解质押 32:惩罚
       add(:status, :integer, null: false, default: 0)
+      # 退出区块
+      add(:exit_block, :bigint, null: false)
+      # 退出内容
+      add(:exit_desc, :string, null: true)
+
       # 0-candidate(质押节点) 1-active(共识节点候选人) 2-verifying(共识节点)
       add(:role, :integer, null: false, default: 0)
 
