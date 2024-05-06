@@ -90,6 +90,11 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     System.get_env("ETHEREUM_JSONRPC_HTTP_URL")
   end
 
+  # 每个共识轮应当出块数（待调整）
+  def l2_round_block_produce() do
+    System.get_env("INDEXER_PLATON_APPCHAIN_L2_ROUND_BLOCK_PRODUCE_SIZE") || 10
+  end
+
   def l1_rpc_url() do
     Application.get_all_env(:indexer)[Indexer.Fetcher.PlatonAppchain][:platon_appchain_l1_rpc]
   end
