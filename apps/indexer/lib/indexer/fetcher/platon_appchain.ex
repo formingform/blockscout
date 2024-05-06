@@ -156,20 +156,33 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     @l2_validator_status[:Invalid] == band(@l2_validator_status[:Invalid], status)
   end
 
+  # 根据区块号，算出round数，从1开始
   def calculateL2Round(current_block_number, round_size) do
-    if rem(current_block_number,round_size)==0 do
-      div(current_block_number, round_size)
-    else
-      div(current_block_number, round_size) + 1
-    end
+    div(current_block_number, round_size) + 1
   end
 
+  # 根据区块号，算出round数，从1开始
   def calculateL2Round(current_block_number) do
-    round_size = l2_round_size()
-    if rem(current_block_number,round_size)==0 do
-      div(current_block_number, round_size)
+    div(current_block_number, l2_round_size()) + 1
+  end
+
+  # round_size = 43 * 10 = 250
+  # 共识周期开始块：round_size * n + 1
+  def is_round_begin_block(block_number) do
+    rem(block_number, l2_round_size()) == 1
+  end
+
+  def is_round_end_block(block_number) do
+    rem(block_number, l2_round_size()) == 0
+  end
+
+  # epoch_size = 430 * 25 = 10750
+  # 结算周期开始块：round_size * n + 1
+  def is_epoch_begin_block(block_number) do
+    if rem(block_number,l2_epoch_size()) == 1 do
+      {true, calculateL2Epoch(block_number)}
     else
-      div(current_block_number, round_size) + 1
+      {false, calculateL2Epoch(block_number)}
     end
   end
 
@@ -178,21 +191,14 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     next_round * round_size + 1
   end
 
+  # 根据区块号，算出epoch数，从1开始
   def calculateL2Epoch(current_block_number, epoch_size) do
-    if rem(current_block_number,epoch_size)==0 do
-      div(current_block_number, epoch_size)
-    else
-      div(current_block_number, epoch_size) + 1
-    end
+    div(current_block_number, epoch_size) + 1
   end
 
+  # 根据区块号，算出epoch数，从1开始
   def calculateL2Epoch(current_block_number) do
-    epoch_size = l2_epoch_size()
-    if rem(current_block_number,epoch_size)==0 do
-      div(current_block_number, epoch_size)
-    else
-      div(current_block_number, epoch_size) + 1
-    end
+    div(current_block_number, l2_epoch_size()) + 1
   end
 
   def calculateNextL2EpochBlockNumber(current_block_number, epoch_size) do

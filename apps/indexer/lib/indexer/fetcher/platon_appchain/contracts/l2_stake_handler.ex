@@ -180,6 +180,19 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler do
   end
 
   @doc """
+  # 数据来源：
+  #     当同步区块时，如果此区块是round结束块（根据规则计算是否是round结束块），则调用底层rpc接口，获取此round所有验证人的出块情况，并被每个验证人一个应出块数（通过配置），最后把数据import到此表。
+  # 注意：
+  #     如果此round某个验证人因为各种原因，没有出块，底层rpc接口的返回数据中，也应包括此验证人，实际出库数=0即可。如果不返回，那就麻烦了，还需要再通过rpc获取这个round的验证人列表，然后合并两次rpc的结果。
+  """
+  def getBlockProducedInfo(periodType, period) do
+    result = get_block_produced_info(periodType, period) |> Ethers.call(rpc_opts: @rpc_opts)
+    {:ok, infos} = result
+    infos
+  end
+
+
+  @doc """
   Query the delegation information of the delegator on these validators based on the addr list of validators
 
   ## Parameters

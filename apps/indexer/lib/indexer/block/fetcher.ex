@@ -43,6 +43,7 @@ defmodule Indexer.Block.Fetcher do
   }
 
   alias Indexer.Transform.PlatonAppchain.{L2Executes, L2Events, L2ValidatorEvents, Commitments}
+  alias Indexer.Fetcher.PlatonAppchain.L2SpecialBlockHandler
 
   alias Indexer.Transform.Blocks, as: TransformBlocks
 
@@ -110,6 +111,7 @@ defmodule Indexer.Block.Fetcher do
     struct!(__MODULE__, named_arguments)
   end
 
+  # fetch历史区块，以及实时区块，都会调用此方法
   @decorate span(tracer: Tracer)
   @spec fetch_and_import_range(t, Range.t()) ::
           {:ok, %{inserted: %{}, errors: [EthereumJSONRPC.Transport.error()]}}
@@ -166,6 +168,13 @@ defmodule Indexer.Block.Fetcher do
              do: Commitments.parse(logs, json_rpc_named_arguments),
              else: []
            ),
+
+         l2_block_produced_statistics =
+           if(Application.get_env(:explorer, :chain_type) == "platon_appchain",
+             do: L2SpecialBlockHandler.l2_block_produced_statistics(blocks_params),
+             else: []
+           ),
+
 
 #         polygon_edge_withdrawals =
 #           if(callback_module == Indexer.Block.Realtime.Fetcher, do: Withdrawals.parse(logs), else: []),
@@ -241,6 +250,7 @@ defmodule Indexer.Block.Fetcher do
               |> Map.put_new(:l2_executes, %{params: l2_executes})
               |> Map.put_new(:l2_validator_events, %{params: l2_validator_events})
               |> Map.put_new(:commitments, %{params: commitments})
+              |> Map.put_new(:l2_block_produced_statistics, %{params: l2_block_produced_statistics})
             else
               basic_import_options
             end),
