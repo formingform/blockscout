@@ -41,7 +41,7 @@ defmodule BlockScoutWeb.API.V2.SearchView do
   end
 
   def prepare_search_result(%{type: address_or_contract_or_label} = search_result)
-      when address_or_contract_or_label in ["address", "contract", "label"] do
+      when address_or_contract_or_label in ["address", "contract", "label", "validator"] do
     %{
       "type" => search_result.type,
       "name" => search_result.name,
