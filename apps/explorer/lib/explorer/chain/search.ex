@@ -239,7 +239,9 @@ defmodule Explorer.Chain.Search do
         total_supply: nil,
         circulating_market_cap: nil,
         priority: 1,
-        is_verified_via_admin_panel: nil
+        is_verified_via_admin_panel: nil,
+        owner_hash: nil,
+        status: nil
       }
     )
   end
@@ -267,7 +269,9 @@ defmodule Explorer.Chain.Search do
         total_supply: token.total_supply,
         circulating_market_cap: token.circulating_market_cap,
         priority: 0,
-        is_verified_via_admin_panel: token.is_verified_via_admin_panel
+        is_verified_via_admin_panel: token.is_verified_via_admin_panel,
+        owner_hash: nil,
+        status: nil
       }
     )
   end
@@ -295,7 +299,9 @@ defmodule Explorer.Chain.Search do
         total_supply: nil,
         circulating_market_cap: nil,
         priority: 0,
-        is_verified_via_admin_panel: nil
+        is_verified_via_admin_panel: nil,
+        owner_hash: nil,
+        status: nil
       }
     )
   end
@@ -332,7 +338,9 @@ defmodule Explorer.Chain.Search do
             total_supply: nil,
             circulating_market_cap: nil,
             priority: 0,
-            is_verified_via_admin_panel: nil
+            is_verified_via_admin_panel: nil,
+            owner_hash: nil,
+            status: nil
           }
         )
 
@@ -364,7 +372,9 @@ defmodule Explorer.Chain.Search do
             total_supply: nil,
             circulating_market_cap: nil,
             priority: 0,
-            is_verified_via_admin_panel: nil
+            is_verified_via_admin_panel: nil,
+            owner_hash: fragment("CONCAT('0x', encode(CAST(? AS bytea), 'hex'))", l2Validator.owner_hash),
+            status:  fragment("CAST(? AS text)", l2Validator.status)
           }
         )
       _ ->
@@ -397,7 +407,9 @@ defmodule Explorer.Chain.Search do
             total_supply: nil,
             circulating_market_cap: nil,
             priority: 0,
-            is_verified_via_admin_panel: nil
+            is_verified_via_admin_panel: nil,
+            owner_hash: nil,
+            status: nil
           }
         )
 
@@ -429,7 +441,9 @@ defmodule Explorer.Chain.Search do
             total_supply: nil,
             circulating_market_cap: nil,
             priority: 0,
-            is_verified_via_admin_panel: nil
+            is_verified_via_admin_panel: nil,
+            owner_hash: nil,
+            status: nil
           }
         )
 
@@ -456,7 +470,9 @@ defmodule Explorer.Chain.Search do
                 total_supply: nil,
                 circulating_market_cap: nil,
                 priority: 0,
-                is_verified_via_admin_panel: nil
+                is_verified_via_admin_panel: nil,
+                owner_hash: nil,
+                status: nil
               }
             )
 
@@ -553,6 +569,15 @@ defmodule Explorer.Chain.Search do
     if result.timestamp do
       result
       |> Map.put(:timestamp, DateTime.from_naive!(result.timestamp, "Etc/UTC"))
+    else
+      result
+    end
+  end
+
+  defp compose_result_checksummed_address_hash(result) do
+    if result.address_hash do
+      result
+      |> Map.put(:address_hash, Address.checksum(result.address_hash))
     else
       result
     end
