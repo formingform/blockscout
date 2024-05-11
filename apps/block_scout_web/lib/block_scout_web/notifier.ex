@@ -26,6 +26,7 @@ defmodule BlockScoutWeb.Notifier do
   alias Explorer.Counters.{AverageBlockTime, Helper}
   alias Explorer.SmartContract.{CompilerVersion, Solidity.CodeCompiler}
   alias Phoenix.View
+  alias Explorer.Chain.PlatonAppchain.Query
 
   @check_broadcast_sequence_period 500
 
@@ -243,9 +244,52 @@ defmodule BlockScoutWeb.Notifier do
     })
   end
 
+  def handle_event({:chain_event, :l1_to_l2_txn, :realtime, l2_executes}) do
+    l2_executes |> Enum.each(&broadcast_l1_to_l2_txn/1)
+  end
+
+  def handle_event({:chain_event, :l2_to_l1_txn, :realtime, l1_executes}) do
+    l1_executes |> Enum.each(&broadcast_l2_to_l1_txn/1)
+  end
+
   def handle_event(event) do
     Logger.warning("Unknown broadcasted event #{inspect(event)}.")
     nil
+  end
+
+  defp broadcast_l1_to_l2_txn(event) do
+    l1_to_l2_txn =  Query.get_l1_to_l2_txn_by_hash(event.hash)
+    if Map.size(l1_to_l2_txn) > 0 do
+      Endpoint.broadcast("platon_appchain:l1_to_l2_txn", "l1_to_l2_txn",%{
+        "no" => l1_to_l2_txn.event_id,
+        "l1_txn_hash" => l1_to_l2_txn.l1_event_hash,
+        "tx_type" => l1_to_l2_txn.tx_type,
+        "block_timestamp" => l1_to_l2_txn.block_timestamp,
+        "state_batches_index" => Integer.to_string(l1_to_l2_txn.start_id) <> "-"  <> Integer.to_string(l1_to_l2_txn.end_id),
+        "state_batches_txn_hash" => l1_to_l2_txn.commitment_hash,
+        "state_root" => l1_to_l2_txn.state_root,
+        "l2_event_hash" => l1_to_l2_txn.l2_event_hash,
+        "status" => l1_to_l2_txn.replay_status
+      })
+    end
+  end
+
+  defp broadcast_l2_to_l1_txn(event) do
+    l2_to_l1_txn =  Query.get_l2_to_l1_txn_by_hash(event.hash)
+    if Map.size(l2_to_l1_txn) > 0 do
+      Endpoint.broadcast("platon_appchain:l2_to_l1_txn", "l2_to_l1_txn",%{
+        "no" => l2_to_l1_txn.event_id,
+        "from" => l2_to_l1_txn.from,
+        "l2_txn_hash" => l2_to_l1_txn.l2_event_hash,
+        "type" => l2_to_l1_txn.tx_type,
+        "block_timestamp" => l2_to_l1_txn.block_timestamp,
+        "state_batches_index" =>  Integer.to_string(l2_to_l1_txn.start_block_number) <> "-"  <> Integer.to_string(l2_to_l1_txn.end_block_number),
+        "state_batches_txn_hash" => l2_to_l1_txn.checkpoint_hash,
+        "state_root" => l2_to_l1_txn.state_root,
+        "l1_txn_hash" => l2_to_l1_txn.l1_exec_hash,
+        "status" => l2_to_l1_txn.replay_status
+      })
+    end
   end
 
   def fetch_compiler_version(compiler) do

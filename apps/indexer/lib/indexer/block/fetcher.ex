@@ -274,6 +274,13 @@ defmodule Indexer.Block.Fetcher do
       update_addresses_cache(inserted[:addresses])
       update_uncles_cache(inserted[:block_second_degree_relations])
       update_withdrawals_cache(inserted[:withdrawals])
+#      如果l2_executes不为空，推送消息给前端 begin
+      if not Enum.empty?(l2_executes) do
+        # 交易执行后才推送消息给前端（保证信息完整性）
+        Publisher.broadcast([{:l1_to_l2_txn, l2_executes}], :realtime)
+      end
+#      如果l2_executes不为空，推送消息给前端 end
+
       result
     else
       {step, {:error, reason}} -> {:error, {step, reason}}

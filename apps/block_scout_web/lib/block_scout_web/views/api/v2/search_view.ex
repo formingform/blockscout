@@ -55,6 +55,7 @@ defmodule BlockScoutWeb.API.V2.SearchView do
     %{
       "type" => search_result.type,
       "name" => search_result.name,
+      "logo" => search_result.logo,
       "address" => search_result.address_hash,
       "owner_address" => search_result.owner_hash,
       "status" => search_result.status,

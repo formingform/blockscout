@@ -241,6 +241,7 @@ defmodule Explorer.Chain.Search do
         priority: 1,
         is_verified_via_admin_panel: nil,
         owner_hash: nil,
+        logo: nil,
         status: nil
       }
     )
@@ -271,6 +272,7 @@ defmodule Explorer.Chain.Search do
         priority: 0,
         is_verified_via_admin_panel: token.is_verified_via_admin_panel,
         owner_hash: nil,
+        logo: nil,
         status: nil
       }
     )
@@ -301,6 +303,7 @@ defmodule Explorer.Chain.Search do
         priority: 0,
         is_verified_via_admin_panel: nil,
         owner_hash: nil,
+        logo: nil,
         status: nil
       }
     )
@@ -340,6 +343,7 @@ defmodule Explorer.Chain.Search do
             priority: 0,
             is_verified_via_admin_panel: nil,
             owner_hash: nil,
+            logo: nil,
             status: nil
           }
         )
@@ -374,6 +378,7 @@ defmodule Explorer.Chain.Search do
             priority: 0,
             is_verified_via_admin_panel: nil,
             owner_hash: fragment("CONCAT('0x', encode(CAST(? AS bytea), 'hex'))", l2Validator.owner_hash),
+            logo: l2Validator.logo,
             status:  fragment("CAST(? AS text)", l2Validator.status)
           }
         )
@@ -409,6 +414,7 @@ defmodule Explorer.Chain.Search do
             priority: 0,
             is_verified_via_admin_panel: nil,
             owner_hash: nil,
+            logo: nil,
             status: nil
           }
         )
@@ -443,6 +449,7 @@ defmodule Explorer.Chain.Search do
             priority: 0,
             is_verified_via_admin_panel: nil,
             owner_hash: nil,
+            logo: nil,
             status: nil
           }
         )
@@ -472,6 +479,7 @@ defmodule Explorer.Chain.Search do
                 priority: 0,
                 is_verified_via_admin_panel: nil,
                 owner_hash: nil,
+                logo: nil,
                 status: nil
               }
             )
