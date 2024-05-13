@@ -119,7 +119,7 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorView do
             "block_timestamp" => block.block_timestamp,
             "txn" => block.txn,
             "gas_used" => block.gas_used,
-            "gas_used_percentage" => "待处理",
+            "gas_used_percentage" => gas_used_percentage(block),
             "tx_fee_reward" => block.tx_fee_reward,
             "block_reward" => "block_reward待处理",
           }
@@ -161,6 +161,15 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorView do
         end),
       next_page_params: next_page_params
     }
+  end
+
+
+  def gas_used_percentage(block) do
+    if Decimal.compare(block.gas_limit, 0) == :gt do
+      block.gas_used |> Decimal.div(block.gas_limit) |> Decimal.mult(100) |> Decimal.to_float()
+    else
+      Decimal.new(0)
+    end
   end
 
 end
