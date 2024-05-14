@@ -826,6 +826,16 @@ defmodule Indexer.Fetcher.PlatonAppchain do
 
     {:ok, _} = Chain.import(import_data)
 
+    # 存入db后给前端推送消息 begin
+    if not Enum.empty?(import_data) do
+      cond do
+        # 交易执行后才推送消息给前端（不然好多信息不完整）
+        calling_module == L1Execute ->
+          Publisher.broadcast([{:l2_to_l1_txn, import_data}], :realtime)
+      end
+    end
+    # 存入db后给前端推送消息 end
+
     {events, event_name}
   end
 

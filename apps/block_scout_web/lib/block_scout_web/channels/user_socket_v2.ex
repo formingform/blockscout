@@ -11,6 +11,7 @@ defmodule BlockScoutWeb.UserSocketV2 do
   channel("transactions:*", BlockScoutWeb.TransactionChannel)
   channel("tokens:*", BlockScoutWeb.TokenChannel)
   channel("zkevm_batches:*", BlockScoutWeb.ZkevmConfirmedBatchChannel)
+  channel("platon_appchain:*", BlockScoutWeb.L1L2EventChannel)
 
   def connect(_params, socket) do
     {:ok, socket}

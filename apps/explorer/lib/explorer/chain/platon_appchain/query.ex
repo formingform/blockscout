@@ -151,6 +151,59 @@ defmodule Explorer.Chain.PlatonAppchain.Query do
     |> select_repo(options).all()
   end
 
+  def get_l2_to_l1_txn_by_hash(l1_hash) do
+    base_query =
+      from(
+        l2e in L2Event,
+        inner_join: l1e in L1Execute,
+        on: l1e.event_id == l2e.event_id,
+        inner_join: c in Checkpoint,
+        on: l1e.checkpoint_hash == c.hash,
+        select: %{
+          event_id: l2e.event_id,
+          from: l2e.from,
+          l2_event_hash: l2e.hash,
+          tx_type: l2e.tx_type,
+          block_timestamp: l2e.block_timestamp,
+          start_block_number: coalesce(c.start_block_number, 0),
+          end_block_number: coalesce(c.end_block_number, 0),
+          checkpoint_hash: l1e.checkpoint_hash,
+          state_root: c.state_root,
+          l1_exec_hash: l1e.hash,
+          replay_status: coalesce(l1e.replay_status,0)
+        },
+        where: l1e.hash == ^l1_hash
+      )
+
+    Repo.replica().one(base_query)
+  end
+
+  def get_l1_to_l2_txn_by_hash(l2_hash) do
+    base_query =
+      from(
+        l1e in L1Event,
+        inner_join: l2e in L2Execute,
+        on: l1e.event_id == l2e.event_id,
+        inner_join: c in Commitment,
+        on: l2e.event_id >= c.start_id and l2e.event_id <= c.end_id,
+        select: %{
+          event_id: l1e.event_id,
+          l1_event_hash: l1e.l1e_hash,
+          tx_type: l1e.tx_type,
+          block_timestamp: l1e.l1e_block_timestamp,
+          l2_event_hash: l2e.l2e_hash,
+          replay_status: coalesce(l2e.replay_status,0),
+          start_id: coalesce(c.start_id,0),
+          end_id: coalesce(c.end_id,0),
+          commitment_hash: c.hash,
+          state_root: c.state_root
+        },
+        where: l2e.hash == ^l2_hash
+      )
+
+    Repo.replica().one(base_query)
+  end
+
   @spec withdrawals_count(list()) :: term() | nil
   def withdrawals_count(options \\ []) do
     query =

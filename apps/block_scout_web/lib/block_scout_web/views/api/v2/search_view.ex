@@ -51,6 +51,18 @@ defmodule BlockScoutWeb.API.V2.SearchView do
     }
   end
 
+  def prepare_search_result(%{type: "validator"} = search_result) do
+    %{
+      "type" => search_result.type,
+      "name" => search_result.name,
+      "logo" => search_result.logo,
+      "address" => search_result.address_hash,
+      "owner_address" => search_result.owner_hash,
+      "status" => search_result.status,
+      "url" => address_path(Endpoint, :show, search_result.address_hash)
+    }
+  end
+
   def prepare_search_result(%{type: "block"} = search_result) do
     block_hash = hash_to_string(search_result.block_hash)
 
