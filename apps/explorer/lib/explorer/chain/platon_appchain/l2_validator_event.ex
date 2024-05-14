@@ -61,4 +61,28 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
     |> unique_constraint([:hash, :log_index, :validator_hash])
   end
 
+  @spec list_validators(integer(), integer()) :: list()
+  def get_undelegate_events_by_epoch_range(epoch_start, epoch_end, options \\ []) do
+    base_query =
+      from(
+        v in __MODULE__,
+        select: %{
+          hash: v.hash,
+          log_index: v.log_index,
+          block_number: v.block_number,
+          epoch: v.epoch,
+          validator_hash: v.validator_hash,
+          action_type: v.action_type,
+          action_desc: v.action_desc,
+          amount: v.amount,
+          block_timestamp: v.block_timestamp,
+          delegator_hash: v.delegator_hash,
+          inserted_at: v.inserted_at,
+          updated_at: v.updated_at},
+        where: v.epoch between ^epoch_start and ^epoch_end
+      )
+
+    base_query
+    |> select_repo(options).all()
+  end
 end

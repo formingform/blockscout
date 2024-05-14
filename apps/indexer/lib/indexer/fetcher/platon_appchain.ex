@@ -191,6 +191,10 @@ defmodule Indexer.Fetcher.PlatonAppchain do
     end
   end
 
+  def is_epoch_end_block(block_number) do
+    rem(block_number, l2_epoch_size()) == 0
+  end
+
   def calculateNextL2RoundBlockNumber(current_block_number, round_size) do
     next_round = calculateL2Round(current_block_number, round_size)
     next_round * round_size + 1

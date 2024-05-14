@@ -280,4 +280,35 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler do
     {:ok, withdrawable} = result
     withdrawable
   end
+
+  @doc """
+  查询委托人在验证节点上的委托信息，包括锁定委托，可领取委托，有效委托
+  ## Parameters
+  * `delegator_validator_pairs`(list()) - The account to calculate amount for
+  [
+    %{delegator_hash: "0x0101", validator_hash: "0x01"},
+    %{delegator_hash: "0x0202", validator_hash: "0x01"},
+    %{delegator_hash: "0x0202", validator_hash: "0x02"}
+  ]
+  ## Returns
+  Examples:
+    [
+      %{delegator_hash: "0x0101", validator_hash: "0x01", withdrawal_delegate_amount: 100, locking_delegate_amount: 200, delegate_amount: 300},
+      %{delegator_hash: "0x0202", validator_hash: "0x01", withdrawal_delegate_amount: 100, locking_delegate_amount: 200, delegate_amount: 300},
+      %{delegator_hash: "0x0202", validator_hash: "0x02", withdrawal_delegate_amount: 100, locking_delegate_amount: 200, delegate_amount: 300}
+    ]
+  """
+  @spec getDelegateDetails(list()) :: {list()}
+  def getDelegateDetails(delegator_validator_pairs) do
+    delegator_validator_pairs
+    |> Enum.map(fn pair ->  getDelegatorDetails(pair.delegator_hash, pair.validator_hash) end)
+  end
+
+  defp getDelegatorDetails(delegator_hash, validator_hash) do
+    withdrawal_delegate_amount = withdrawableOfDelegate(validator_hash, delegator_hash)
+    locking_delegate_amount = pendingWithdrawalsOfDelegate(validator_hash, delegator_hash)
+    delegation_info =  getDelegationsWithValidator([validator_hash], delegator_hash)
+    %{delegator_hash: ^delegator_hash, validator_hash: ^validator_hash, withdrawal_delegate_amount: withdrawal_delegate_amount, locking_delegate_amount: locking_delegate_amount,  delegate_amount: delegation_info.delegate_amount}
+  end
+
 end

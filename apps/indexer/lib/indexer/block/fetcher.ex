@@ -44,6 +44,7 @@ defmodule Indexer.Block.Fetcher do
 
   alias Indexer.Transform.PlatonAppchain.{L2Executes, L2Events, L2ValidatorEvents, Commitments}
   alias Indexer.Fetcher.PlatonAppchain.L2SpecialBlockHandler
+  alias Indexer.Fetcher.PlatonAppchain.L2DelegatorService
 
   alias Indexer.Transform.Blocks, as: TransformBlocks
 
@@ -175,6 +176,18 @@ defmodule Indexer.Block.Fetcher do
              else: []
            ),
 
+         l2_delegators =
+           if(callback_module == Indexer.Block.Realtime.Fetcher,
+             do: L2DelegatorService.refresh_delegators(l2_validator_events),
+             else: []
+           ),
+
+         #直接upsert表：l2_delegators
+         _ =
+           if(callback_module == Indexer.Block.Realtime.Fetcher,
+             do: L2DelegatorService.refreshed_delegators(l2_validator_events, range),
+             else: []
+           ),
 
 #         polygon_edge_withdrawals =
 #           if(callback_module == Indexer.Block.Realtime.Fetcher, do: Withdrawals.parse(logs), else: []),
