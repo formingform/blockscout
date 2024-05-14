@@ -218,8 +218,10 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
       l in L2ValidatorEvent,
       update: [
         set: [
-          # Don't update `hash` `log_index` `validator_hash` as it is a primary key and used for the conflict target
+          # Don't update `hash` `log_index` as it is a primary key and used for the conflict target
           block_number: fragment("EXCLUDED.block_number"),
+          epoch: fragment("EXCLUDED.epoch"),
+          validator_hash: fragment("EXCLUDED.validator_hash"),
           action_type: fragment("EXCLUDED.action_type"),
           action_desc: fragment("EXCLUDED.action_desc"),
           amount: fragment("EXCLUDED.amount"),
@@ -231,9 +233,11 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
       ],
       where:
         fragment(
-          "(EXCLUDED.block_number,EXCLUDED.action_type,EXCLUDED.action_desc,EXCLUDED.amount,
-          EXCLUDED.block_timestamp,EXCLUDED.delegator_hash) IS DISTINCT FROM (?,?,?,?,?,?)", # 有冲突时只更新这些字段
+          "(EXCLUDED.block_number,EXCLUDED.epoch,EXCLUDED.validator_hash,EXCLUDED.action_type,EXCLUDED.action_desc,EXCLUDED.amount,
+          EXCLUDED.block_timestamp,EXCLUDED.delegator_hash) IS DISTINCT FROM (?,?,?,?,?,?,?,?)", # 有冲突时只更新这些字段
           l.block_number,
+          l.epoch,
+          l.validator_hash,
           l.action_type,
           l.action_desc,
           l.amount,

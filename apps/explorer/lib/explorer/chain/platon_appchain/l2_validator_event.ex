@@ -9,7 +9,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
 
   @optional_attrs ~w(action_desc amount delegator_hash)a
 
-  @required_attrs ~w(hash log_index block_number validator_hash action_type block_timestamp)a
+  @required_attrs ~w(hash log_index block_number epoch validator_hash action_type block_timestamp)a
 
   @allowed_attrs @optional_attrs ++ @required_attrs
 
@@ -19,6 +19,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
   * `action_desc` - 事件描述
   * `amount` - 事件涉及金额
   * `block_number` - 事件发生块高
+  * `epoch` - 事件发生epoch
   * `block_timestamp` - 交易所在区块时间戳
   * `log_index` - 日志索引
   * `hash` - 事件所在交易hash
@@ -28,6 +29,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
                hash: Hash.t(),
                log_index: non_neg_integer(),
                block_number: Block.block_number(),
+               epoch: non_neg_integer,
                validator_hash: Hash.Address.t(),
                action_type: non_neg_integer(),
                action_desc: String.t() | nil,
@@ -41,7 +43,8 @@ defmodule Explorer.Chain.PlatonAppchain.L2ValidatorEvent do
     field(:hash, Hash.Full, primary_key: true)
     field(:log_index, :integer, primary_key: true)
     field(:block_number, :integer)
-    field(:validator_hash, Hash.Address, primary_key: true)
+    field(:epoch, :integer)
+    field(:validator_hash, Hash.Address)
     field(:action_type, :integer)
     field(:action_desc, :string)
     field(:amount, Wei)
