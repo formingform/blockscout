@@ -9,7 +9,6 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2DelegatorService do
   alias Explorer.Chain.PlatonAppchain.L2Delegator
   alias Indexer.Fetcher.PlatonAppchain
   alias Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent
-  alias Indexer.Fetcher.PlatonAppchain.Contracts.InnerContractHandler
 
   #       l2_validator_event: %{
   #            log_index: log_index,
@@ -52,12 +51,13 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2DelegatorService do
       end
 
     #当前同步的first_epoch..last_epoch的区块，能解锁irst_epoch-6..last_epoch-6期间锁定的撤销委托
+    epochs_for_locking_undelegation = PlatonAppchain.l2_epochs_for_locking_undelegation(block_last)
     total_delegator_events =
-    if last_epoch > InnerContractHandler.get_epochs_for_locking_undelegation(block_last) do
-      undelegate_last_epoch = last_epoch - InnerContractHandler.get_epochs_for_locking_undelegation(block_last)
+    if last_epoch > epochs_for_locking_undelegation do
+      undelegate_last_epoch = last_epoch - epochs_for_locking_undelegation
       undelegate_first_epoch =
-      if first_epoch > InnerContractHandler.get_epochs_for_locking_undelegation(block_last) do
-        first_epoch - InnerContractHandler.get_epochs_for_locking_undelegation(block_last)
+      if first_epoch > epochs_for_locking_undelegation do
+        first_epoch - epochs_for_locking_undelegation
       else
         1
       end

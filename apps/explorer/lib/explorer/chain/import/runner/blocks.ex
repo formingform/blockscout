@@ -341,6 +341,7 @@ defmodule Explorer.Chain.Import.Runner.Blocks do
           gas_limit: fragment("EXCLUDED.gas_limit"),
           gas_used: fragment("EXCLUDED.gas_used"),
           miner_hash: fragment("EXCLUDED.miner_hash"),
+          block_reward: fragment("EXCLUDED.block_reward"),
           nonce: fragment("EXCLUDED.nonce"),
           number: fragment("EXCLUDED.number"),
           parent_hash: fragment("EXCLUDED.parent_hash"),

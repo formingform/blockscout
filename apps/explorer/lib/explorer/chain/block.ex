@@ -56,6 +56,7 @@ defmodule Explorer.Chain.Block do
           hash: Hash.Full.t(),
           miner: %Ecto.Association.NotLoaded{} | Address.t(),
           miner_hash: Hash.Address.t(),
+          block_reward: Wei.t(),
           nonce: Hash.Nonce.t(),
           number: block_number(),
           parent_hash: Hash.t(),
@@ -82,6 +83,7 @@ defmodule Explorer.Chain.Block do
     field(:refetch_needed, :boolean)
     field(:base_fee_per_gas, Wei)
     field(:is_empty, :boolean)
+    field(:block_reward, Wei)
 
     timestamps()
 

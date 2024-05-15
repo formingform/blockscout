@@ -19,6 +19,8 @@ defmodule Indexer.Transform.Blocks.PlatonAppchain do
     miner_address = PlatonAppchainBlocks.signer(block)
     %{block | miner_hash: miner_address}
 
+    Map.put(block, :block_reward, PlatonAppchain.l2_block_reward())
+
 #    # 如果当前区块是共识轮的第一个区块，则调function getValidatorAddrs(uint8 periodType, uint256 period) external view returns (address[] memory); 获取当前轮的理论验证人
 #    # 如果想取共识周期的验证人列表periodType要怎么传值?????
 #    l2_round_size = PlatonAppchain.l2_round_size()

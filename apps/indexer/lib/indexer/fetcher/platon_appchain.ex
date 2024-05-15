@@ -71,6 +71,16 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   # 0-candidate(质押节点) 1-active(201共识节点后续人) 2-verifying(43共识节点)
   @l2_validator_role %{Active: 0, Verifying: 1, Candidate: 2}
 
+  #目前返回环境变量配置的值，后续要从把block_number作为eth_call的参数，从rpc接口中获取治理合约中管理的值
+  def l2_epochs_for_locking_undelegation(block_number) do
+    Application.get_all_env(:indexer)[Indexer.Fetcher.PlatonAppchain][:l2_epochs_for_locking_undelegation]
+  end
+
+  #目前返回环境变量配置的值，后续要从把block_number作为eth_call的参数，从rpc接口中获取治理合约中管理的值
+  def l2_block_reward() do
+    Application.get_all_env(:indexer)[Indexer.Fetcher.PlatonAppchain][:l2_block_reward]
+  end
+
   def l2_round_size() do
     Application.get_all_env(:indexer)[Indexer.Fetcher.PlatonAppchain][:l2_round_size]
   end
