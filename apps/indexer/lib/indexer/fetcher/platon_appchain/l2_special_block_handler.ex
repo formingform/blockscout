@@ -40,16 +40,18 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2SpecialBlockHandler do
     end)
   end
 
+
+  @spec get_block_produced_info_if_round_end_block(map()) :: list()
   defp get_block_produced_info_if_round_end_block(block) when is_map(block) do
     if PlatonAppchain.is_round_end_block(block.number) == true do
       epoch = PlatonAppchain.calculateL2Epoch(block.number)
       round = PlatonAppchain.calculateL2Round(block.number)
-      # todo：还需要和底层协商，开发并开放此接口。
-      block_producer_hash_list = L2StakeHandler.getBlockProducedInfo(@period_type[:round], round)
-      convert_to_L2BlockProducedStatistics(block_producer_hash_list, epoch, round)
-      %{}
+      # todo：还需要和底层协商，开发并开放此接口。暂时屏蔽
+      # block_producer_hash_list = L2StakeHandler.getBlockProducedInfo(@period_type[:round], round)
+      # convert_to_L2BlockProducedStatistics(block_producer_hash_list, epoch, round)
+      []
     else
-      %{}
+      []
     end
   end
 
