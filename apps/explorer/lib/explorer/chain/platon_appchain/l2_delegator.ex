@@ -57,8 +57,8 @@ defmodule Explorer.Chain.PlatonAppchain.L2Delegator do
     |> unique_constraint(:delegator_hash, :validator_hash)
   end
 
-  @spec update_changeset(map()) :: Ecto.Schema.t()
-  def update_changeset(params \\ %{}) do
+  @spec update_changeset(Ecto.Schema.t(), map()) :: Ecto.Schema.t()
+  def update_changeset(%__MODULE__{} = module,params \\ %{}) do
     module
     |> cast(params, @allowed_attrs)
     |> validate_required(@required_attrs)

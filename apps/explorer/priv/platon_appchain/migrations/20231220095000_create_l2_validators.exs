@@ -56,10 +56,6 @@ defmodule Explorer.Repo.PlatonAppchain.Migrations.CreateL2Validators do
       # 底层是用bit来存储的，是个复合状态
       # 浏览器目前只判断：0: 正常 1：无效 2：低出块 4: 低阈值 8: 双签 16：解质押 32:惩罚
       add(:status, :integer, null: false, default: 0)
-      # 退出区块
-      add(:exit_block, :bigint, null: false)
-      # 退出内容
-      add(:exit_desc, :string, null: true)
 
       # 0-candidate(质押节点) 1-active(共识节点候选人) 2-verifying(共识节点)
       add(:role, :integer, null: false, default: 0)

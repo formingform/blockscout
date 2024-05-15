@@ -186,9 +186,9 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler do
   #     如果此round某个验证人因为各种原因，没有出块，底层rpc接口的返回数据中，也应包括此验证人，实际出库数=0即可。如果不返回，那就麻烦了，还需要再通过rpc获取这个round的验证人列表，然后合并两次rpc的结果。
   """
   def getBlockProducedInfo(periodType, period) do
-    result = get_block_produced_info(periodType, period) |> Ethers.call(rpc_opts: @rpc_opts)
-    {:ok, infos} = result
-    infos
+#    result = get_block_produced_info(periodType, period) |> Ethers.call(rpc_opts: @rpc_opts)
+#    {:ok, infos} = result
+#    infos
   end
 
 
@@ -308,7 +308,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler do
     withdrawal_delegate_amount = withdrawableOfDelegate(validator_hash, delegator_hash)
     locking_delegate_amount = pendingWithdrawalsOfDelegate(validator_hash, delegator_hash)
     delegation_info =  getDelegationsWithValidator([validator_hash], delegator_hash)
-    %{delegator_hash: ^delegator_hash, validator_hash: ^validator_hash, withdrawal_delegate_amount: withdrawal_delegate_amount, locking_delegate_amount: locking_delegate_amount,  delegate_amount: delegation_info.delegate_amount}
+    %{delegator_hash: delegator_hash, validator_hash: validator_hash, withdrawal_delegate_amount: withdrawal_delegate_amount, locking_delegate_amount: locking_delegate_amount,  delegate_amount: delegation_info.delegate_amount}
   end
 
 end

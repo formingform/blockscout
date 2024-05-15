@@ -18,15 +18,15 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2SpecialBlockHandler do
         epoch = PlatonAppchain.calculateL2Epoch(block_number)
         round = PlatonAppchain.calculateL2Round(block_number)
         block_producer_hash_list = L2StakeHandler.getValidatorAddrs(@period_type[:round], round)
-        l2_block_produced_statistics = get_init_L2BlockProducedStatistics(block_producer_hash_list, epoch, round)
-        %{init_statistics: l2_block_produced_statistics}
+#        l2_block_produced_statistics = get_init_L2BlockProducedStatistics(block_producer_hash_list, epoch, round)
+#        %{init_statistics: l2_block_produced_statistics}
       PlatonAppchain.is_round_end_block(block_number) == true ->
         epoch = PlatonAppchain.calculateL2Epoch(block_number)
         round = PlatonAppchain.calculateL2Round(block_number)
         # todo：还需要和底层协商，开发并开放此接口。
         block_producer_hash_list = L2StakeHandler.getBlockProducedInfo(@period_type[:round], round)
-        l2_block_produced_statistics = get_updated_L2BlockProducedStatistics(block_producer_hash_list, epoch, round)
-        %{update_statistics: l2_block_produced_statistics}
+#        l2_block_produced_statistics = get_updated_L2BlockProducedStatistics(block_producer_hash_list, epoch, round)
+#        %{update_statistics: l2_block_produced_statistics}
       true -> %{}
     end
   end
