@@ -21,6 +21,7 @@ defmodule Indexer.Fetcher.PlatonAppchain do
   alias Indexer.{Helper}
   alias Explorer.Chain.PlatonAppchain
   alias Indexer.Fetcher.PlatonAppchain.{L1Event, L1Execute, L2Event, L2Execute, L2ValidatorEvent, L2RewardEvent, Commitment, Checkpoint}
+  alias Explorer.Chain.Events.Publisher
 
 
   @fetcher_name :platon_appchain
@@ -835,7 +836,14 @@ defmodule Indexer.Fetcher.PlatonAppchain do
       cond do
         # 交易执行后才推送消息给前端（不然好多信息不完整）
         calling_module == L1Execute ->
-          Publisher.broadcast([{:l2_to_l1_txn, import_data}], :realtime)
+          l1_executes = Map.get(import_data, :l1_executes, %{})
+          params = Map.get(l1_executes, :params, [])
+
+          if length(params) > 0 do
+            Publisher.broadcast([{:l2_to_l1_txn, import_data}], :realtime)
+          end
+        true ->
+          :ignore
       end
     end
     # 存入db后给前端推送消息 end

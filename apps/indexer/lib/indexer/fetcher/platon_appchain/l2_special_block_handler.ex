@@ -36,7 +36,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2SpecialBlockHandler do
   @spec l2_block_produced_statistics(list()) :: list()
   def l2_block_produced_statistics(blocks) when is_list(blocks) do
     Enum.reduce(blocks, [], fn block, acc ->
-      acc ++ get_block_produced_info_if_round_end_block(block.number)
+      acc ++ get_block_produced_info_if_round_end_block(block)
     end)
   end
 
@@ -47,6 +47,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2SpecialBlockHandler do
       # todo：还需要和底层协商，开发并开放此接口。
       block_producer_hash_list = L2StakeHandler.getBlockProducedInfo(@period_type[:round], round)
       convert_to_L2BlockProducedStatistics(block_producer_hash_list, epoch, round)
+      %{}
     else
       %{}
     end

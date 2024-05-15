@@ -53,11 +53,11 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2DelegatorService do
 
     #当前同步的first_epoch..last_epoch的区块，能解锁irst_epoch-6..last_epoch-6期间锁定的撤销委托
     total_delegator_events =
-    if last_epoch > InnerContractHandler.get_epochs_for_locking_undelegation() do
-      undelegate_last_epoch = last_epoch - InnerContractHandler.get_epochs_for_locking_undelegation()
+    if last_epoch > InnerContractHandler.get_epochs_for_locking_undelegation(block_last) do
+      undelegate_last_epoch = last_epoch - InnerContractHandler.get_epochs_for_locking_undelegation(block_last)
       undelegate_first_epoch =
-      if first_epoch > InnerContractHandler.get_epochs_for_locking_undelegation() do
-        first_epoch - InnerContractHandler.get_epochs_for_locking_undelegation()
+      if first_epoch > InnerContractHandler.get_epochs_for_locking_undelegation(block_last) do
+        first_epoch - InnerContractHandler.get_epochs_for_locking_undelegation(block_last)
       else
         1
       end
