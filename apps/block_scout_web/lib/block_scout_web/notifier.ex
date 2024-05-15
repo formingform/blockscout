@@ -275,6 +275,11 @@ defmodule BlockScoutWeb.Notifier do
   end
 
   defp broadcast_l2_to_l1_txn(event) do
+#    Logger.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>.")
+#    Logger.info(fn -> "to import commitments: #{inspect(event)}" end ,
+#      logger: :platon_appchain
+#    )
+#    Logger.info("broadcast_l2_to_l1_txn  event #{event} >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>.")
     l2_to_l1_txn =  Query.get_l2_to_l1_txn_by_hash(event.hash)
     if Map.size(l2_to_l1_txn) > 0 do
       Endpoint.broadcast("platon_appchain:l2_to_l1_txn", "l2_to_l1_txn",%{

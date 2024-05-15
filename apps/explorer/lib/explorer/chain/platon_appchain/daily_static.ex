@@ -72,7 +72,7 @@ defmodule Explorer.Chain.PlatonAppchain.DailyStatic do
         select: %{
           static_date: fragment("to_char(CURRENT_DATE - INTERVAL '1 day', 'YYYYMMDD')"),
           total_validator_size: count(1),
-          total_bonded: sum(l.stake_amount + l.delegate_amount),
+          total_bonded: fragment("SUM(COALESCE(?, 0) + COALESCE(?, 0))", l.stake_amount, l.delegate_amount),
           inserted_at: fragment("CURRENT_TIMESTAMP"),
           updated_at: fragment("CURRENT_TIMESTAMP")
         }
