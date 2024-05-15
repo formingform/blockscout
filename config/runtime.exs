@@ -604,7 +604,10 @@ config :indexer, Indexer.Fetcher.PlatonAppchain,
   platon_appchain_eth_get_logs_range_size: ConfigHelper.parse_integer_env_var("INDEXER_PLATON_APPCHAIN_ETH_GET_LOGS_RANGE_SIZE", 1000),
   l2_validator_contract_address: System.get_env("INDEXER_PLATON_APPCHAIN_L2_VALIDATOR_CONTRACT_ADDRESS"),
   l2_epoch_size: ConfigHelper.parse_integer_env_var("INDEXER_PLATON_APPCHAIN_L2_EPOCH_SIZE", 25000),
-  l2_round_size: ConfigHelper.parse_integer_env_var("INDEXER_PLATON_APPCHAIN_L2_ROUND_SIZE", 250)
+  l2_round_size: ConfigHelper.parse_integer_env_var("INDEXER_PLATON_APPCHAIN_L2_ROUND_SIZE", 250),
+  l2_block_reward: ConfigHelper.parse_integer_env_var("INDEXER_PLATON_APPCHAIN_L2_BLOCK_REWARD", 4000000000000000000),
+  l2_epochs_for_locking_undelegation: ConfigHelper.parse_integer_env_var("INDEXER_PLATON_APPCHAIN_L2_EPOCHS_FOR_LOCKING_UNDELEGATION", 6)
+
   # l2_epoch_size: System.get_env("INDEXER_PLATON_APPCHAIN_L2_EPOCH_SIZE"),
   # l2_round_size: System.get_env("INDEXER_PLATON_APPCHAIN_L2_ROUND_SIZE")
 
