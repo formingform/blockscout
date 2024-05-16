@@ -176,12 +176,6 @@ defmodule Indexer.Block.Fetcher do
              else: []
            ),
 
-         l2_delegators =
-           if(callback_module == Indexer.Block.Realtime.Fetcher,
-             do: L2DelegatorService.refresh_delegators(l2_validator_events),
-             else: []
-           ),
-
          #直接upsert表：l2_delegators
          _ =
            if(callback_module == Indexer.Block.Realtime.Fetcher,
