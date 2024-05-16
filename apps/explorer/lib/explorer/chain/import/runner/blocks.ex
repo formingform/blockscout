@@ -356,7 +356,7 @@ defmodule Explorer.Chain.Import.Runner.Blocks do
       where:
         fragment("EXCLUDED.consensus <> ?", block.consensus) or fragment("EXCLUDED.difficulty <> ?", block.difficulty) or
           fragment("EXCLUDED.gas_limit <> ?", block.gas_limit) or fragment("EXCLUDED.gas_used <> ?", block.gas_used) or
-          fragment("EXCLUDED.miner_hash <> ?", block.miner_hash) or fragment("EXCLUDED.nonce <> ?", block.nonce) or
+          fragment("EXCLUDED.miner_hash <> ?", block.miner_hash) or fragment("EXCLUDED.block_reward <> ?", block.block_reward) or fragment("EXCLUDED.nonce <> ?", block.nonce) or
           fragment("EXCLUDED.number <> ?", block.number) or fragment("EXCLUDED.parent_hash <> ?", block.parent_hash) or
           fragment("EXCLUDED.size <> ?", block.size) or fragment("EXCLUDED.timestamp <> ?", block.timestamp) or
           fragment("EXCLUDED.total_difficulty <> ?", block.total_difficulty)

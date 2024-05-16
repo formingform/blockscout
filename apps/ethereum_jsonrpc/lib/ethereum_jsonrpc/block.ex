@@ -30,7 +30,8 @@ defmodule EthereumJSONRPC.Block do
           transactions_root: EthereumJSONRPC.hash(),
           uncles: [EthereumJSONRPC.hash()],
           base_fee_per_gas: non_neg_integer(),
-          withdrawals_root: EthereumJSONRPC.hash()
+          withdrawals_root: EthereumJSONRPC.hash(),
+          block_reward: non_neg_integer()
         }
 
   @typedoc """
@@ -143,7 +144,8 @@ defmodule EthereumJSONRPC.Block do
         total_difficulty: 340282366920938463463374607431465668165,
         transactions_root: "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
         uncles: [],
-        withdrawals_root: "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"
+        withdrawals_root: "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+        block_reward: 0
       }
 
   [Geth] `elixir` can be converted to params
@@ -192,7 +194,8 @@ defmodule EthereumJSONRPC.Block do
         total_difficulty: 1039309006117,
         transactions_root: "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
         uncles: [],
-        withdrawals_root: "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"
+        withdrawals_root: "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+        block_reward: 0
       }
 
   """
@@ -241,7 +244,8 @@ defmodule EthereumJSONRPC.Block do
 #      uncles: uncles,
       base_fee_per_gas: base_fee_per_gas,
       withdrawals_root:
-        Map.get(elixir, "withdrawalsRoot", "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421")
+        Map.get(elixir, "withdrawalsRoot", "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"),
+      block_reward: 0
     }
   end
 
@@ -287,7 +291,8 @@ defmodule EthereumJSONRPC.Block do
       uncles: uncles,
       base_fee_per_gas: base_fee_per_gas,
       withdrawals_root:
-        Map.get(elixir, "withdrawalsRoot", "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421")
+        Map.get(elixir, "withdrawalsRoot", "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"),
+      block_reward: 0
     }
   end
 
@@ -333,7 +338,8 @@ defmodule EthereumJSONRPC.Block do
       transactions_root: transactions_root,
       uncles: uncles,
       withdrawals_root:
-        Map.get(elixir, "withdrawalsRoot", "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421")
+        Map.get(elixir, "withdrawalsRoot", "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"),
+      block_reward: 0
     }
   end
 
@@ -378,7 +384,8 @@ defmodule EthereumJSONRPC.Block do
       transactions_root: transactions_root,
       uncles: uncles,
       withdrawals_root:
-        Map.get(elixir, "withdrawalsRoot", "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421")
+        Map.get(elixir, "withdrawalsRoot", "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"),
+      block_reward: 0
     }
   end
 
