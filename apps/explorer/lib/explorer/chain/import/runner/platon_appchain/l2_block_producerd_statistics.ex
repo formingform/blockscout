@@ -53,8 +53,8 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2BlockProducedStatistics 
       Instrumenter.block_import_stage_runner(
         fn -> insert(repo, changes_list, insert_options) end,
         :block_referencing,
-        :insert_l2_block_produced_statistics,
-        :insert_l2_block_produced_statistics
+        :l2_block_produced_statistics,
+        :l2_block_produced_statistics
       )
     end)
   end
