@@ -285,6 +285,7 @@ config :explorer, Explorer.ExchangeRates,
 
 config :explorer, Explorer.ExchangeRates.Source,
   source: ConfigHelper.exchange_rates_source(),
+  proxy: System.get_env("EXCHANGE_RATES_PROXY"),
   price_source: ConfigHelper.exchange_rates_price_source(),
   market_cap_source: ConfigHelper.exchange_rates_market_cap_source(),
   tvl_source: ConfigHelper.exchange_rates_tvl_source()
