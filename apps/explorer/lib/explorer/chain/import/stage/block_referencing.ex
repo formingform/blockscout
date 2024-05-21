@@ -48,7 +48,8 @@ defmodule Explorer.Chain.Import.Stage.BlockReferencing do
           Runner.PlatonAppchain.L2Executes,
           Runner.PlatonAppchain.Commitments,
           Runner.PlatonAppchain.Checkpoints,
-          Runner.PlatonAppchain.L2ValidatorEvents
+          Runner.PlatonAppchain.L2ValidatorEvents,
+          Runner.PlatonAppchain.L2BlockProducedStatistics
         ]
 
       _ ->

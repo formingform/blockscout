@@ -46,10 +46,16 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2BlockProducedStatistics 
       |> Map.put_new(:timeout, @timeout)
       |> Map.put(:timestamps, timestamps)
 
+    # 需要更新出块率的验证人列表
+    validator_hash_list =
+      changes_list
+      |> Enum.reduce([], fn block_produced_statistic, acc ->  [block_produced_statistic.validator_hash | acc] end)
+
     # 获取事务操作的超时时间，如果没有指定，则使用默认的超时时间
     transactions_timeout = options[Runner.PlatonAppchain.L2BlockProducedStatistics.option_key()][:timeout] || Runner.PlatonAppchain.L2BlockProducedStatistics.timeout()
 
-    Multi.run(multi, :insert_l2_block_produced_statistics, fn repo, _ ->
+    multi
+    |> Multi.run(:insert_l2_block_produced_statistics, fn repo, _ ->
       Instrumenter.block_import_stage_runner(
         fn -> insert(repo, changes_list, insert_options) end,
         :block_referencing,
@@ -57,6 +63,38 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2BlockProducedStatistics 
         :l2_block_produced_statistics
       )
     end)
+    # 继续执行更新出块率的SQL
+    |> Multi.run(:update_l2_validators_block_rate, fn repo, _ ->
+      Instrumenter.block_import_stage_runner(
+        fn -> update_l2_validators_block_rate(repo, validator_hash_list, %{
+          timeout:
+            options[Explorer.Chain.Import.Runner.PlatonAppchain.L2BlockProducedStatistics.option_key()][:timeout] ||
+              Explorer.Chain.Import.Runner.PlatonAppchain.L2BlockProducedStatistics.timeout(),
+          timestamps: timestamps
+        }) end,
+        :block_referencing,
+        :l2_block_produced_statistics,
+        :l2_block_produced_statistics
+      )
+    end)
+
+
+    # todo: 继续执行更新出块率的SQL
+    #update l2_validators dest
+    #set block_rate = src.block_rate
+    #from (
+    #	SELECT validator_hash, round(round(sum(actual_blocks) / sum(should_blocks), 4) * 10000, 0) as block_rate
+    #	from (
+    #		select validator_hash, should_blocks, actual_blocks, round, ROW_NUMBER() over(partition by validator_hash order by round desc) as row_num
+    #		from l2_block_produced_statistics
+    #		where validator_hash in (E'\\x1dd26dfb60b996fd5d5152af723949971d9119ee', E'\\x343972bf63d1062761aaaa891d2750f03cb4b2f7')
+    #	) sorted
+    #	where sorted.row_num < 8
+    #	group by validator_hash
+    #) src
+    #where dest.validator_hash = src.validator_hash
+
+    # https://stackoverflow.com/questions/68880594/ecto-update-query-using-value-from-a-subquery
   end
 
 
@@ -104,5 +142,19 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2BlockProducedStatistics 
           l.actual_blocks
         )
     )
+  end
+
+  defp update_l2_validators_block_rate(repo, validator_hash_list, %{timeout: timeout, timestamps: %{updated_at: updated_at}}) when is_list(validator_hash_list) do
+
+    subquery_1 = from(s in Explorer.Chain.PlatonAppchain.L2BlockProducedStatistic, select: %{row_num: row_number() |> over(partition_by: s.validator_hash, order_by: [desc: s.round]), validator_hash: s.validator_hash, should_blocks: s.should_blocks, actual_blocks: s.actual_blocks})
+    subquery_2 = from(s2 in subquery(subquery_1), select: %{validator_hash: s2.validator_hash, block_rate:  fragment("round(?, 4)", fragment("cast(? as numeric)", sum(s2.actual_blocks)) / sum(s2.should_blocks)) * 10000}, where: s2.row_num <= 7 and s2.validator_hash in ^validator_hash_list, group_by: s2.validator_hash)
+
+
+    update_from_select = from(d in Explorer.Chain.PlatonAppchain.L2Validator,
+      join: sub in subquery(subquery_2),
+      where: d.validator_hash == sub.validator_hash,
+      update: [set: [block_rate: sub.block_rate]]
+    )
+    repo.update_all(update_from_select, [])
   end
 end
