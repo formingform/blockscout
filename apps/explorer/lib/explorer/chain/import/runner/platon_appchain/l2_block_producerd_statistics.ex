@@ -146,15 +146,26 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2BlockProducedStatistics 
 
   defp update_l2_validators_block_rate(repo, validator_hash_list, %{timeout: timeout, timestamps: %{updated_at: updated_at}}) when is_list(validator_hash_list) do
 
+    # 说明：row_number() |> over(partition_by: s.validator_hash, order_by: [desc: s.round])
+    # 也可以写成：over(row_number(), partition_by: s.validator_hash, order_by: [desc: s.round])，在窗口中执行函数row_number(), 分区标准是s.validator_hash，排序是s.round的倒叙
+    # 说明：select: %{row_num: over(row_number(), partition_by: s.validator_hash, order_by: [desc: s.round])}, validator_hash: s.validator_hash, should_blocks: s.should_blocks, actual_blocks: s.actual_blocks}
+    # 这样是把窗口函数执行的结果作为一列，列名是：row_num，同时其它列也需要转成%{}
     subquery_1 = from(s in Explorer.Chain.PlatonAppchain.L2BlockProducedStatistic, select: %{row_num: row_number() |> over(partition_by: s.validator_hash, order_by: [desc: s.round]), validator_hash: s.validator_hash, should_blocks: s.should_blocks, actual_blocks: s.actual_blocks})
-    subquery_2 = from(s2 in subquery(subquery_1), select: %{validator_hash: s2.validator_hash, block_rate:  fragment("round(?, 4)", fragment("cast(? as numeric)", sum(s2.actual_blocks)) / sum(s2.should_blocks)) * 10000}, where: s2.row_num <= 7 and s2.validator_hash in ^validator_hash_list, group_by: s2.validator_hash)
+
+    # 这个子查询，也是因为引入了一个临时列block_rate，所以其它列也要转成%{}形式
+    subquery_2 = from(s2 in subquery(subquery_1), select: %{validator_hash: s2.validator_hash, block_rate: fragment("round(?, 4)", fragment("cast(? as numeric)", sum(s2.actual_blocks)) / sum(s2.should_blocks)) * 10000}, where: s2.row_num <= 7 and s2.validator_hash in ^validator_hash_list, group_by: s2.validator_hash)
 
 
     update_from_select = from(d in Explorer.Chain.PlatonAppchain.L2Validator,
       join: sub in subquery(subquery_2),
-      where: d.validator_hash == sub.validator_hash,
+
+      # 下一行可以写成: on: d.validator_hash == sub.validator_hash,
+      where: d.validator_hash == sub.validator_hash, #
+
       update: [set: [block_rate: sub.block_rate]]
     )
+
+    #[]不能缺少
     repo.update_all(update_from_select, [])
   end
 end
