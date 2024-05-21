@@ -120,7 +120,8 @@ defmodule Explorer.ExchangeRates.Source do
   end
 
   def http_request(source_url, additional_headers) do
-    case HTTPoison.get(source_url, headers() ++ additional_headers) do
+    opts = [{:proxy, config(:proxy)}]
+    case HTTPoison.get(source_url, headers() ++ additional_headers, opts) do
       {:ok, %Response{body: body, status_code: 200}} ->
         parse_http_success_response(body)
 
