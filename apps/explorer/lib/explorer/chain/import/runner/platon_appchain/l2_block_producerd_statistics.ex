@@ -165,7 +165,14 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2BlockProducedStatistics 
       update: [set: [block_rate: sub.block_rate]]
     )
 
-    #[]不能缺少
-    repo.update_all(update_from_select, [])
+    try do
+      #[]不能缺少
+      {_, result} = repo.update_all(update_from_select, [], timeout: timeout)
+
+      {:ok, result}
+    rescue
+      postgrex_error in Postgrex.Error ->
+        {:error, %{exception: postgrex_error, update_block_rate_validator_hash_list: validator_hash_list}}
+    end
   end
 end
