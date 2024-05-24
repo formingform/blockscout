@@ -8,7 +8,7 @@ defmodule Indexer.Fetcher.PlatonAppchain.L2DelegatorService do
   alias Explorer.Chain
   alias Explorer.Chain.PlatonAppchain.L2Delegator
   alias Indexer.Fetcher.PlatonAppchain
-  alias Indexer.Fetcher.PlatonAppchain.L2ValidatorEvent
+  alias Explorer.Chain.PlatonAppchain.L2ValidatorEvent
 
   #       l2_validator_event: %{
   #            log_index: log_index,

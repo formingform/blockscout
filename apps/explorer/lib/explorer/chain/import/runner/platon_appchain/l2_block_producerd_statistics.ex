@@ -11,7 +11,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2BlockProducedStatistics 
   alias Indexer.Fetcher.PlatonAppchain
   alias Explorer.Chain.Import.Runner
 
-  import Ecto.Query, only: [from: 2]
+  import Ecto.Query, only: [from: 2, subquery: 1]
 
   @behaviour Import.Runner
 
@@ -39,6 +39,9 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2BlockProducedStatistics 
   @impl Import.Runner
   @spec run(Multi.t(), list(), map()) :: Multi.t()
   def run(multi, changes_list, %{timestamps: timestamps} = options) when length(changes_list) > 0 do
+
+    Logger.warn("更新验证人出块情况...")
+
     insert_options =
       options
       |> Map.get(option_key(), %{})

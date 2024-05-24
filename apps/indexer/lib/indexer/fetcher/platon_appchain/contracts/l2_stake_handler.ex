@@ -183,13 +183,32 @@ defmodule Indexer.Fetcher.PlatonAppchain.Contracts.L2StakeHandler do
   # 数据来源：
   #     当同步区块时，如果此区块是round结束块（根据规则计算是否是round结束块），则调用底层rpc接口，获取此round所有验证人的出块情况，并被每个验证人一个应出块数（通过配置），最后把数据import到此表。
   # 注意：
-  #     如果此round某个验证人因为各种原因，没有出块，底层rpc接口的返回数据中，也应包括此验证人，实际出库数=0即可。如果不返回，那就麻烦了，还需要再通过rpc获取这个round的验证人列表，然后合并两次rpc的结果。
+  #     如果此round某个验证人因为各种原因，没有出块，底层rpc接口的返回数据中，也会包括此验证人，实际出库数=0即可。
   """
-  def getBlockProducedInfo(periodType, period) do
-    # todo: 底层实现后放开注释
-#    result = get_block_produced_info(periodType, period) |> Ethers.call(rpc_opts: @rpc_opts)
-#    {:ok, infos} = result
-#    infos
+  def get_blocks_of_validators_from_chain(periodType, period) do
+    # 返回
+    # [
+    #  {"0x343972bf63d1062761aaaa891d2750f03cb4b2f7", 90},
+    #  {"0x1dd26dfb60b996fd5d5152af723949971d9119ee", 80},
+    #  {"0x70d207c1322ccb9069d3790d6768866dabff1035", 80}
+    # ]
+
+    result = get_blocks_of_validators(periodType, period) |> Ethers.call(rpc_opts: @rpc_opts)
+    case result do
+      {:ok, blockProducedInfos} ->
+        data = convertBlockProducedInfos(blockProducedInfos)
+        Logger.warn(fn -> "结束get_blocks_of_validators_from_chain: #{inspect(data)}" end,
+          logger: :platon_appchain
+        )
+      _ -> []
+    end
+  end
+  defp convertBlockProducedInfos(blockProducedInfos) do
+    Enum.reduce(blockProducedInfos, [], fn eachItem, acc ->
+      block_info = %{validator_hash: elem(eachItem, 0), actual_blocks: elem(eachItem, 1)}
+      [block_info | acc] #后来的插入头部，效率高
+    end)
+    # |> Enum.reverse  #反转list
   end
 
 
