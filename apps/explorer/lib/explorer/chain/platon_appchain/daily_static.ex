@@ -54,6 +54,17 @@ defmodule Explorer.Chain.PlatonAppchain.DailyStatic do
     |> select_repo([]).one()
   end
 
+  def get_reward_pool() do
+    json_rpc_named_arguments = json_rpc_named_arguments(System.get_env("INDEXER_PLATON_APPCHAIN_L1_RPC"))
+    l2_reward_manager_contract = System.get_env("INDEXER_PLATON_APPCHAIN_L2_REWARD_MANAGER_CONTRACT")
+    address_balances = EthereumJSONRPC.fetch_balances([%{block_quantity: "latest", hash_data: l2_reward_manager_contract}], json_rpc_named_arguments)
+
+    excitation_balance =  case address_balances do
+      {:ok, %EthereumJSONRPC.FetchedBalances{params_list: [%{address_hash: address_hash_value, block_number: block_number_value, value: balance}]}} -> Decimal.new(balance)
+      _-> Decimal.new("0")
+    end
+  end
+
   def find_by_static_date(static_date) do
     query =
       from(d in __MODULE__,
@@ -79,5 +90,20 @@ defmodule Explorer.Chain.PlatonAppchain.DailyStatic do
       )
 
     Repo.insert_all(__MODULE__, query)
+  end
+
+  def json_rpc_named_arguments(rpc_url) do
+    [
+      transport: EthereumJSONRPC.HTTP,
+      transport_options: [
+        http: EthereumJSONRPC.HTTP.HTTPoison,
+        url: rpc_url,
+        http_options: [
+          recv_timeout: :timer.minutes(10),
+          timeout: :timer.minutes(10),
+          hackney: [pool: :ethereum_jsonrpc]
+        ]
+      ]
+    ]
   end
 end

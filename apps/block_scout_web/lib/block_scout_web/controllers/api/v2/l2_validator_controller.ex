@@ -64,7 +64,6 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorController do
   def validator_details(conn, %{"validator_hash_param" => address_hash_string} = params) do
     with {:format, {:ok, validator_hash_address}} <- {:format, Chain.string_to_address_hash(address_hash_string)} do
      validator_detail =  Validator.get_validator_details(validator_hash_address)
-
       conn
       |> put_status(200)
       |> render(:validator_details, %{validator_detail: validator_detail})

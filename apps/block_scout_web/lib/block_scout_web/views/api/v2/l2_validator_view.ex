@@ -85,7 +85,11 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorView do
       "total_rewards" =>Decimal.add(Decimal.new(validator_detail.stake_reward.value),Decimal.new(validator_detail.delegate_reward.value)),    # Decimal.add(validator_detail.stake_reward, validator_detail.delegate_reward),
       "validator_rewards" => validator_detail.stake_reward,    # 验证人奖励
       "delegator_rewards" => validator_detail.delegate_reward,    # 委托奖励
-      "validator_claimable_rewards" => validator_detail.pending_validator_rewards # 验证人可领取的数量
+      "validator_claimable_rewards" => validator_detail.pending_validator_rewards, # 验证人可领取的数量
+      "name" => validator_detail.name,
+      "status" => validator_detail.status,
+      "unbonding" => validator_detail.locking_stake_amount,
+      "pending_withdrawal" => validator_detail.withdrawal_stake_amount
     }
   end
 
@@ -121,7 +125,8 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorView do
             "gas_used" => block.gas_used,
             "gas_used_percentage" => gas_used_percentage(block),
             "tx_fee_reward" => block.tx_fee_reward,
-            "block_reward" => "block_reward待处理",
+            "block_reward" => block.block_reward,
+            "gas_used_percentage " => gas_target(block.gas_used,block.gas_limit),
           }
         end),
       next_page_params: next_page_params
@@ -167,6 +172,16 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorView do
   def gas_used_percentage(block) do
     if Decimal.compare(block.gas_limit, 0) == :gt do
       block.gas_used |> Decimal.div(block.gas_limit) |> Decimal.mult(100) |> Decimal.to_float()
+    else
+      Decimal.new(0)
+    end
+  end
+
+  def gas_target(gas_used,gas_limit) do
+    if Decimal.compare(gas_limit, 0) == :gt do
+      elasticity_multiplier = Application.get_env(:explorer, :elasticity_multiplier)
+      ratio = Decimal.div(gas_used, Decimal.div(gas_limit, elasticity_multiplier))
+      ratio |> Decimal.sub(1) |> Decimal.mult(100) |> Decimal.to_float()
     else
       Decimal.new(0)
     end

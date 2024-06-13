@@ -21,10 +21,9 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainValidatorController do
    %{validator_count: validator_count} = L2Validator.validators_size()
    total_bonded = L2Validator.get_total_bonded()
 
-   yesterday_validators_size = 0;
-   yesterday_total_bonded = Decimal.new("0");
-
    daily_static =  DailyStatic.find_yesterday_data()
+
+   reward_pool = DailyStatic.get_reward_pool()
    if !is_nil(daily_static) do
      json(
        conn,
@@ -33,7 +32,9 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainValidatorController do
          "validators_24_hours" => validator_count - daily_static.total_validator_size,
          "total_bonded" => total_bonded,
          "total_bonded_24_hours" => Decimal.sub(total_bonded, Decimal.new(daily_static.total_bonded.value)),
-         "reward_pool" => "待确认"
+         "reward_pool" => reward_pool,
+         "block_reward" => "待提供数据",
+         "epoch_staking_reward" => "待提供数据"
        }
      )
    else
@@ -44,25 +45,19 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainValidatorController do
          "validators_24_hours" => validator_count,
          "total_bonded" => total_bonded,
          "total_bonded_24_hours" => total_bonded,
-         "reward_pool" => "待确认"
+         "reward_pool" => reward_pool,
+         "block_reward" => "待提供数据",
+         "epoch_staking_reward" => "待提供数据"
        }
      )
    end
-
-   json(
-   conn,
-   %{
-     "validators" => validator_count,
-     "validators_24_hours" => validator_count - yesterday_validators_size,
-     "total_bonded" => total_bonded,
-     "total_bonded_24_hours" => Decimal.sub(total_bonded, yesterday_total_bonded),
-     "reward_pool" => "待确认"
-   }
-  )
   end
 
   @spec list_all_validators(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def list_all_validators(conn, params) do
+    Logger.info(fn -> "list_all_validators params: #{inspect(params)}" end ,
+      logger: :platon_appchain
+    )
     validators =
     []
     |> Keyword.put(:role, "all")

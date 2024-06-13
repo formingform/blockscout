@@ -389,7 +389,16 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
     base_query =
       from(
         v in __MODULE__,
-        order_by: [asc: v.validator_hash]
+        inner_join: block in Block,
+        on: block.number == v.exit_block,
+        order_by: [asc: v.validator_hash],
+        select: %{
+          stake_epoch: v.stake_epoch,
+          validator_hash: v.validator_hash,
+          status: v.status,
+          exit_block: v.exit_block,
+          exit_desc: v.exit_desc,
+          timestamp: block.timestamp}
       )
 
     base_query

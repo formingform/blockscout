@@ -76,7 +76,11 @@ defmodule Explorer.Chain.PlatonAppchain.Validator do
           expect_apr: v.expect_apr,
           blocks: subquery(blocks_total_query),
           block_rate: v.block_rate,
-          pending_validator_rewards: v.pending_validator_rewards
+          pending_validator_rewards: v.pending_validator_rewards,
+          name: v.name,
+          status: v.status,
+          locking_stake_amount: v.locking_stake_amount,
+          withdrawal_stake_amount: v.withdrawal_stake_amount
         },
       )
 
@@ -115,13 +119,14 @@ defmodule Explorer.Chain.PlatonAppchain.Validator do
         b in Block,
         left_join: t in Transaction,
         on: b.number == t.block_number,
-        group_by: [b.number, b.timestamp, b.size, b.gas_used, b.gas_limit],
+        group_by: [b.number, b.timestamp, b.size, b.gas_used, b.gas_limit, b.block_reward],
         select: %{
           number: b.number,
           block_timestamp: b.timestamp,
           txn: b.size,
           gas_used: b.gas_used,
           gas_limit: b.gas_limit,
+          block_reward: b.block_reward,
           tx_fee_reward: coalesce(sum(t.gas_used * t.gas_price), 0)
         },
         order_by: [desc: b.number]
