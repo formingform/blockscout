@@ -55,13 +55,12 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainValidatorController do
 
   @spec list_all_validators(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def list_all_validators(conn, params) do
-    Logger.info(fn -> "list_all_validators params: #{inspect(params)}" end ,
-      logger: :platon_appchain
-    )
+    q = Map.get(params, "q")
     validators =
     []
     |> Keyword.put(:role, "all")
     |> Keyword.put(:api?, true)
+    |> Keyword.put(:q, q)
     |> L2Validator.list_validators_by_role()
 
     conn
@@ -141,4 +140,5 @@ defmodule BlockScoutWeb.API.V2.PlatonAppchainValidatorController do
     |> put_status(200)
     |> render(:platon_appchain_validator_details, %{validator: validator})
   end
+
 end

@@ -1,7 +1,9 @@
 defmodule Explorer.Chain.PlatonAppchain.L2Validator do
   use Explorer.Schema
 
-  import Explorer.Chain, only: [default_paging_options: 0, select_repo: 1]
+  require Logger
+
+  import Explorer.Chain, only: [default_paging_options: 0, select_repo: 1,string_to_address_hash: 1]
 
   # alias Ecto.Changeset
   alias Explorer.{
@@ -272,8 +274,9 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
 
   @spec list_validators_by_role([]) :: [__MODULE__.t]
   def list_validators_by_role(options \\ []) do
+    q  = Keyword.get(options, :q, "")
     role_value = Keyword.get(options, :role, "All")
-    query =
+    base_query =
       case String.downcase(role_value) do
         "all" ->
           from(
@@ -292,6 +295,18 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
             where: v.role == 0,
             order_by: [desc: v.rank]
           )
+      end
+
+    query =
+      if q != "" do
+        case string_to_address_hash(q) do
+          {:ok, address_hash} ->
+            from(v in base_query, where: v.name == ^q or v.validator_hash == ^address_hash)
+          _error ->
+            from(v in base_query, where: v.name == ^q)
+        end
+      else
+        base_query
       end
 
     query

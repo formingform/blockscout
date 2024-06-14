@@ -119,14 +119,13 @@ defmodule BlockScoutWeb.API.V2.L2ValidatorView do
       items:
         Enum.map(block_produced, fn block ->
           %{
-            "number" => block.number,
+            "block_number" => block.number,
             "block_timestamp" => block.block_timestamp,
             "txn" => block.txn,
             "gas_used" => block.gas_used,
             "gas_used_percentage" => gas_used_percentage(block),
             "tx_fee_reward" => block.tx_fee_reward,
             "block_reward" => block.block_reward,
-            "gas_used_percentage " => gas_target(block.gas_used,block.gas_limit),
           }
         end),
       next_page_params: next_page_params
