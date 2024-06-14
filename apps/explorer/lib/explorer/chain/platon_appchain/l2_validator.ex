@@ -298,7 +298,7 @@ defmodule Explorer.Chain.PlatonAppchain.L2Validator do
       end
 
     query =
-      if q != "" do
+      if !is_nil(q) && q != "" do
         case string_to_address_hash(q) do
           {:ok, address_hash} ->
             from(v in base_query, where: v.name == ^q or v.validator_hash == ^address_hash)
