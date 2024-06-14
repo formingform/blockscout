@@ -12,6 +12,7 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
   alias Explorer.Prometheus.Instrumenter
   alias Indexer.Fetcher.PlatonAppchain
   alias Explorer.Chain.Import.Runner
+  alias BlockScoutWeb.Endpoint
 
   import Ecto.Query, only: [from: 2]
 
@@ -118,6 +119,9 @@ defmodule Explorer.Chain.Import.Runner.PlatonAppchain.L2ValidatorEvents do
         {:error, _reason} -> throw({:error, "add new validator(s) failed"})
       end
     end)
+    # 添加成功通过ws给前端发消息 begin
+    Endpoint.broadcast("platon_appchain_l2_validator:all_validator", "all_validator", 1)
+    # 添加成功通过ws给前端发消息 end
     {:ok, "add new validator(s) successfully"}
   end
 
